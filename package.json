@@ -1,0 +1,30 @@
+{
+  "devDependencies": {
+    "@babel/core": "^7.15.5",
+    "@babel/preset-env": "^7.15.6",
+    "@babel/register": "^7.15.3",
+    "babel-plugin-istanbul": "^6.0.0",
+    "babelify": "^10.0.0",
+    "browserify": "^17.0.0",
+    "jasmine-core": "^3.9.0",
+    "karma": "^6.3.4",
+    "karma-babel-preprocessor": "^8.0.1",
+    "karma-browserify": "^8.1.0",
+    "karma-chrome-launcher": "^3.1.0",
+    "karma-cli": "^2.0.0",
+    "karma-coverage-istanbul-reporter": "^3.0.3",
+    "karma-jasmine": "^4.0.1",
+    "watchify": "^4.0.0"
+  },
+  "scripts": {
+    "test": "karma start",
+    "test:watch": "karma start --auto-watch true --single-run false",
+    "coverage": "karma start --reporters dots,coverage-istanbul"
+  },
+  "name": "view-js-sdk",
+  "version": "0.0.1",
+  "main": "index.js",
+  "repository": "git@github.com:xenonview-com/view-js-sdk.git",
+  "author": "Luke Woydziak <lwoydziak@gmail.com>",
+  "license": "Apache"
+}
