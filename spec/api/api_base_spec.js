@@ -102,6 +102,7 @@ describe('ApiBase', () => {
         doneSpy = jasmine.createSpy('done');
         failSpy = jasmine.createSpy('fail');
         subject.fetch({data: {}}).then(doneSpy, failSpy);
+        UnblockPromises();
       });
       it('rejects the promise', () => {
         expect(failSpy).toHaveBeenCalled();
