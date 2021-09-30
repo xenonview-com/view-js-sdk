@@ -1,11 +1,15 @@
 {
   "devDependencies": {
     "@babel/core": "^7.15.5",
+    "@babel/plugin-transform-runtime": "^7.15.0",
     "@babel/preset-env": "^7.15.6",
     "@babel/register": "^7.15.3",
     "babel-plugin-istanbul": "^6.0.0",
     "babelify": "^10.0.0",
+    "bluebird": "^3.7.2",
     "browserify": "^17.0.0",
+    "jasmine-ajax": "^4.0.0",
+    "jasmine-async-suite": "^0.0.8",
     "jasmine-core": "^3.9.0",
     "karma": "^6.3.4",
     "karma-babel-preprocessor": "^8.0.1",
@@ -14,6 +18,7 @@
     "karma-cli": "^2.0.0",
     "karma-coverage-istanbul-reporter": "^3.0.3",
     "karma-jasmine": "^4.0.1",
+    "mock-promises": "github:lwoydziak/mock-promises",
     "watchify": "^4.0.0"
   },
   "scripts": {
@@ -26,5 +31,8 @@
   "main": "index.js",
   "repository": "git@github.com:xenonview-com/view-js-sdk.git",
   "author": "Luke Woydziak <lwoydziak@gmail.com>",
-  "license": "Apache"
+  "license": "Apache",
+  "dependencies": {
+    "isomorphic-fetch": "^3.0.0"
+  }
 }

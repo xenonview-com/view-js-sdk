@@ -32,14 +32,19 @@ module.exports = function (config) {
     },
 
     browserify: {
-      debug: false,
+      debug: true,
       transform: [
         ['babelify', {
           presets: ["@babel/preset-env"],
           sourceMap: "inline",
-          "plugins": [["istanbul", {
-              "exclude": ["spec/**/*[Ss]pec.?(m)js"]
-          }]]
+          "plugins": [
+            ["istanbul", {
+              "exclude": ["spec/**/*[Ss]pec.?(m)js","spec/**/mock*.?(m)js", "spec/helper/**/*.?(m)js" ]
+            }],
+            ["@babel/plugin-transform-runtime", {
+                "regenerator": true
+            }]
+          ]
         }],
       ]
     },
