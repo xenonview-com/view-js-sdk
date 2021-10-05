@@ -7,12 +7,18 @@
  * Testing: SDK for interacting with the Xenon View service.
  *
  */
-import View from "../src/view";
+import {_View} from "../src/view";
+import './helper/api_helper';
+import {UnblockPromises} from "./helper/api_helper";
+
+
 
 describe('View SDK', () => {
   let unit = null;
-
-
+  let journeyApi = jasmine.createSpyObj('MyJourneyApi', ['fetch'])
+  let JourneyApi = jasmine.createSpy('constructor').and.returnValue(journeyApi);
+  let apiKey = "<token>";
+  let apiUrl = "https://localhost";
   describe('when initialized', () => {
     it('then has default journey', () => {
       expect(JSON.stringify(unit.journey())).toEqual(
@@ -20,7 +26,6 @@ describe('View SDK', () => {
       );
     });
   });
-
   describe('when initialized and previous journey', () => {
     it('then has previous journey', () => {
       expect(JSON.stringify(unit.journey())).toEqual(
@@ -30,10 +35,9 @@ describe('View SDK', () => {
     });
     beforeEach(() => {
       unit.pageView('test');
-      unit = new View();
+      unit = new _View();
     });
   });
-
   describe('when adding a page view', () => {
     let page = "test page";
     it('then has a journey with a page view', () => {
@@ -46,8 +50,6 @@ describe('View SDK', () => {
       unit.pageView(page);
     });
   });
-
-
   describe('when adding an event', () => {
     let event = {category: 'Event', action: 'test'};
     it('then has a journey with an event', () => {
@@ -56,11 +58,49 @@ describe('View SDK', () => {
         '{"category":"Event","action":"test"}]'
       );
     });
+    describe('when committing a journey', () => {
+      it('then calls the view journey API', () => {
+        expect(JourneyApi).toHaveBeenCalledWith(apiUrl);
+        expect(journeyApi.fetch).toHaveBeenCalledWith({
+          data: {
+            journey: [
+              {category: 'Landing', action: 'New session started'},
+              {category: 'Event', action: 'test'}
+            ],
+            token: '<token>'
+          }
+        });
+      });
+      it('then resets journey', () => {
+        expect(JSON.stringify(unit.journey())).toEqual('null');
+      });
+      let resolvePromise = null;
+      let rejectPromise = null;
+      describe('when API fails', () => {
+        it('then restores journey', () => {
+          expect(JSON.stringify(unit.journey())).toEqual(
+            '[{"category":"Landing","action":"New session started"},' +
+            '{"category":"Event","action":"test"}]'
+          );
+        });
+        beforeEach(() => {
+          rejectPromise(new Error('failure'));
+          UnblockPromises();
+        });
+      });
+      beforeEach(() => {
+        let promise = new Promise(function (resolve, reject) {
+          resolvePromise = resolve;
+          rejectPromise = reject;
+        });
+        journeyApi.fetch.and.returnValue(promise);
+        unit.commit();
+      });
+    });
     beforeEach(() => {
       unit.event(event);
     });
   });
-
   describe('when adding duplicate event', () => {
     let event = {funnel: 'funnel', action: 'test'};
     it('then has a journey with a single event', () => {
@@ -74,7 +114,6 @@ describe('View SDK', () => {
       unit.event(event);
     });
   });
-
   describe('when adding generic event', () => {
     let event = {action: 'test'};
     it('then has a journey with a generic event', () => {
@@ -87,8 +126,6 @@ describe('View SDK', () => {
       unit.event(event);
     });
   });
-
-
   describe('when adding an event after reset', () => {
     let event = {category: 'Event', action: 'test'};
     it('then has a journey with only event', () => {
@@ -101,27 +138,42 @@ describe('View SDK', () => {
       unit.event(event);
     });
   });
-
-  describe('when restoring after reset', () => {
+  describe('when resetting', () => {
     let event = {category: 'Event', action: 'test'};
-    it('then has a journey with added event', () => {
-      expect(JSON.stringify(unit.journey())).toEqual(
-        '[{"category":"Landing","action":"New session started"},' +
-        '{"category":"Event","action":"test"}]'
-      );
+    describe('when restoring', () => {
+      beforeEach(() => {
+        unit.restore();
+      });
+      it('then has a journey with added event', () => {
+        expect(JSON.stringify(unit.journey())).toEqual(
+          '[{"category":"Landing","action":"New session started"},' +
+          '{"category":"Event","action":"test"}]'
+        );
+      });
+    });
+    describe('when restoring after another event was added', () => {
+      let anotherEvent = {category: 'Event', action: 'another'};
+      it('then adds new event at end of previous journey', () => {
+        expect(JSON.stringify(unit.journey())).toEqual(
+          '[{"category":"Landing","action":"New session started"},' +
+          '{"category":"Event","action":"test"},' +
+          '{"category":"Event","action":"another"}]'
+        );
+      });
+      beforeEach(() => {
+        unit.event(anotherEvent);
+        unit.restore();
+      });
     });
     beforeEach(() => {
       unit.event(event);
       unit.reset();
-      unit.restore();
     });
   });
-
   beforeEach(() => {
     localStorage.clear();
-    unit = new View();
+    unit = new _View(apiKey, apiUrl, JourneyApi);
   });
-
   afterEach(() => {
     unit = null;
     localStorage.clear();

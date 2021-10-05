@@ -7,10 +7,12 @@ function journeyParams(data) {
 }
 
 class journeyApi extends ApiBase {
-  constructor() {
+  constructor(apiUrl) {
     let props = {
       name: 'ApiJourney',
-      url: 'journey'
+      url: 'journey',
+      apiUrl: apiUrl,
+      authenticated: true
     };
     super(props);
   }

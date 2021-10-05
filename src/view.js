@@ -7,8 +7,11 @@
  * SDK for interacting with the Xenon View service.
  *
  */
-class View {
-  constructor() {
+import JourneyApi from "./api/journey";
+
+export class _View {
+  constructor(apiKey, apiUrl = 'https://app.xenonview.com',
+              journeyApi = JourneyApi) {
     let journey = this.journey();
     if (!journey) {
       journey = [{
@@ -18,6 +21,9 @@ class View {
     }
     this.storeJourney(journey);
     this.restoreJourney = null;
+    this.JourneyApi = journeyApi;
+    this.apiUrl = apiUrl;
+    this.apiKey = apiKey;
   }
 
   pageView(page) {
@@ -47,8 +53,22 @@ class View {
     } else {
       journey = [content];
     }
-    this.restoreJourney = null;
     this.storeJourney(journey);
+  }
+
+  commit() {
+    let params = {
+      data: {
+        journey: this.journey(),
+        token: this.apiKey
+      }
+    };
+    this.reset();
+    return this.JourneyApi(this.apiUrl)
+      .fetch(params)
+      .catch((err) =>{
+        this.restore();
+      });
   }
 
   storeJourney(journey) {
@@ -66,9 +86,10 @@ class View {
   }
 
   restore() {
-    this.storeJourney(this.restoreJourney);
+    let currentJourney = this.journey();
+    let restoreJourney = this.restoreJourney;
+    if (currentJourney && currentJourney.length) restoreJourney = restoreJourney.concat(currentJourney);
+    this.storeJourney(restoreJourney);
     this.restoreJourney = null;
   }
 }
-
-export default View;

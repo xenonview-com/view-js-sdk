@@ -6,7 +6,7 @@ const apiUrl_ = `https://${apiHost}`;
 
 class ApiBase {
   constructor(props = {}) {
-    const {name, method, headers, url, skipName, authenticated, apiUrl} = props;
+    const {name, method, headers, url: path, skipName, authenticated, apiUrl} = props;
     this.authenticated = (authenticated) ? authenticated : false;
     this.skipName = (skipName) ? skipName : false;
     this.name = (name) ? name : 'ApiBase';
@@ -15,15 +15,15 @@ class ApiBase {
       'content-type': 'application/json'
     };
     this.apiUrl = (apiUrl || apiUrl != undefined) ? apiUrl : apiUrl_;
-    this.url_ = (url) ? url : '';
+    this.path_ = (path) ? path : '';
   }
 
   params(data) {
     return {};
   };
 
-  url(data){
-    return this.url_;
+  path(data){
+    return this.path_;
   }
 
   fetch({data} = {}) {
@@ -52,7 +52,7 @@ class ApiBase {
       if (token) fetchParameters.accessToken = token;
       else return Promise.reject(new Error("No token and authenticated!"))
     }
-    const fetchUrl = `${this.apiUrl}/${this.url(data)}`;
+    const fetchUrl = `${this.apiUrl}/${this.path(data)}`;
     return fetchJson(fetchUrl, fetchParameters);
   }
 }

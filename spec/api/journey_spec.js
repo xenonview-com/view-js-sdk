@@ -5,10 +5,10 @@ import {UnblockPromises} from "../helper/api_helper";
 describe('JourneyApi', () => {
   let subject;
   const apiUrl = 'https://app.xenonview.com';
-  let dataWithJourney = {uuid: 'somevalue', handle: 'test_user_screenname', journey: ['step']};
-  let dataWithoutJourney = {uuid: 'somevalue', handle: 'test_user_screenname'};
+  let dataWithoutJourney = {uuid: 'somevalue', handle: 'test_user_screenname', token: "<testToken>"}
+  let dataWithJourney = {...dataWithoutJourney, journey: ['step']};
   beforeEach(() => {
-    subject = new JourneyApi();
+    subject = new JourneyApi(apiUrl);
     const data = dataWithJourney;
     subject.fetch({data});
     UnblockPromises();
