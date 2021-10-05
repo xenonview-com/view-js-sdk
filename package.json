@@ -19,6 +19,7 @@
     "karma-coverage-istanbul-reporter": "^3.0.3",
     "karma-jasmine": "^4.0.1",
     "mock-promises": "github:lwoydziak/mock-promises",
+    "np": "^7.5.0",
     "watchify": "^4.0.0"
   },
   "scripts": {
@@ -34,7 +35,10 @@
   "version": "0.0.1",
   "description": "Javascript access to Xenon View.",
   "homepage": "https://github.com/xenonview-com/view-js-sdk",
-  "keywords": ["xenonview", "sdk"],
+  "keywords": [
+    "xenonview",
+    "sdk"
+  ],
   "browser": "index.js",
   "repository": {
     "type": "git",
