@@ -53,5 +53,8 @@
   "np": {
     "yarn": true,
     "contents": "dist"
+  },
+  "publishConfig": {
+    "registry": "https://registry.npmjs.org"
   }
 }
