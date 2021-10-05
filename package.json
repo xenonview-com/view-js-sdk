@@ -50,10 +50,6 @@
   "dependencies": {
     "isomorphic-fetch": "^3.0.0"
   },
-  "np": {
-    "yarn": true,
-    "contents": "dist"
-  },
   "publishConfig": {
     "registry": "https://registry.npmjs.org"
   }
