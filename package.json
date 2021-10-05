@@ -49,5 +49,9 @@
   "license": "Apache",
   "dependencies": {
     "isomorphic-fetch": "^3.0.0"
+  },
+  "np": {
+    "yarn": true,
+    "contents": "dist"
   }
 }
