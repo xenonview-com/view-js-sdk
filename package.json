@@ -26,10 +26,20 @@
     "test:watch": "karma start --auto-watch true --single-run false",
     "coverage": "karma start --reporters dots,coverage-istanbul"
   },
+  "files": [
+    "index.js",
+    "src"
+  ],
   "name": "view-js-sdk",
   "version": "0.0.1",
-  "main": "index.js",
-  "repository": "git@github.com:xenonview-com/view-js-sdk.git",
+  "description": "Javascript access to Xenon View.",
+  "homepage": "https://github.com/xenonview-com/view-js-sdk",
+  "keywords": ["xenonview", "sdk"],
+  "browser": "index.js",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/xenonview-com/view-js-sdk.git"
+  },
   "author": "Luke Woydziak <lwoydziak@gmail.com>",
   "license": "Apache",
   "dependencies": {
