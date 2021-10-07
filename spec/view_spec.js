@@ -112,6 +112,8 @@ describe('View SDK', () => {
           });
         });
         beforeEach(() => {
+          let promise = new Promise(function (resolve, reject) {});
+          journeyApi.fetch.and.returnValue(promise);
           unit.init(apiKey=customKey);
           unit.commit();
         });
