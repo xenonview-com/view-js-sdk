@@ -32,7 +32,7 @@
     "index.js",
     "src"
   ],
-  "name": "view-js-sdk",
+  "name": "xenon-view-sdk",
   "version": "0.0.1",
   "description": "Javascript access to Xenon View.",
   "homepage": "https://github.com/xenonview-com/view-js-sdk",

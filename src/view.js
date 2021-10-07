@@ -22,6 +22,10 @@ export class _View {
     this.storeJourney(journey);
     this.restoreJourney = null;
     this.JourneyApi = journeyApi;
+    this.init(apiKey, apiUrl);
+  }
+
+  init(apiKey, apiUrl = 'https://app.xenonview.com'){
     this.apiUrl = apiUrl;
     this.apiKey = apiKey;
   }

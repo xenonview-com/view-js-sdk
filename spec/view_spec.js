@@ -59,42 +59,62 @@ describe('View SDK', () => {
       );
     });
     describe('when committing a journey', () => {
-      it('then calls the view journey API', () => {
-        expect(JourneyApi).toHaveBeenCalledWith(apiUrl);
-        expect(journeyApi.fetch).toHaveBeenCalledWith({
-          data: {
-            journey: [
-              {category: 'Landing', action: 'New session started'},
-              {category: 'Event', action: 'test'}
-            ],
-            token: '<token>'
-          }
+      describe('when default', () => {
+        it('then calls the view journey API', () => {
+          expect(JourneyApi).toHaveBeenCalledWith(apiUrl);
+          expect(journeyApi.fetch).toHaveBeenCalledWith({
+            data: {
+              journey: [
+                {category: 'Landing', action: 'New session started'},
+                {category: 'Event', action: 'test'}
+              ],
+              token: apiKey
+            }
+          });
         });
-      });
-      it('then resets journey', () => {
-        expect(JSON.stringify(unit.journey())).toEqual('null');
-      });
-      let resolvePromise = null;
-      let rejectPromise = null;
-      describe('when API fails', () => {
-        it('then restores journey', () => {
-          expect(JSON.stringify(unit.journey())).toEqual(
-            '[{"category":"Landing","action":"New session started"},' +
-            '{"category":"Event","action":"test"}]'
-          );
+        it('then resets journey', () => {
+          expect(JSON.stringify(unit.journey())).toEqual('null');
+        });
+        let resolvePromise = null;
+        let rejectPromise = null;
+        describe('when API fails', () => {
+          it('then restores journey', () => {
+            expect(JSON.stringify(unit.journey())).toEqual(
+              '[{"category":"Landing","action":"New session started"},' +
+              '{"category":"Event","action":"test"}]'
+            );
+          });
+          beforeEach(() => {
+            rejectPromise(new Error('failure'));
+            UnblockPromises();
+          });
         });
         beforeEach(() => {
-          rejectPromise(new Error('failure'));
-          UnblockPromises();
+          let promise = new Promise(function (resolve, reject) {
+            resolvePromise = resolve;
+            rejectPromise = reject;
+          });
+          journeyApi.fetch.and.returnValue(promise);
+          unit.commit();
         });
       });
-      beforeEach(() => {
-        let promise = new Promise(function (resolve, reject) {
-          resolvePromise = resolve;
-          rejectPromise = reject;
+      describe('when custom', () => {
+        let customKey = '<custom>';
+        it('then calls the view journey API', () => {
+          expect(journeyApi.fetch).toHaveBeenCalledWith({
+            data: {
+              journey: [
+                {category: 'Landing', action: 'New session started'},
+                {category: 'Event', action: 'test'}
+              ],
+              token: customKey
+            }
+          });
         });
-        journeyApi.fetch.and.returnValue(promise);
-        unit.commit();
+        beforeEach(() => {
+          unit.init(apiKey=customKey);
+          unit.commit();
+        });
       });
     });
     beforeEach(() => {
