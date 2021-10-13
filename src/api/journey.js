@@ -24,7 +24,7 @@ class journeyApi extends ApiBase {
     return params;
   }
 }
-function JourneyApi(){
-  return new journeyApi();
+function JourneyApi(apiUrl){
+  return new journeyApi(apiUrl);
 }
 export default JourneyApi;
