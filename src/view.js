@@ -8,10 +8,12 @@
  *
  */
 import JourneyApi from "./api/journey";
+import {resetLocal, retrieveLocal, retrieveSession, storeLocal, storeSession} from "./storage/storage";
 
 export class _View {
   constructor(apiKey, apiUrl = 'https://app.xenonview.com',
-              journeyApi = JourneyApi) {
+              journeyApi = JourneyApi, deanonApi = null) {
+    storeSession('xenon-view', crypto.randomUUID())
     let journey = this.journey();
     if (!journey) {
       journey = [{
@@ -22,6 +24,7 @@ export class _View {
     this.storeJourney(journey);
     this.restoreJourney = null;
     this.JourneyApi = journeyApi;
+    this.DeanonApi = deanonApi;
     this.init(apiKey, apiUrl);
   }
 
@@ -40,6 +43,10 @@ export class _View {
 
   event(event) {
     this.journeyAdd(event);
+  }
+
+  id(){
+    return retrieveSession('xenon-view');
   }
 
   journeyAdd(content) {
@@ -63,6 +70,7 @@ export class _View {
   commit() {
     let params = {
       data: {
+        id: this.id(),
         journey: this.journey(),
         token: this.apiKey
       }
@@ -75,18 +83,29 @@ export class _View {
       });
   }
 
+  deanonymize(person){
+    let params = {
+      data: {
+        id: this.id(),
+        person: person,
+        token: this.apiKey
+      }
+    };
+    return this.DeanonApi(this.apiUrl)
+      .fetch(params);
+  }
+
   storeJourney(journey) {
-    localStorage.setItem('view-journey', JSON.stringify(journey));
+    storeLocal('view-journey', journey);
   }
 
   journey() {
-    let journey = JSON.parse(localStorage.getItem('view-journey'));
-    return journey;
+    return retrieveLocal('view-journey');
   }
 
   reset() {
     this.restoreJourney = this.journey();
-    localStorage.removeItem('view-journey');
+    resetLocal('view-journey');
   }
 
   restore() {

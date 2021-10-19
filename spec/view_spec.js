@@ -17,6 +17,8 @@ describe('View SDK', () => {
   let unit = null;
   let journeyApi = jasmine.createSpyObj('MyJourneyApi', ['fetch'])
   let JourneyApi = jasmine.createSpy('constructor').and.returnValue(journeyApi);
+  let deanonApi = jasmine.createSpyObj('MyDeanonApi', ['fetch'])
+  let DeanonApi = jasmine.createSpy('constructor').and.returnValue(deanonApi);
   let apiKey = "<token>";
   let apiUrl = "https://localhost";
   describe('when initialized', () => {
@@ -64,6 +66,7 @@ describe('View SDK', () => {
           expect(JourneyApi).toHaveBeenCalledWith(apiUrl);
           expect(journeyApi.fetch).toHaveBeenCalledWith({
             data: {
+              id: jasmine.any(String),
               journey: [
                 {category: 'Landing', action: 'New session started'},
                 {category: 'Event', action: 'test'}
@@ -103,6 +106,7 @@ describe('View SDK', () => {
         it('then calls the view journey API', () => {
           expect(journeyApi.fetch).toHaveBeenCalledWith({
             data: {
+              id: jasmine.any(String),
               journey: [
                 {category: 'Landing', action: 'New session started'},
                 {category: 'Event', action: 'test'}
@@ -192,12 +196,52 @@ describe('View SDK', () => {
       unit.reset();
     });
   });
+  describe('when deanonymizing', () => {
+    let person = {name:'Test User', email: 'test@example.com'};
+    describe('when default', () => {
+      it('then calls the view deanon API', () => {
+        expect(DeanonApi).toHaveBeenCalledWith(apiUrl);
+        expect(deanonApi.fetch).toHaveBeenCalledWith({
+          data: {
+            id: jasmine.any(String),
+            person: person,
+            token: apiKey
+          }
+        });
+      });
+      beforeEach(() => {
+        let promise = new Promise(function (resolve, reject) {});
+        deanonApi.fetch.and.returnValue(promise);
+        unit.deanonymize(person);
+      });
+    });
+    describe('when custom', () => {
+      let customKey = '<custom>';
+      it('then calls the view journey API', () => {
+        expect(deanonApi.fetch).toHaveBeenCalledWith({
+          data: {
+            id: jasmine.any(String),
+            person: person,
+            token: customKey
+          }
+        });
+      });
+      beforeEach(() => {
+        let promise = new Promise(function (resolve, reject) {});
+        deanonApi.fetch.and.returnValue(promise);
+        unit.init(apiKey=customKey);
+        unit.deanonymize(person);
+      });
+    });
+  });
   beforeEach(() => {
     localStorage.clear();
-    unit = new _View(apiKey, apiUrl, JourneyApi);
+    sessionStorage.clear();
+    unit = new _View(apiKey, apiUrl, JourneyApi, DeanonApi);
   });
   afterEach(() => {
     unit = null;
     localStorage.clear();
+    sessionStorage.clear();
   });
 });
