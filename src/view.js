@@ -22,7 +22,7 @@ export class _View {
       }];
     }
     this.storeJourney(journey);
-    this.restoreJourney = null;
+    this.restoreJourney = [];
     this.JourneyApi = journeyApi;
     this.DeanonApi = deanonApi;
     this.init(apiKey, apiUrl);
@@ -113,6 +113,6 @@ export class _View {
     let restoreJourney = this.restoreJourney;
     if (currentJourney && currentJourney.length) restoreJourney = restoreJourney.concat(currentJourney);
     this.storeJourney(restoreJourney);
-    this.restoreJourney = null;
+    this.restoreJourney = [];
   }
 }
