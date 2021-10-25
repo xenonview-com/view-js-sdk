@@ -18,12 +18,12 @@ class journeyApi extends ApiBase {
   }
   params(data) {
     let params = journeyParams(data);
-    const {uuid, handle} = data;
-    params.uuid = uuid;
-    params.handle = handle;
+    const {id} = data;
+    params.uuid = id;
     return params;
   }
 }
+
 function JourneyApi(apiUrl){
   return new journeyApi(apiUrl);
 }

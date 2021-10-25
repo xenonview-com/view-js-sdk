@@ -12,6 +12,7 @@ class deanonApi extends ApiBase {
   }
   params(data) {
     const {id, person} = data;
+    let params = {};
     params.uuid = id;
     params.person = person;
     return params;
