@@ -8,11 +8,12 @@
  *
  */
 import JourneyApi from "./api/journey";
+import DeanonApi from "./api/deanonymize";
 import {resetLocal, retrieveLocal, retrieveSession, storeLocal, storeSession} from "./storage/storage";
 
 export class _View {
   constructor(apiKey, apiUrl = 'https://app.xenonview.com',
-              journeyApi = JourneyApi, deanonApi = null) {
+              journeyApi = JourneyApi, deanonApi = DeanonApi) {
     storeSession('xenon-view', crypto.randomUUID())
     let journey = this.journey();
     if (!journey) {
