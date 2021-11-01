@@ -64,6 +64,7 @@ You can use this method to add page views to the journey.
       View.pageView(page);
     });
 ```
+This adds a page view step to the journey chain.
 
 #### Generic events
 You can use this method to add generic events to the journey.
@@ -76,11 +77,11 @@ You can use this method to add generic events to the journey.
       View.event(event);
     });
 ```
+This adds an event step to the journey chain.
 
 ### Committing Journeys
 
 Journeys only exist locally until you commit them to the Xenon View system. After you have created and added to a journey, you can commit the journey to Xenon View for analysis as follows:
-
 ```javascript
     import View from 'xenon_view_sdk';
 
@@ -88,11 +89,11 @@ Journeys only exist locally until you commit them to the Xenon View system. Afte
       await View.commit();
     });
 ```
+This commits a journey to Xenon View for analysis.
 
 ### Deanonymizing Journeys
 
 Xenon View supports both anonymous and known journeys. By deanonymizing a journey you can compare a user's path to other known paths and gather insights into their progress. This is optional.
-
 ```javascript
     import View from 'xenon_view_sdk';
 
@@ -104,6 +105,7 @@ Xenon View supports both anonymous and known journeys. By deanonymizing a journe
       await View.deanonymize({name:'JS Test', email:'jstest@example.com'});
     });
 ```
+This deanonymizes every journey committed to a particular user.
 
 ### Error handling
 In the event of an API error when committing, the method returns a [promise](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise). 
