@@ -1,5 +1,5 @@
 # xenon-view-sdk
-The Xenon View Python SDK is the JavaScript SDK to interact with [XenonView](https://xenonview.com).
+The Xenon View JavaScript SDK is the JavaScript SDK to interact with [XenonView](https://xenonview.com).
 
 **Table of contents:**
 
@@ -10,6 +10,7 @@ The Xenon View Python SDK is the JavaScript SDK to interact with [XenonView](htt
 
 ## <a name="whats-new"></a>
 ## What's New
+* v0.0.10 - Fully operational Outcome and Funnel methods
 * v0.0.7 - Fully operational deanonymization
 * v0.0.5 - Introduction of deanonymizing journeys
 * v0.0.4 - Allow setting the API URL
