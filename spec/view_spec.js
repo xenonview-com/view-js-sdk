@@ -52,6 +52,32 @@ describe('View SDK', () => {
       unit.pageView(page);
     });
   });
+  describe('when adding a funnel stage', () => {
+    let stage = "<stage in funnel>";
+    let action = "<custom action>";
+    it('then has a journey with a funnel stage', () => {
+      expect(JSON.stringify(unit.journey())).toEqual(
+        '[{"category":"Landing","action":"New session started"},' +
+        '{"funnel":"<stage in funnel>","action":"<custom action>"}]'
+      );
+    });
+    beforeEach(() => {
+      unit.funnel(stage, action);
+    });
+  });
+  describe('when adding an outcome', () => {
+    let outcome = "<outcome>";
+    let action = "<custom action>";
+    it('then adds an outcome to journey', () => {
+      expect(JSON.stringify(unit.journey())).toEqual(
+        '[{"category":"Landing","action":"New session started"},' +
+        '{"outcome":"<outcome>","action":"<custom action>"}]'
+      );
+    });
+    beforeEach(() => {
+      unit.outcome(outcome, action);
+    });
+  });
   describe('when adding an event', () => {
     let event = {category: 'Event', action: 'test'};
     it('then has a journey with an event', () => {

@@ -66,6 +66,37 @@ You can use this method to add page views to the journey.
 ```
 This adds a page view step to the journey chain.
 
+
+#### Funnel Stage
+You can use this method to track funnel stages in the journey.
+
+```javascript
+    import View from 'xenon_view_sdk';
+
+    let stage = "<stage in funnel>";
+    let action = "<custom action>";
+    it('then adds a funnel stage to journey', () => {
+      View.funnel(stage, action);
+    });
+```
+This adds a funnel stage to the journey chain.
+
+#### Outcome
+You can use this method to add an outcome to the journey.
+
+```javascript
+    import View from 'xenon_view_sdk';
+
+    let outcome = "<outcome>";
+    let action = "<custom action>";
+    it('then adds an outcome to journey', () => {
+      View.outcome(outcome, action);
+    });
+```
+This adds an outcome to the journey chain effectively completing it.
+
+
+
 #### Generic events
 You can use this method to add generic events to the journey.
 

@@ -42,6 +42,22 @@ export class _View {
     this.journeyAdd(content);
   }
 
+  funnel(stage, action) {
+    let content = {
+      funnel: stage,
+      action: action,
+    };
+    this.journeyAdd(content);
+  }
+
+  outcome(name, action) {
+    let content = {
+      outcome: name,
+      action: action,
+    };
+    this.journeyAdd(content);
+  }
+
   event(event) {
     this.journeyAdd(event);
   }
