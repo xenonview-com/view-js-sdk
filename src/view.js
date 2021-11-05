@@ -14,7 +14,10 @@ import {resetLocal, retrieveLocal, retrieveSession, storeLocal, storeSession} fr
 export class _View {
   constructor(apiKey, apiUrl = 'https://app.xenonview.com',
               journeyApi = JourneyApi, deanonApi = DeanonApi) {
-    storeSession('xenon-view', crypto.randomUUID())
+    let discoveredId = this.id()
+    if (!discoveredId || discoveredId === '') {
+        storeSession('xenon-view', crypto.randomUUID())
+    }
     let journey = this.journey();
     if (!journey) {
       journey = [{
@@ -62,7 +65,10 @@ export class _View {
     this.journeyAdd(event);
   }
 
-  id(){
+  id(id){
+    if (id) {
+        storeSession('xenon-view', id)
+    }
     return retrieveSession('xenon-view');
   }
 

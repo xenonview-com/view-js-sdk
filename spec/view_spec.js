@@ -27,6 +27,22 @@ describe('View SDK', () => {
         '[{"category":"Landing","action":"New session started"}]'
       );
     });
+    it('then has default id', () => {
+      expect(unit.id()).not.toBeNull();
+      expect(unit.id()).not.toEqual('');
+    });
+    describe('when id set', () => {
+      let testId = '<some random uuid>';
+      beforeEach(() => {
+        unit.id(testId);
+      });
+      it('then has set id', () => {
+        expect(unit.id()).toEqual(testId);
+      });
+      it('then persists id', () => {
+        expect(sessionStorage.getItem('xenon-view')).toEqual(JSON.stringify(testId));
+      });
+    });
   });
   describe('when initialized and previous journey', () => {
     it('then has previous journey', () => {
@@ -37,6 +53,16 @@ describe('View SDK', () => {
     });
     beforeEach(() => {
       unit.pageView('test');
+      unit = new _View();
+    });
+  });
+  describe('when initialized with a previous id', () => {
+    let testId = '<some random uuid>';
+    it('then has previous id', () => {
+      expect(unit.id()).toEqual(testId);
+    });
+    beforeEach(() => {
+      unit.id(testId);
       unit = new _View();
     });
   });
