@@ -20,12 +20,11 @@ export class _View {
     }
     let journey = this.journey();
     if (!journey) {
-      journey = [{
+      this.event({
         category: 'Landing',
         action: 'New session started'
-      }];
+      });
     }
-    this.storeJourney(journey);
     this.restoreJourney = [];
     this.JourneyApi = journeyApi;
     this.DeanonApi = deanonApi;
@@ -74,6 +73,7 @@ export class _View {
 
   journeyAdd(content) {
     let journey = this.journey();
+    content.timestamp = (new Date()).getTime()/1000;
     if (journey) {
       let last = journey[journey.length - 1];
       if ((last.hasOwnProperty('funnel') && content.hasOwnProperty('funnel')) ||
@@ -111,7 +111,8 @@ export class _View {
       data: {
         id: this.id(),
         person: person,
-        token: this.apiKey
+        token: this.apiKey,
+        timestamp: (new Date()).getTime()/1000
       }
     };
     return this.DeanonApi(this.apiUrl)

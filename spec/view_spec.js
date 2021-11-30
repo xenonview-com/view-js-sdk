@@ -23,8 +23,8 @@ describe('View SDK', () => {
   let apiUrl = "https://localhost";
   describe('when initialized', () => {
     it('then has default journey', () => {
-      expect(JSON.stringify(unit.journey())).toEqual(
-        '[{"category":"Landing","action":"New session started"}]'
+      expect(JSON.stringify(unit.journey())).toContain(
+        '[{"category":"Landing","action":"New session started","timestamp":'
       );
     });
     it('then has default id', () => {
@@ -46,10 +46,14 @@ describe('View SDK', () => {
   });
   describe('when initialized and previous journey', () => {
     it('then has previous journey', () => {
-      expect(JSON.stringify(unit.journey())).toEqual(
-        '[{"category":"Landing","action":"New session started"},' +
-        '{"category":"Page View","action":"test"}]'
+      let journeyStr = JSON.stringify(unit.journey());
+      expect(journeyStr).toContain(
+        '[{"category":"Landing","action":"New session started","timestamp":'
       );
+      expect(journeyStr).toContain(
+        '{"category":"Page View","action":"test","timestamp":'
+      );
+
     });
     beforeEach(() => {
       unit.pageView('test');
@@ -69,9 +73,12 @@ describe('View SDK', () => {
   describe('when adding a page view', () => {
     let page = "test page";
     it('then has a journey with a page view', () => {
-      expect(JSON.stringify(unit.journey())).toEqual(
-        '[{"category":"Landing","action":"New session started"},' +
-        '{"category":"Page View","action":"test page"}]'
+      let journeyStr = JSON.stringify(unit.journey());
+      expect(journeyStr).toContain(
+        '[{"category":"Landing","action":"New session started","timestamp":'
+      );
+      expect(journeyStr).toContain(
+        '{"category":"Page View","action":"test page","timestamp":'
       );
     });
     beforeEach(() => {
@@ -82,9 +89,12 @@ describe('View SDK', () => {
     let stage = "<stage in funnel>";
     let action = "<custom action>";
     it('then has a journey with a funnel stage', () => {
-      expect(JSON.stringify(unit.journey())).toEqual(
-        '[{"category":"Landing","action":"New session started"},' +
-        '{"funnel":"<stage in funnel>","action":"<custom action>"}]'
+      let journeyStr = JSON.stringify(unit.journey());
+      expect(journeyStr).toContain(
+        '[{"category":"Landing","action":"New session started","timestamp":'
+      );
+      expect(journeyStr).toContain(
+        '{"funnel":"<stage in funnel>","action":"<custom action>","timestamp":'
       );
     });
     beforeEach(() => {
@@ -95,9 +105,12 @@ describe('View SDK', () => {
     let outcome = "<outcome>";
     let action = "<custom action>";
     it('then adds an outcome to journey', () => {
-      expect(JSON.stringify(unit.journey())).toEqual(
-        '[{"category":"Landing","action":"New session started"},' +
-        '{"outcome":"<outcome>","action":"<custom action>"}]'
+      let journeyStr = JSON.stringify(unit.journey());
+      expect(journeyStr).toContain(
+        '[{"category":"Landing","action":"New session started","timestamp":'
+      );
+      expect(journeyStr).toContain(
+        '{"outcome":"<outcome>","action":"<custom action>","timestamp":'
       );
     });
     beforeEach(() => {
@@ -107,9 +120,12 @@ describe('View SDK', () => {
   describe('when adding an event', () => {
     let event = {category: 'Event', action: 'test'};
     it('then has a journey with an event', () => {
-      expect(JSON.stringify(unit.journey())).toEqual(
-        '[{"category":"Landing","action":"New session started"},' +
-        '{"category":"Event","action":"test"}]'
+      let journeyStr = JSON.stringify(unit.journey());
+      expect(journeyStr).toContain(
+        '[{"category":"Landing","action":"New session started","timestamp":'
+      );
+      expect(journeyStr).toContain(
+        '{"category":"Event","action":"test","timestamp":'
       );
     });
     describe('when committing a journey', () => {
@@ -120,8 +136,8 @@ describe('View SDK', () => {
             data: {
               id: jasmine.any(String),
               journey: [
-                {category: 'Landing', action: 'New session started'},
-                {category: 'Event', action: 'test'}
+                {category: 'Landing', action: 'New session started', timestamp: jasmine.any(Number)},
+                {category: 'Event', action: 'test', timestamp: jasmine.any(Number)}
               ],
               token: apiKey
             }
@@ -134,9 +150,12 @@ describe('View SDK', () => {
         let rejectPromise = null;
         describe('when API fails', () => {
           it('then restores journey', () => {
-            expect(JSON.stringify(unit.journey())).toEqual(
-              '[{"category":"Landing","action":"New session started"},' +
-              '{"category":"Event","action":"test"}]'
+            let journeyStr = JSON.stringify(unit.journey());
+            expect(journeyStr).toContain(
+              '[{"category":"Landing","action":"New session started","timestamp":'
+            );
+            expect(journeyStr).toContain(
+              '{"category":"Event","action":"test","timestamp":'
             );
           });
           beforeEach(() => {
@@ -160,8 +179,8 @@ describe('View SDK', () => {
             data: {
               id: jasmine.any(String),
               journey: [
-                {category: 'Landing', action: 'New session started'},
-                {category: 'Event', action: 'test'}
+                {category: 'Landing', action: 'New session started', timestamp: jasmine.any(Number)},
+                {category: 'Event', action: 'test', timestamp: jasmine.any(Number)}
               ],
               token: customKey
             }
@@ -182,9 +201,12 @@ describe('View SDK', () => {
   describe('when adding duplicate event', () => {
     let event = {funnel: 'funnel', action: 'test'};
     it('then has a journey with a single event', () => {
-      expect(JSON.stringify(unit.journey())).toEqual(
-        '[{"category":"Landing","action":"New session started"},' +
-        '{"funnel":"funnel","action":"test"}]'
+      let journeyStr = JSON.stringify(unit.journey());
+      expect(journeyStr).toContain(
+        '[{"category":"Landing","action":"New session started","timestamp":'
+      );
+      expect(journeyStr).toContain(
+        '{"funnel":"funnel","action":"test","timestamp":'
       );
     });
     beforeEach(() => {
@@ -195,9 +217,12 @@ describe('View SDK', () => {
   describe('when adding generic event', () => {
     let event = {action: 'test'};
     it('then has a journey with a generic event', () => {
-      expect(JSON.stringify(unit.journey())).toEqual(
-        '[{"category":"Landing","action":"New session started"},' +
-        '{"action":"test"}]'
+      let journeyStr = JSON.stringify(unit.journey());
+      expect(journeyStr).toContain(
+        '[{"category":"Landing","action":"New session started","timestamp":'
+      );
+      expect(journeyStr).toContain(
+        '{"action":"test","timestamp":'
       );
     });
     beforeEach(() => {
@@ -207,8 +232,9 @@ describe('View SDK', () => {
   describe('when adding an event after reset', () => {
     let event = {category: 'Event', action: 'test'};
     it('then has a journey with only event', () => {
-      expect(JSON.stringify(unit.journey())).toEqual(
-        '[{"category":"Event","action":"test"}]'
+      let journeyStr = JSON.stringify(unit.journey());
+      expect(journeyStr).toContain(
+        '[{"category":"Event","action":"test","timestamp":'
       );
     });
     beforeEach(() => {
@@ -223,19 +249,27 @@ describe('View SDK', () => {
         unit.restore();
       });
       it('then has a journey with added event', () => {
-        expect(JSON.stringify(unit.journey())).toEqual(
-          '[{"category":"Landing","action":"New session started"},' +
-          '{"category":"Event","action":"test"}]'
+        let journeyStr = JSON.stringify(unit.journey());
+        expect(journeyStr).toContain(
+          '[{"category":"Landing","action":"New session started","timestamp":'
+        );
+        expect(journeyStr).toContain(
+          '{"category":"Event","action":"test","timestamp":'
         );
       });
     });
     describe('when restoring after another event was added', () => {
       let anotherEvent = {category: 'Event', action: 'another'};
       it('then adds new event at end of previous journey', () => {
-        expect(JSON.stringify(unit.journey())).toEqual(
-          '[{"category":"Landing","action":"New session started"},' +
-          '{"category":"Event","action":"test"},' +
-          '{"category":"Event","action":"another"}]'
+        let journeyStr = JSON.stringify(unit.journey());
+        expect(journeyStr).toContain(
+          '[{"category":"Landing","action":"New session started","timestamp":'
+        );
+        expect(journeyStr).toContain(
+          '{"category":"Event","action":"test","timestamp":'
+        );
+        expect(journeyStr).toContain(
+          '{"category":"Event","action":"another","timestamp":'
         );
       });
       beforeEach(() => {
@@ -257,7 +291,8 @@ describe('View SDK', () => {
           data: {
             id: jasmine.any(String),
             person: person,
-            token: apiKey
+            token: apiKey,
+            timestamp: jasmine.any(Number)
           }
         });
       });
@@ -274,7 +309,8 @@ describe('View SDK', () => {
           data: {
             id: jasmine.any(String),
             person: person,
-            token: customKey
+            token: customKey,
+            timestamp: jasmine.any(Number)
           }
         });
       });

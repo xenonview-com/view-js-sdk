@@ -10,6 +10,7 @@ The Xenon View JavaScript SDK is the JavaScript SDK to interact with [XenonView]
 
 ## <a name="whats-new"></a>
 ## What's New
+* v0.0.13 - Timestamps on every addition
 * v0.0.12 - Add typescript definitions
 * v0.0.11 - Can get and set a Journey ID
 * v0.0.10 - Fully operational Outcome and Funnel methods
