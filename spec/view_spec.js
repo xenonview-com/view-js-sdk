@@ -139,7 +139,8 @@ describe('View SDK', () => {
                 {category: 'Landing', action: 'New session started', timestamp: jasmine.any(Number)},
                 {category: 'Event', action: 'test', timestamp: jasmine.any(Number)}
               ],
-              token: apiKey
+              token: apiKey,
+              timestamp: jasmine.any(Number)
             }
           });
         });
@@ -182,7 +183,8 @@ describe('View SDK', () => {
                 {category: 'Landing', action: 'New session started', timestamp: jasmine.any(Number)},
                 {category: 'Event', action: 'test', timestamp: jasmine.any(Number)}
               ],
-              token: customKey
+              token: customKey,
+              timestamp: jasmine.any(Number)
             }
           });
         });

@@ -95,7 +95,8 @@ export class _View {
       data: {
         id: this.id(),
         journey: this.journey(),
-        token: this.apiKey
+        token: this.apiKey,
+        timestamp: (new Date()).getTime()/1000
       }
     };
     this.reset();
