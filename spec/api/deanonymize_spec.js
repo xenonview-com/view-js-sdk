@@ -5,7 +5,7 @@ import {UnblockPromises} from "../helper/api_helper";
 describe('DeanonApi', () => {
   let subject;
   const apiUrl = 'https://app.xenonview.com';
-  let dataWithoutPerson = {id: 'somevalue', token: "<testToken>"}
+  let dataWithoutPerson = {id: 'somevalue', token: "<testToken>", timestamp: 0.1}
   let dataWithPerson = {...dataWithoutPerson, person: {name: 'Test Name', email:'test@example.com'}};
   beforeEach(() => {
     subject = new DeanonApi(apiUrl);
@@ -19,7 +19,8 @@ describe('DeanonApi', () => {
   it('creates parameters with person', () => {
     expect(subject.params(dataWithPerson)).toEqual({
       uuid: 'somevalue',
-      person: {name: 'Test Name', email:'test@example.com'}
+      person: {name: 'Test Name', email:'test@example.com'},
+      timestamp: jasmine.any(Number)
     });
   });
 });

@@ -18,8 +18,9 @@ class journeyApi extends ApiBase {
   }
   params(data) {
     let params = journeyParams(data);
-    const {id} = data;
+    const {id, timestamp} = data;
     params.uuid = id;
+    params.timestamp = timestamp;
     return params;
   }
 }

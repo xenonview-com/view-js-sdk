@@ -11,10 +11,11 @@ class deanonApi extends ApiBase {
     super(props);
   }
   params(data) {
-    const {id, person} = data;
+    const {id, person, timestamp} = data;
     let params = {};
     params.uuid = id;
     params.person = person;
+    params.timestamp = timestamp;
     return params;
   }
 }

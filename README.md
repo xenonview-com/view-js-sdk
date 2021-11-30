@@ -10,6 +10,7 @@ The Xenon View JavaScript SDK is the JavaScript SDK to interact with [XenonView]
 
 ## <a name="whats-new"></a>
 ## What's New
+* v0.0.15 - plumb timestamp through the API call
 * v0.0.14 - Timestamp on commit
 * v0.0.13 - Timestamps on every addition
 * v0.0.12 - Add typescript definitions

@@ -5,7 +5,7 @@ import {UnblockPromises} from "../helper/api_helper";
 describe('JourneyApi', () => {
   let subject;
   const apiUrl = 'https://app.xenonview.com';
-  let dataWithoutJourney = {id: 'somevalue', token: "<testToken>"}
+  let dataWithoutJourney = {id: 'somevalue', token: "<testToken>", timestamp: 0.1}
   let dataWithJourney = {...dataWithoutJourney, journey: ['step']};
   beforeEach(() => {
     subject = new JourneyApi(apiUrl);
@@ -19,12 +19,14 @@ describe('JourneyApi', () => {
   it('creates parameters with journey', () => {
     expect(subject.params(dataWithJourney)).toEqual({
       uuid: 'somevalue',
-      journey: ['step']
+      journey: ['step'],
+      timestamp: jasmine.any(Number)
     });
   });
   it('creates parameters without journey', () => {
     expect(subject.params(dataWithoutJourney)).toEqual({
-      uuid: 'somevalue'
+      uuid: 'somevalue',
+      timestamp: jasmine.any(Number)
     });
   });
 });
