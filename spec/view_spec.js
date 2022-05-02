@@ -15,6 +15,7 @@ import {UnblockPromises} from "./helper/api_helper";
 
 describe('View SDK', () => {
   let unit = null;
+  let unit2 = null;
   let journeyApi = jasmine.createSpyObj('MyJourneyApi', ['fetch'])
   let JourneyApi = jasmine.createSpy('constructor').and.returnValue(journeyApi);
   let deanonApi = jasmine.createSpyObj('MyDeanonApi', ['fetch'])
@@ -210,6 +211,7 @@ describe('View SDK', () => {
       expect(journeyStr).toContain(
         '{"funnel":"funnel","action":"test","timestamp":'
       );
+      expect(unit.journey().length).toEqual(2);
     });
     beforeEach(() => {
       unit.event(event);
@@ -224,7 +226,22 @@ describe('View SDK', () => {
         '[{"category":"Landing","action":"New session started","timestamp":'
       );
       expect(journeyStr).toContain(
-        '{"action":"test","timestamp":'
+        '{"action":"test","category":"Event","timestamp":'
+      );
+    });
+    beforeEach(() => {
+      unit.event(event);
+    });
+  });
+  describe('when adding custom event', () => {
+    let event = {custom: 'test'};
+    it('then has a journey with a generic event', () => {
+      let journeyStr = JSON.stringify(unit.journey());
+      expect(journeyStr).toContain(
+        '[{"category":"Landing","action":"New session started","timestamp":'
+      );
+      expect(journeyStr).toContain(
+        '{"action":{"custom":"test"},"category":"Event","timestamp":'
       );
     });
     beforeEach(() => {
@@ -328,9 +345,11 @@ describe('View SDK', () => {
     localStorage.clear();
     sessionStorage.clear();
     unit = new _View(apiKey, apiUrl, JourneyApi, DeanonApi);
+    unit2 = new _View(apiKey, apiUrl, JourneyApi, DeanonApi);
   });
   afterEach(() => {
     unit = null;
+    unit2 = null;
     localStorage.clear();
     sessionStorage.clear();
   });

@@ -61,6 +61,13 @@ export class _View {
   }
 
   event(event) {
+    let keys = Object.keys(event);
+    if (!keys.includes('action')) {
+      event = {action: event};
+    }
+    if (!keys.includes('category') && !keys.includes('funnel') && !keys.includes('outcome')  ){
+      event.category = 'Event';
+    }
     this.journeyAdd(event);
   }
 
