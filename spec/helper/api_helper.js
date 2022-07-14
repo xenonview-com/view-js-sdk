@@ -58,13 +58,13 @@ beforeEach(() => {
       };
     },
 
-    toHaveBeenRequestedWithQuery() {
+    toHaveBeenRequestedWithQuery(matchersUtil) {
       return {
         compare(actual, query) {
           const requests = jasmine.Ajax.requests.filter(new RegExp(actual));
           query = Object.keys(query).reduce((memo, key) => (memo[key] = query[key].toString(), memo), {});
           const pass = requests.some(request => {
-            return request.url.includes('?') && jasmine.matchersUtil.equals(qs.parse(request.url.replace(/.*\?(.*)$/, '$1')), jasmine.objectContaining(query));
+            return request.url.includes('?') && matchersUtil.equals(qs.parse(request.url.replace(/.*\?(.*)$/, '$1')), jasmine.objectContaining(query));
           });
 
           const requestsQueryParams = requests.map(request => {
@@ -81,14 +81,14 @@ beforeEach(() => {
       };
     },
 
-    toHaveBeenRequestedWith() {
+    toHaveBeenRequestedWith(matchersUtil) {
       return {
         compare(actual, options) {
           const requests = jasmine.Ajax.requests.filter(new RegExp(actual));
           const pass = requests.some(request => {
             return Object.keys(options).every(k => {
               const observed = typeof request[k] === 'function' ? request[k]() : request[k];
-              return jasmine.matchersUtil.equals(observed, options[k]);
+              return matchersUtil.equals(observed, options[k]);
             });
           });
           options.url = actual;

@@ -2,15 +2,14 @@
  * Created by lwoydziak on 09/27/21.
  */
 /**
- * view.js
+ * xenon_spec.js
  *
  * Testing: SDK for interacting with the Xenon View service.
  *
  */
-import {_View} from "../src/view";
+import {_Xenon} from "../src/xenon";
 import './helper/api_helper';
 import {UnblockPromises} from "./helper/api_helper";
-
 
 
 describe('View SDK', () => {
@@ -58,7 +57,7 @@ describe('View SDK', () => {
     });
     beforeEach(() => {
       unit.pageView('test');
-      unit = new _View();
+      unit = new _Xenon();
     });
   });
   describe('when initialized with a previous id', () => {
@@ -68,7 +67,7 @@ describe('View SDK', () => {
     });
     beforeEach(() => {
       unit.id(testId);
-      unit = new _View();
+      unit = new _Xenon();
     });
   });
   describe('when adding a page view', () => {
@@ -344,8 +343,8 @@ describe('View SDK', () => {
   beforeEach(() => {
     localStorage.clear();
     sessionStorage.clear();
-    unit = new _View(apiKey, apiUrl, JourneyApi, DeanonApi);
-    unit2 = new _View(apiKey, apiUrl, JourneyApi, DeanonApi);
+    unit = new _Xenon(apiKey, apiUrl, JourneyApi, DeanonApi);
+    unit2 = new _Xenon(apiKey, apiUrl, JourneyApi, DeanonApi);
   });
   afterEach(() => {
     unit = null;

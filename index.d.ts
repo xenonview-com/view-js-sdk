@@ -1,5 +1,5 @@
 declare module 'xenon-view-sdk' {
-    interface ViewInterface {
+    interface XenonInterface {
         init: (apiKey: string, apiUrl?: string) => void;
         pageView: (page: string) => void;
         funnel: (stage: string, action: string | object) => void;
@@ -10,6 +10,6 @@ declare module 'xenon-view-sdk' {
         deanonymize: (person: object) => Promise<object>;
 
     }
-    let View: ViewInterface;
-    export default View;
+    let Xenon: XenonInterface;
+    export default Xenon;
 }

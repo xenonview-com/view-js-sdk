@@ -1,4 +1,4 @@
-import {_View} from "./src/view";
+import {_Xenon} from "src/xenon";
 
-const View = new _View();
-export default View;
+const Xenon = new _Xenon();
+export default Xenon;

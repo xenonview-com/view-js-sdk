@@ -2,7 +2,7 @@
  * Created by lwoydziak on 09/27/21.
  */
 /**
- * view.js
+ * xenon.js
  *
  * SDK for interacting with the Xenon View service.
  *
@@ -11,7 +11,7 @@ import JourneyApi from "./api/journey";
 import DeanonApi from "./api/deanonymize";
 import {resetLocal, retrieveLocal, retrieveSession, storeLocal, storeSession} from "./storage/storage";
 
-export class _View {
+export class _Xenon {
   constructor(apiKey, apiUrl = 'https://app.xenonview.com',
               journeyApi = JourneyApi, deanonApi = DeanonApi) {
     let discoveredId = this.id()
