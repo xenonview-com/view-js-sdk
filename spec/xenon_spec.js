@@ -189,9 +189,10 @@ describe('View SDK', () => {
           });
         });
         beforeEach(() => {
-          let promise = new Promise(function (resolve, reject) {});
+          let promise = new Promise(function (resolve, reject) {
+          });
           journeyApi.fetch.and.returnValue(promise);
-          unit.init(apiKey=customKey);
+          unit.init(apiKey = customKey);
           unit.commit();
         });
       });
@@ -210,7 +211,22 @@ describe('View SDK', () => {
       expect(journeyStr).toContain(
         '{"funnel":"funnel","action":"test","timestamp":'
       );
+      expect(journeyStr).toContain(
+        '"count":2'
+      );
       expect(unit.journey().length).toEqual(2);
+    });
+    describe('when adding third duplicate', () => {
+      it('then has a count of 3', () => {
+        let journeyStr = JSON.stringify(unit.journey());
+        expect(journeyStr).toContain(
+          '"count":3'
+        );
+        expect(unit.journey().length).toEqual(2);
+      });
+      beforeEach(() => {
+        unit.event(event);
+      });
     });
     beforeEach(() => {
       unit.event(event);
@@ -301,7 +317,7 @@ describe('View SDK', () => {
     });
   });
   describe('when deanonymizing', () => {
-    let person = {name:'Test User', email: 'test@example.com'};
+    let person = {name: 'Test User', email: 'test@example.com'};
     describe('when default', () => {
       it('then calls the view deanon API', () => {
         expect(DeanonApi).toHaveBeenCalledWith(apiUrl);
@@ -315,7 +331,8 @@ describe('View SDK', () => {
         });
       });
       beforeEach(() => {
-        let promise = new Promise(function (resolve, reject) {});
+        let promise = new Promise(function (resolve, reject) {
+        });
         deanonApi.fetch.and.returnValue(promise);
         unit.deanonymize(person);
       });
@@ -333,9 +350,10 @@ describe('View SDK', () => {
         });
       });
       beforeEach(() => {
-        let promise = new Promise(function (resolve, reject) {});
+        let promise = new Promise(function (resolve, reject) {
+        });
         deanonApi.fetch.and.returnValue(promise);
-        unit.init(apiKey=customKey);
+        unit.init(apiKey = customKey);
         unit.deanonymize(person);
       });
     });

@@ -35,7 +35,7 @@ yarn test:watch
 
 To run the tests in "coverage mode" (runs all tests then calculates coverage for each dir/file):
 ```bash
-yarn coverage
+yarn test:coverage
 ```
 
 # Publishing

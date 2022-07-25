@@ -10,6 +10,7 @@ The Xenon View JavaScript SDK is the JavaScript SDK to interact with [XenonView]
 
 ## <a name="whats-new"></a>
 ## What's New
+* v0.0.20 - Count duplicate steps instead of dropping them
 * v0.0.19 - Correct import issue
 * v0.0.18 - Correct release issue
 * v0.0.17 - Rename View -> Xenon

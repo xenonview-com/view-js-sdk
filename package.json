@@ -25,7 +25,7 @@
   "scripts": {
     "test": "karma start",
     "test:watch": "karma start --auto-watch true --single-run false",
-    "coverage": "karma start --reporters dots,coverage-istanbul",
+    "test:coverage": "karma start --reporters dots,coverage-istanbul",
     "release": "np"
   },
   "files": [

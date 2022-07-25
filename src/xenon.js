@@ -87,6 +87,9 @@ export class _Xenon {
         (last.hasOwnProperty('category') && content.hasOwnProperty('category'))) {
         if (last.action !== content.action) {
           journey.push(content);
+        } else {
+          let count = last.hasOwnProperty('count') ? last['count'] : 1;
+          last['count'] = count+1;
         }
       } else {
         journey.push(content);
