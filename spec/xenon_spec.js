@@ -102,19 +102,67 @@ describe('View SDK', () => {
     });
   });
   describe('when adding an outcome', () => {
+    let softwareVersion = "5.1.5";
+    let deviceModel = "Pixel 4 XL";
+    let operatingSystemVersion = "Android 12.0";
     let outcome = "<outcome>";
     let action = "<custom action>";
-    it('then adds an outcome to journey', () => {
-      let journeyStr = JSON.stringify(unit.journey());
-      expect(journeyStr).toContain(
-        '[{"category":"Landing","action":"New session started","timestamp":'
-      );
-      expect(journeyStr).toContain(
-        '{"outcome":"<outcome>","action":"<custom action>","timestamp":'
-      );
+    describe('when no platform set', () => {
+      it('then adds an outcome to journey', () => {
+        let journeyStr = JSON.stringify(unit.journey());
+        expect(journeyStr).toContain(
+          '[{"category":"Landing","action":"New session started","timestamp":'
+        );
+        expect(journeyStr).toContain(
+          '{"outcome":"<outcome>","action":"<custom action>","timestamp":'
+        );
+      });
+      beforeEach(() => {
+        unit.outcome(outcome, action);
+      });
     });
-    beforeEach(() => {
-      unit.outcome(outcome, action);
+    describe('when platform set', () => {
+      it('then adds an outcome to journey', () => {
+        let journeyStr = JSON.stringify(unit.journey());
+        expect(journeyStr).toContain(
+          '[{"category":"Landing","action":"New session started","timestamp":'
+        );
+        expect(journeyStr).toContain(
+          '{"outcome":"<outcome>","action":"<custom action>"'
+        );
+        expect(journeyStr).toContain(
+          '"timestamp":'
+        );
+      });
+      it('then has platform details on the outcome', () => {
+        let journeyStr = JSON.stringify(unit.journey());
+        expect(journeyStr).toContain(
+          '"platform":{"softwareVersion":"5.1.5","deviceModel":"Pixel 4 XL","operatingSystemVersion":"Android 12.0"}'
+        );
+      });
+      beforeEach(() => {
+        unit.platform(softwareVersion, deviceModel, operatingSystemVersion);
+        unit.outcome(outcome, action);
+      });
+      afterEach(() => {
+        unit.removePlatform();
+      });
+    });
+    describe('when platform set and unset', () => {
+      it('then adds an outcome to journey', () => {
+        let journeyStr = JSON.stringify(unit.journey());
+        expect(journeyStr).toContain(
+          '[{"category":"Landing","action":"New session started","timestamp":'
+        );
+        expect(journeyStr).toContain(
+          '{"outcome":"<outcome>","action":"<custom action>","timestamp":'
+        );
+      });
+      beforeEach(() => {
+        unit.platform(softwareVersion, deviceModel, operatingSystemVersion);
+        unit.removePlatform();
+        unit.outcome(outcome, action);
+      });
     });
   });
   describe('when adding an event', () => {

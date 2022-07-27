@@ -9,7 +9,7 @@
  */
 import JourneyApi from "./api/journey";
 import DeanonApi from "./api/deanonymize";
-import {resetLocal, retrieveLocal, retrieveSession, storeLocal, storeSession} from "./storage/storage";
+import {resetLocal, resetSession, retrieveLocal, retrieveSession, storeLocal, storeSession} from "./storage/storage";
 
 export class _Xenon {
   constructor(apiKey, apiUrl = 'https://app.xenonview.com',
@@ -36,6 +36,15 @@ export class _Xenon {
     this.apiKey = apiKey;
   }
 
+  platform(softwareVersion, deviceModel, operatingSystemVersion){
+      let platform = {
+        softwareVersion: softwareVersion,
+        deviceModel: deviceModel,
+        operatingSystemVersion: operatingSystemVersion
+      }
+      storeSession('view-platform', platform)
+  }
+
   pageView(page) {
     let content = {
       category: 'Page View',
@@ -57,6 +66,10 @@ export class _Xenon {
       outcome: name,
       action: action,
     };
+    let platform = retrieveSession('view-platform')
+    if (platform) {
+      content['platform'] = platform
+    }
     this.journeyAdd(content);
   }
 
@@ -149,5 +162,9 @@ export class _Xenon {
     if (currentJourney && currentJourney.length) restoreJourney = restoreJourney.concat(currentJourney);
     this.storeJourney(restoreJourney);
     this.restoreJourney = [];
+  }
+
+  removePlatform() {
+    resetSession('view-platform')
   }
 }

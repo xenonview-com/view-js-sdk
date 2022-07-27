@@ -10,6 +10,7 @@ The Xenon View JavaScript SDK is the JavaScript SDK to interact with [XenonView]
 
 ## <a name="whats-new"></a>
 ## What's New
+* v0.0.21 - Add new platform method.
 * v0.0.20 - Count duplicate steps instead of dropping them
 * v0.0.19 - Correct import issue
 * v0.0.18 - Correct release issue
@@ -58,10 +59,39 @@ Xenon.init('<API KEY>');
 Of course, you'll have to make the following modifications to the above code:
 - Replace `<API KEY>` with your [api key](https://xenonview.com/api-get)
 
+### Platforming
+After you have initialized View, you can optionally specify platform details such as:
+- Operating System version
+- Device model (Pixel, Docker Container, Linux VM, Dell Server, etc.)
+- Software version of your application.
+
+```javascript
+import Xenon from 'xenon_view_sdk';
+
+const softwareVersion = "5.1.5";
+const deviceModel = "Pixel 4 XL";
+const operatingSystemVersion = "Android 12.0";
+
+// you can add platform details to outcomes
+Xenon.platform(softwareVersion, deviceModel, operatingSystemVersion);
+```
+This adds platform details for each [outcome](#outcome). Typically, this would be set once at initialization:
+```javascript
+import Xenon from 'xenon_view_sdk';
+
+Xenon.init('<API KEY>');
+const softwareVersion = "5.1.5";
+const deviceModel = "Pixel 4 XL";
+const operatingSystemVersion = "Android 12.0";
+Xenon.platform(softwareVersion, deviceModel, operatingSystemVersion);
+```
+
+
 ### Add Journeys
 After you have initialized the View singleton, you can start collecting journeys.
 
 There are a few helper methods you can use:
+#### <a name="outcome"></a>
 #### Outcome
 You can use this method to add an outcome to the journey.
 
