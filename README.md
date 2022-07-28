@@ -10,6 +10,7 @@ The Xenon View JavaScript SDK is the JavaScript SDK to interact with [XenonView]
 
 ## <a name="whats-new"></a>
 ## What's New
+* v0.0.23 - Fix types for platform methods.
 * v0.0.22 - Add types for platform methods.
 * v0.0.21 - Add new platform method.
 * v0.0.20 - Count duplicate steps instead of dropping them
