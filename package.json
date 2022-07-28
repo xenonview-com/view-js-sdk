@@ -34,7 +34,7 @@
     "src"
   ],
   "name": "xenon-view-sdk",
-  "version": "0.0.22",
+  "version": "0.0.23",
   "description": "Javascript access to Xenon View.",
   "homepage": "https://github.com/xenonview-com/view-js-sdk",
   "keywords": [
