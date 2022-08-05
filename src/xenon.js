@@ -167,4 +167,8 @@ export class _Xenon {
   removePlatform() {
     resetSession('view-platform')
   }
+
+  newId() {
+    storeSession('xenon-view', crypto.randomUUID());
+  }
 }

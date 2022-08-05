@@ -70,6 +70,17 @@ describe('View SDK', () => {
       unit = new _Xenon();
     });
   });
+  describe('when regenerating an ID', () => {
+    let previousId = null;
+    it('then has previous id', () => {
+      expect(unit.id()).not.toEqual(previousId);
+    });
+    beforeEach(() => {
+      previousId = unit.id();
+      unit = new _Xenon();
+      unit.newId();
+    });
+  });
   describe('when adding a page view', () => {
     let page = "test page";
     it('then has a journey with a page view', () => {

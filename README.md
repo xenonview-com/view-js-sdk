@@ -10,6 +10,7 @@ The Xenon View JavaScript SDK is the JavaScript SDK to interact with [XenonView]
 
 ## <a name="whats-new"></a>
 ## What's New
+* v0.0.24 - Regenerate Journey ID with newId function.
 * v0.0.23 - Fix types for platform methods.
 * v0.0.22 - Add types for platform methods.
 * v0.0.21 - Add new platform method.
@@ -168,17 +169,30 @@ import Xenon from 'xenon_view_sdk';
 
 // you can deanonymize before or after you have committed journey (in this case after):
 let person = {name:'JS Test', email:'jstest@example.com'};
-await Xenon.deanonymize();
+await Xenon.deanonymize(person);
+
+// you can also deanonymize with a user ID:
+let person = {
+  UUID: '<some unique ID>'
+}
+await Xenon.deanonymize(person);
 ```
 This deanonymizes every journey committed to a particular user.
+
+> **Note:** With journeys that span multiple platforms (eg. Website->Android->API backend), you can merge the journeys by deanonymizing on each platform.
 
 
 ### Journey IDs
 Each Journey has an ID akin to a session. After an Outcome occurs the ID remains the same to link all the Journeys. If you have a previous Journey in progress and would like to append to that, you can set the ID.
 
-*Note: For JavaScript, the Journey is a session persistent variable. If a previous browser session was created, the Journey ID will be reused.* 
+>**Note:** For JavaScript, the Journey ID is a session persistent variable. If a previous browser session was created, the Journey ID will be reused. 
 
-After you have initialized the View singleton, you can view or set the Journey (Session) ID:
+
+After you have initialized the Xenon singleton, you can:
+1. Use the default UUID
+2. Set the Journey (Session) ID
+3. Regenerate a new UUID
+
 ```javascript
 import Xenon from 'xenon_view_sdk';
 // by default has Journey id
@@ -189,13 +203,18 @@ expect(Xenon.id()).not.toEqual('');
 let testId = '<some random uuid>';
 Xenon.id(testId);
 expect(Xenon.id()).toEqual(testId);
+
+// lastly you can generate a new one (useful for serialized async operations that are for different customers)
+Xenon.newId();
+expect(Xenon.id()).not.toBeNull();
+expect(Xenon.id()).not.toEqual('');
 ```
 
 
 ### Error handling
 In the event of an API error when committing, the method returns a [promise](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise). 
 
-Note: The default handling of this situation will restore the journey (appending newly added pageViews, events, etc.) for future committing. If you want to do something special, you can do so like this:
+> **Note:** The default handling of this situation will restore the journey (appending newly added pageViews, events, etc.) for future committing. If you want to do something special, you can do so like this:
 
 ```javascript
 import Xenon from 'xenon_view_sdk';
