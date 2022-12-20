@@ -12,6 +12,7 @@ class deanonApi extends ApiBase {
   }
   params(data) {
     const {id, person, timestamp} = data;
+    if (!person) throw new Error("No person data received.")
     let params = {};
     params.uuid = id;
     params.person = person;

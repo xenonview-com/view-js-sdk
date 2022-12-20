@@ -23,4 +23,7 @@ describe('DeanonApi', () => {
       timestamp: jasmine.any(Number)
     });
   });
+  it('throws when no person', () => {
+    expect(subject.params(dataWithoutPerson)).toThrow()
+  });
 });
