@@ -8,12 +8,13 @@
  *
  */
 import JourneyApi from "./api/journey";
+import HeartbeatApi from "./api/heartbeat";
 import DeanonApi from "./api/deanonymize";
 import {resetLocal, resetSession, retrieveLocal, retrieveSession, storeLocal, storeSession} from "./storage/storage";
 
 export class _Xenon {
   constructor(apiKey, apiUrl = 'https://app.xenonview.com',
-              journeyApi = JourneyApi, deanonApi = DeanonApi) {
+              journeyApi = JourneyApi, deanonApi = DeanonApi, heartbeatApi = HeartbeatApi) {
     let discoveredId = this.id()
     if (!discoveredId || discoveredId === '') {
       storeSession('xenon-view', crypto.randomUUID())
@@ -25,6 +26,7 @@ export class _Xenon {
     this.restoreJourney = [];
     this.JourneyApi = journeyApi;
     this.DeanonApi = deanonApi;
+    this.HeartbeatApi = heartbeatApi;
     this.init(apiKey, apiUrl);
   }
 
@@ -466,6 +468,27 @@ export class _Xenon {
       });
   }
 
+  heartbeat() {
+    const platform = retrieveSession('view-platform');
+    const tags = retrieveSession('view-tags');
+    let params = {
+      data: {
+        id: this.id(),
+        journey: this.journey(),
+        token: this.apiKey,
+        platform: platform ? platform : {},
+        tags: tags ? tags : [],
+        timestamp: (new Date()).getTime() / 1000
+      }
+    };
+    this.reset();
+    return this.HeartbeatApi(this.apiUrl)
+      .fetch(params)
+      .catch((err) => {
+        this.restore();
+      });
+  }
+
   deanonymize(person) {
     let params = {
       data: {
@@ -505,11 +528,9 @@ export class _Xenon {
     content.timestamp = (new Date()).getTime() / 1000;
     if (journey && journey.length) {
       let last = journey[journey.length - 1];
-      console.log(last, content);
       if (this.isDuplicate(last, content)) {
         let count = last.hasOwnProperty('count') ? last.count : 1;
         last.count = count + 1;
-        console.log(last);
       } else {
         journey.push(content);
       }
@@ -523,7 +544,6 @@ export class _Xenon {
   isDuplicate(last, content) {
     const lastKeys = Object.keys(last);
     const contentKeys = Object.keys(content);
-    console.log(lastKeys, contentKeys);
     const isSuperset = (set, subset) => {
       for (const elem of subset) {
         if (!set.has(elem)) {
@@ -533,13 +553,10 @@ export class _Xenon {
       return true;
     }
     if (!isSuperset(new Set(lastKeys), new Set(contentKeys))) return false;
-    console.log('here1')
     if (!contentKeys.includes('category') || !lastKeys.includes('category')) return false;
-    console.log('here2')
     if (content.category !== last.category) return false;
     if (!contentKeys.includes('action') || !lastKeys.includes('action')) return false;
     if (content.action !== last.action) return false;
-    console.log("dup check")
     return (this.duplicateFeature(last, content, lastKeys, contentKeys) ||
       this.duplicateContent(last, content, lastKeys, contentKeys) ||
       this.duplicateMilestone(last, content, lastKeys, contentKeys));
@@ -547,12 +564,12 @@ export class _Xenon {
 
   duplicateFeature(last, content, lastKeys, contentKeys) {
     if (content.category !== 'Feature' || last.category !== 'Feature') return false;
-    console.log(content.name === last.name)
     return content.name === last.name;
   }
 
   duplicateContent(last, content, lastKeys, contentKeys) {
     if (content.category !== 'Content' || last.category !== 'Content') return false;
+    if (!contentKeys.includes('type') && !lastKeys.includes('type')) return true;
     if (content.type !== last.type) return false;
     if (!contentKeys.includes('identifier') && !lastKeys.includes('identifier')) return true;
     if (content.identifier !== last.identifier) return false;

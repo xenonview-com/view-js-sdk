@@ -24,6 +24,8 @@ describe('DeanonApi', () => {
     });
   });
   it('throws when no person', () => {
-    expect(subject.params(dataWithoutPerson)).toThrow()
+    expect(()=>subject.params(dataWithoutPerson)).toThrow(
+      new Error("No person data received.")
+    )
   });
 });

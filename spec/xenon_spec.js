@@ -19,6 +19,8 @@ describe('View SDK', () => {
   let JourneyApi = jasmine.createSpy('constructor').and.returnValue(journeyApi);
   let deanonApi = jasmine.createSpyObj('MyDeanonApi', ['fetch'])
   let DeanonApi = jasmine.createSpy('constructor').and.returnValue(deanonApi);
+  let heartbeatApi = jasmine.createSpyObj('MyHeartbeatApi', ['fetch'])
+  let HeartbeatApi = jasmine.createSpy('constructor').and.returnValue(heartbeatApi);
   let apiKey = '<token>';
   let apiUrl = 'https://localhost';
   // Platforming, Tagging and Init tests
@@ -1050,12 +1052,17 @@ describe('View SDK', () => {
   describe('duplicateContent', () => {
     describe('when content with no type', () => {
       it('then is not dup', () => {
-        expect(unit.duplicateContent({category: 'Content'}, {category: 'Content'})).toBeFalse();
+        const noType ={category: 'Content'};
+        const noTypeKey = []
+        expect(unit.duplicateContent(noType, noType, noTypeKey, noTypeKey)).toBeTrue();
       });
     });
     describe('when content with mismatch type', () => {
       it('then is not dup', () => {
-        expect(unit.duplicateContent({category: 'Content', type: '1'}, {category: 'Content', type: '2'})).toBeFalse();
+        const type1 ={category: 'Content', type: '1'};
+        const type2 ={category: 'Content', type: '2'};
+        const noTypeKey = ['type']
+        expect(unit.duplicateContent(type1, type2, noTypeKey, noTypeKey)).toBeFalse();
       });
     });
   });
@@ -1144,6 +1151,114 @@ describe('View SDK', () => {
       unit.featureAttempted(feature);
     });
   });
+  describe('when heartbeating', () => {
+    const feature = 'heartbeating';
+    describe('when default', () => {
+      it('then calls the view heartbeat API', () => {
+        expect(HeartbeatApi).toHaveBeenCalledWith(apiUrl);
+        expect(heartbeatApi.fetch).toHaveBeenCalledWith({
+          data: {
+            id: jasmine.any(String),
+            journey: [
+              {category: 'Feature', action: 'Attempted', name: feature, timestamp: jasmine.any(Number)}
+            ],
+            token: apiKey,
+            tags: [],
+            platform: {},
+            timestamp: jasmine.any(Number)
+          }
+        });
+      });
+      it('then resets journey', () => {
+        expect(unit.journey()).toEqual([]);
+      });
+      let resolvePromise = null;
+      let rejectPromise = null;
+      describe('when API fails', () => {
+        it('then restores journey', () => {
+          expect(unit.journey().length).toEqual(1);
+          const journey = unit.journey()[0];
+          expect(journey.name).toEqual(feature);
+        });
+        beforeEach(() => {
+          rejectPromise(new Error('failure'));
+          UnblockPromises();
+        });
+      });
+      beforeEach(() => {
+        let promise = new Promise(function (resolve, reject) {
+          resolvePromise = resolve;
+          rejectPromise = reject;
+        });
+        heartbeatApi.fetch.and.returnValue(promise);
+        unit.heartbeat();
+      });
+    });
+    describe('when tags', () => {
+      it('then calls the view heartbeat API', () => {
+        expect(HeartbeatApi).toHaveBeenCalledWith(apiUrl);
+        expect(heartbeatApi.fetch).toHaveBeenCalledWith({
+          data: {
+            id: jasmine.any(String),
+            journey: [
+              {category: 'Feature', action: 'Attempted', name: feature, timestamp: jasmine.any(Number)}
+            ],
+            token: apiKey,
+            tags: ['tag'],
+            platform: {},
+            timestamp: jasmine.any(Number)
+          }
+        });
+      });
+      let resolvePromise = null;
+      let rejectPromise = null;
+      beforeEach(() => {
+        let promise = new Promise(function (resolve, reject) {
+          resolvePromise = resolve;
+          rejectPromise = reject;
+        });
+        heartbeatApi.fetch.and.returnValue(promise);
+        unit.tag(['tag']);
+        unit.heartbeat();
+      });
+    });
+    describe('when platform', () => {
+      it('then calls the view heartbeat API', () => {
+        expect(HeartbeatApi).toHaveBeenCalledWith(apiUrl);
+        expect(heartbeatApi.fetch).toHaveBeenCalledWith({
+          data: {
+            id: jasmine.any(String),
+            journey: [
+              {category: 'Feature', action: 'Attempted', name: feature, timestamp: jasmine.any(Number)}
+            ],
+            token: apiKey,
+            tags: [],
+            platform: {
+              softwareVersion: 'a',
+              deviceModel: 'b',
+              operatingSystemName: 'c',
+              operatingSystemVersion: 'd'
+            },
+            timestamp: jasmine.any(Number)
+          }
+        });
+      });
+      let resolvePromise = null;
+      let rejectPromise = null;
+      beforeEach(() => {
+        let promise = new Promise(function (resolve, reject) {
+          resolvePromise = resolve;
+          rejectPromise = reject;
+        });
+        heartbeatApi.fetch.and.returnValue(promise);
+        unit.platform('a', 'b', 'c', 'd');
+        unit.heartbeat();
+      });
+    });
+    beforeEach(() => {
+      unit.featureAttempted(feature);
+    });
+  });
   describe('when deanonymizing', () => {
     let person = {name: 'Test User', email: 'test@example.com'};
     describe('when default', () => {
@@ -1189,8 +1304,8 @@ describe('View SDK', () => {
   beforeEach(() => {
     localStorage.clear();
     sessionStorage.clear();
-    unit = new _Xenon(apiKey, apiUrl, JourneyApi, DeanonApi);
-    unit2 = new _Xenon(apiKey, apiUrl, JourneyApi, DeanonApi);
+    unit = new _Xenon(apiKey, apiUrl, JourneyApi, DeanonApi, HeartbeatApi);
+    unit2 = new _Xenon(apiKey, apiUrl, JourneyApi, DeanonApi, HeartbeatApi);
   });
   afterEach(() => {
     unit = null;
