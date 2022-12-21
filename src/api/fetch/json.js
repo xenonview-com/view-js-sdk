@@ -1,4 +1,4 @@
-require('isomorphic-fetch');
+import 'isomorphic-fetch';
 
 async function checkStatus(response) {
   if (response.status >= 200 && response.status < 400) {

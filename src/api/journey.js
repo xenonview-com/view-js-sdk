@@ -1,4 +1,4 @@
-const ApiBase = require('./api_base').default;
+import ApiBase from './api_base';
 
 function journeyParams(data) {
   const {journey: journey} = data;
