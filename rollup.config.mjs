@@ -7,7 +7,6 @@ import path from 'path';
 
 export default {
   input: './index.js',
-  // input: path.resolve(__dirname, 'dist') + '/xenon_view_sdk.js',
   output: [
     {
       format: 'iife',

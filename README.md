@@ -34,6 +34,7 @@ The Xenon View JavaScript SDK is the JavaScript SDK to interact with [XenonView]
 * [License](#license)
 
 ## What's New <a id='whats-new'></a>
+* v0.1.1 - [Install](#installation-html) via HTML as plain JavaScript 
 * v0.1.0 - SDK redesign
 
 <br/>
@@ -222,6 +223,9 @@ It provides code examples for each of the calls.
 
 ### Installation <a id='installation'></a>
 
+<br/>
+
+#### Install React/Angular (or other JS framework): <a id='installation-framework'></a>
 You can install the Xenon View SDK from [npm](https://www.npmjs.com/package/xenon-view-sdk):
 
 Via npm:
@@ -238,15 +242,69 @@ yarn add xenon-view-sdk
 
 [back to top](#contents)
 
+<br/>
+
+#### Install with HTML: <a id='installation-html'></a>
+You can install the Xenon View SDK as plain JavaScript via HTML. Below are a couple examples. 
+More are provided for each function.
+```html
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <script src="https://cdn.jsdelivr.net/gh/xenonview-com/view-js-sdk@v0.1.1/dist/xenon_view_sdk.min.js"></script>
+  <script>
+    Xenon.init('<API KEY>')
+  </script>
+  <title>Sample</title>
+</head>
+<body>
+<script>
+  function exampleFeatureOccurred() {
+    Xenon.featureAttempted("Example Feature")
+    Xenon.commit()
+  }
+
+  function exampleReferralOutcomeOccurred() {
+    Xenon.referral("From Button")
+    Xenon.commit()
+  }
+</script>
+
+<button onclick="exampleFeatureOccurred()">Example Feature</button>
+<button onclick="exampleReferralOutcomeOccurred()">Example Referral Outcome</button>
+</body>
+</html>
+```
+
+
+<br/>
+
+[back to top](#contents)
+
 ### Instantiation <a id='instantiation'></a>
 
 The View SDK is a JS module you'll need to include in your application. After inclusion, you'll need to init the singleton object:
 
+###### Framework example:
 ```javascript
 import Xenon from 'xenon_view_sdk';
 
 // start by initializing Xenon View
 Xenon.init('<API KEY>');
+```
+###### HTML example:
+```html
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <script src="https://cdn.jsdelivr.net/gh/xenonview-com/view-js-sdk@v0.1.1/dist/xenon_view_sdk.min.js"></script>
+  <script>
+    Xenon.init('<API KEY>')
+  </script>
+  <title>Sample</title>
+</head>
 ```
 Of course, you'll have to make the following modifications to the above code:
 - Replace `<API KEY>` with your [api key](https://xenonview.com/api-get)
@@ -266,6 +324,8 @@ You can add a specifier string to the call to differentiate as follows:
 <br/>
 
 ##### ```leadCaptured()```
+
+###### Framework example:
 ```javascript
 import Xenon from 'xenon_view_sdk';
 
@@ -278,10 +338,25 @@ Xenon.leadCaptured(emailSpecified);
 // Successful Lead Capture of a phone number
 Xenon.leadCaptured(phoneSpecified);
 ```
+
+###### HTML example:
+```html
+<script>
+  const emailSpecified = 'Email'
+  function leadCapturedOccurred() {
+    Xenon.leadCaptured(emailSpecified)
+    Xenon.commit()
+  }
+</script>
+
+<button onclick="leadCapturedOccurred()">Lead Capture</button>
+```
+
 <br/>
 
 ##### ```leadCaptureDeclined()``` <a id='saas-lead-capture-fail'></a>
 > :memo: Note: You want to be consistent between success and failure and match the specifiers
+###### Framework example:
 ```javascript
 import Xenon from 'xenon_view_sdk';
 
@@ -295,6 +370,19 @@ Xenon.leadCaptureDeclined(emailSpecified);
 Xenon.leadCaptureDeclined(phoneSpecified);
 ```
 
+###### HTML example:
+```html
+<script>
+  const emailSpecified = 'Email'
+  function leadCaptureDeclinedOccurred() {
+    Xenon.leadCaptureDeclined(emailSpecified)
+    Xenon.commit()
+  }
+</script>
+
+<button onclick="leadCaptureDeclinedOccurred()">Lead Capture Declined</button>
+```
+
 <br/>
 
 #### Account Signup  <a id='saas-account-signup'></a>
@@ -304,6 +392,7 @@ You can add a specifier string to the call to differentiate as follows:
 <br/>
 
 ##### ```accountSignup()```
+###### Framework example:
 ```javascript
 import Xenon from 'xenon_view_sdk';
 
@@ -321,10 +410,24 @@ Xenon.accountSignup(viaGoogle);
 Xenon.accountSignup(viaEmail);
 ```
 
+###### HTML example:
+```html
+<script>
+  const viaFacebook = 'Facebook'
+  function accountSignupOccurred() {
+    Xenon.accountSignup(viaFacebook)
+    Xenon.commit()
+  }
+</script>
+
+<button onclick="accountSignupOccurred()">Account Signup</button>
+```
+
 <br/>
 
 ##### ```accountSignupDeclined()``` <a id='saas-account-signup-fail'></a>
 > :memo: Note: You want to be consistent between success and failure and match the specifiers
+###### Framework example:
 ```javascript
 import Xenon from 'xenon_view_sdk';
 
@@ -341,6 +444,18 @@ Xenon.accountSignupDeclined(viaGoogle);
 // Unsuccessful Account Signup with an Email
 Xenon.accountSignupDeclined(viaEmail);
 ```
+###### HTML example:
+```html
+<script>
+  const viaFacebook = 'Facebook'
+  function accountSignupDeclinedOccurred() {
+    Xenon.accountSignupDeclined(viaFacebook)
+    Xenon.commit()
+  }
+</script>
+
+<button onclick="accountSignupDeclinedOccurred()">Account Signup Decline</button>
+```
 
 <br/>
 
@@ -350,22 +465,46 @@ Use this call to track when customers install your application.
 <br/>
 
 ##### ```applicationInstalled()```
+###### Framework example:
 ```javascript
 import Xenon from 'xenon_view_sdk';
 
 // Successful Application Installation
 Xenon.applicationInstalled();
 ```
+###### HTML example:
+```html
+<script>
+  function applicationInstalledOccurred() {
+    Xenon.applicationInstalled()
+    Xenon.commit()
+  }
+</script>
+
+<button onclick="applicationInstalledOccurred()">Install Application</button>
+```
 
 <br/>
 
 ##### ```applicationNotInstalled()``` <a id='saas-application-install-fail'></a>
 > :memo: Note: You want consistency between success and failure.
+###### Framework example:
 ```javascript
 import Xenon from 'xenon_view_sdk';
 
 // Unsuccessful or not completed Application Installation
 Xenon.applicationNotInstalled();
+```
+###### HTML example:
+```html
+<script>
+  function applicationNotInstalledOccurred() {
+    Xenon.applicationNotInstalled()
+    Xenon.commit()
+  }
+</script>
+
+<button onclick="applicationNotInstalledOccurred()">Application Not Installed</button>
 ```
 
 <br/>
@@ -377,6 +516,7 @@ You can add a specifier string to the call to differentiate as follows:
 <br/>
 
 ##### ```initialSubscription()```
+###### Framework example:
 ```javascript
 import Xenon from 'xenon_view_sdk';
 
@@ -398,11 +538,25 @@ Xenon.initialSubscription(tierPlatium);
 // Successful subscription of an annual period
 Xenon.initialSubscription(annualSilver);
 ```
+###### HTML example:
+```html
+<script>
+  const annualSilver = 'Silver Annual'
+  const method = 'Stripe'
+  function initialSubscriptionOccurred() {
+    Xenon.initialSubscription(annualSilver, method)
+    Xenon.commit()
+  }
+</script>
+
+<button onclick="initialSubscriptionOccurred()">Subscribe</button>
+```
 
 <br/>
 
 ##### ```subscriptionDeclined()``` <a id='saas-initial-subscription-fail'></a>
 > :memo: Note: You want to be consistent between success and failure and match the specifiers
+###### Framework example:
 ```javascript
 import Xenon from 'xenon_view_sdk';
 
@@ -424,6 +578,19 @@ Xenon.subscriptionDeclined(tierPlatium);
 // Unsuccessful subscription of an annual period
 Xenon.subscriptionDeclined(annualSilver, method);
 ```
+###### HTML example:
+```html
+<script>
+  const annualSilver = 'Silver Annual'
+  const method = 'Stripe'
+  function subscriptionDeclinedOccurred() {
+    Xenon.subscriptionDeclined(annualSilver, method)
+    Xenon.commit()
+  }
+</script>
+
+<button onclick="subscriptionDeclinedOccurred()">Don't Subscribe</button>
+```
 
 <br/>
 
@@ -434,6 +601,7 @@ You can add a specifier string to the call to differentiate as follows:
 <br/>
 
 ##### ```subscriptionRenewed()```
+###### Framework example:
 ```javascript
 import Xenon from 'xenon_view_sdk';
 
@@ -455,11 +623,24 @@ Xenon.subscriptionRenewed(tierPlatium);
 // Successful renewal of an annual period
 Xenon.subscriptionRenewed(annualSilver);
 ```
+###### HTML example:
+```html
+<script>
+  const annualSilver = 'Silver Annual'
+  function subscriptionRenewedOccurred() {
+    Xenon.subscriptionRenewed(annualSilver)
+    Xenon.commit()
+  }
+</script>
+
+<button onclick="subscriptionRenewedOccurred()">Renew Subscription</button>
+```
 
 <br/>
 
 ##### ```subscriptionCanceled()``` <a id='saas-renewed-subscription-fail'></a>
 > :memo: Note: You want to be consistent between success and failure and match the specifiers
+###### Framework example:
 ```javascript
 import Xenon from 'xenon_view_sdk';
 
@@ -481,6 +662,18 @@ Xenon.subscriptionCanceled(tierPlatium);
 // Canceled subscription of an annual period with Stripe
 Xenon.subscriptionCanceled(annualSilver, method);
 ```
+###### HTML example:
+```html
+<script>
+  const annualSilver = 'Silver Annual'
+  function subscriptionCanceledOccurred() {
+    Xenon.subscriptionCanceled(annualSilver)
+    Xenon.commit()
+  }
+</script>
+
+<button onclick="subscriptionCanceledOccurred()">Cancel Subscription</button>
+```
 
 <br/>
 
@@ -491,6 +684,7 @@ You can add a specifier string to the call to differentiate as follows:
 <br/>
 
 ##### ```subscriptionUpsold()```
+###### Framework example:
 ```javascript
 import Xenon from 'xenon_view_sdk';
 
@@ -510,11 +704,24 @@ Xenon.subscriptionUpsold(tierPlatium);
 // Successful upsell of middle tier - annual period
 Xenon.subscriptionUpsold(annualGold);
 ```
+###### HTML example:
+```html
+<script>
+  const annualSilver = 'Silver Annual'
+  function subscriptionUpsoldOccurred() {
+    Xenon.subscriptionUpsold(annualSilver)
+    Xenon.commit()
+  }
+</script>
+
+<button onclick="subscriptionUpsoldOccurred()">Upsell Subscription</button>
+```
 
 <br/>
 
 ##### ```subscriptionUpsellDeclined()``` <a id='saas-upsell-subscription-fail'></a>
 > :memo: Note: You want to be consistent between success and failure and match the specifiers
+###### Framework example:
 ```javascript
 import Xenon from 'xenon_view_sdk';
 
@@ -534,6 +741,18 @@ Xenon.subscriptionUpsellDeclined(tierPlatium);
 // Rejected upsell of middle tier - annual period with Stripe
 Xenon.subscriptionUpsellDeclined(annualGold, method);
 ```
+###### HTML example:
+```html
+<script>
+  const annualSilver = 'Silver Annual'
+  function subscriptionUpsellDeclinedOccurred() {
+    Xenon.subscriptionUpsellDeclined(annualSilver)
+    Xenon.commit()
+  }
+</script>
+
+<button onclick="subscriptionUpsellDeclinedOccurred()">Decline Upsell</button>
+```
 
 <br/>
 
@@ -544,6 +763,7 @@ You can add a specifier string to the call to differentiate as follows:
 <br/>
 
 ##### ```referral()```
+###### Framework example:
 ```javascript
 import Xenon from 'xenon_view_sdk';
 
@@ -555,11 +775,24 @@ Xenon.referral(kind, detail);
 // -OR-
 Xenon.referral(kind);
 ```
+###### HTML example:
+```html
+<script>
+  const kind = 'Share'
+  function referralOccurred() {
+    Xenon.referral(kind)
+    Xenon.commit()
+  }
+</script>
+
+<button onclick="referralOccurred()">Referral</button>
+```
 
 <br/>
 
 ##### ```referralDeclined()``` <a id='saas-referral-fail'></a>
 > :memo: Note: You want to be consistent between success and failure and match the specifiers
+###### Framework example:
 ```javascript
 import Xenon from 'xenon_view_sdk';
 
@@ -570,6 +803,18 @@ const detail = 'Review'; // optional
 Xenon.referralDeclined(kind, detail);
 // -OR-
 Xenon.referralDeclined(kind);
+```
+###### HTML example:
+```html
+<script>
+  const kind = 'Share'
+  function referralDeclinedOccurred() {
+    Xenon.referralDeclined(kind)
+    Xenon.commit()
+  }
+</script>
+
+<button onclick="referralDeclinedOccurred()">Decline Referral</button>
 ```
 
 <br/>
@@ -588,6 +833,7 @@ You can add a specifier string to the call to differentiate as follows:
 <br/>
 
 ##### ```leadCaptured()```
+###### Framework example:
 ```javascript
 import Xenon from 'xenon_view_sdk';
 
@@ -600,11 +846,24 @@ Xenon.leadCaptured(emailSpecified);
 // Successful Lead Capture of a phone number
 Xenon.leadCaptured(phoneSpecified);
 ```
+###### HTML example:
+```html
+<script>
+  const emailSpecified = 'Email'
+  function leadCapturedOccurred() {
+    Xenon.leadCaptured(emailSpecified)
+    Xenon.commit()
+  }
+</script>
+
+<button onclick="leadCapturedOccurred()">Lead Capture</button>
+```
 
 <br/>
 
 ##### ```leadCaptureDeclined()``` <a id='ecom-lead-capture-fail'></a>
 > :memo: Note: You want to be consistent between success and failure and match the specifiers
+###### Framework example:
 ```javascript
 import Xenon from 'xenon_view_sdk';
 
@@ -617,6 +876,18 @@ Xenon.leadCaptureDeclined(emailSpecified);
 // Unsuccessful Lead Capture of a phone number
 Xenon.leadCaptureDeclined(phoneSpecified);
 ```
+###### HTML example:
+```html
+<script>
+  const emailSpecified = 'Email'
+  function leadCaptureDeclinedOccurred() {
+    Xenon.leadCaptureDeclined(emailSpecified)
+    Xenon.commit()
+  }
+</script>
+
+<button onclick="leadCaptureDeclinedOccurred()">Decline Lead Capture</button>
+```
 
 <br/>
 
@@ -627,6 +898,7 @@ You can add a specifier string to the call to differentiate as follows:
 <br/>
 
 ##### ```accountSignup()```
+###### Framework example:
 ```javascript
 import Xenon from 'xenon_view_sdk';
 
@@ -643,11 +915,24 @@ Xenon.accountSignup(viaGoogle);
 // Successful Account Signup with an Email
 Xenon.accountSignup(viaEmail);
 ```
+###### HTML example:
+```html
+<script>
+  const viaFacebook = 'Facebook'
+  function accountSignupOccurred() {
+    Xenon.accountSignup(viaFacebook)
+    Xenon.commit()
+  }
+</script>
+
+<button onclick="accountSignupOccurred()">Account Signup</button>
+```
 
 <br/>
 
 ##### ```accountSignupDeclined()``` <a id='ecom-account-signup-fail'></a>
 > :memo: Note: You want to be consistent between success and failure and match the specifiers
+###### Framework example:
 ```javascript
 import Xenon from 'xenon_view_sdk';
 
@@ -664,6 +949,18 @@ Xenon.accountSignupDeclined(viaGoogle);
 // Unsuccessful Account Signup with an Email
 Xenon.accountSignupDeclined(viaEmail);
 ```
+###### HTML example:
+```html
+<script>
+  const viaFacebook = 'Facebook'
+  function accountSignupDeclinedOccurred() {
+    Xenon.accountSignupDeclined(viaFacebook)
+    Xenon.commit()
+  }
+</script>
+
+<button onclick="accountSignupDeclinedOccurred()">Decline Account Signup</button>
+```
 
 <br/>
 
@@ -674,6 +971,7 @@ You can add a specifier string to the call to differentiate as follows:
 <br/>
 
 ##### ```productAddedToCart()```
+###### Framework example:
 ```javascript
 import Xenon from 'xenon_view_sdk';
 
@@ -686,11 +984,24 @@ Xenon.productAddedToCart(laptop);
 // Successful adds a keyboard to the cart
 Xenon.productAddedToCart(keyboard);
 ```
+###### HTML example:
+```html
+<script>
+  const laptop = 'Dell XPS'
+  function productAddedToCartOccurred() {
+    Xenon.productAddedToCart(laptop)
+    Xenon.commit()
+  }
+</script>
+
+<button onclick="productAddedToCartOccurred()">Add to cart</button>
+```
 
 <br/>
 
 ##### ```productNotAddedToCart()``` <a id='ecom-product-to-cart-fail'></a>
 > :memo: Note: You want to be consistent between success and failure and match the specifiers
+###### Framework example:
 ```javascript
 import Xenon from 'xenon_view_sdk';
 
@@ -703,6 +1014,18 @@ Xenon.productNotAddedToCart(laptop);
 // Doesn't add a keyboard to the cart
 Xenon.productNotAddedToCart(keyboard);
 ```
+###### HTML example:
+```html
+<script>
+  const laptop = 'Dell XPS'
+  function productNotAddedToCartOccurred() {
+    Xenon.productNotAddedToCart(laptop)
+    Xenon.commit()
+  }
+</script>
+
+<button onclick="productNotAddedToCartOccurred()">Remove from cart</button>
+```
 
 <br/>
 
@@ -713,6 +1036,7 @@ You can add a specifier string to the call to differentiate as follows:
 <br/>
 
 ##### ```upsold()```
+###### Framework example:
 ```javascript
 import Xenon from 'xenon_view_sdk';
 
@@ -725,11 +1049,24 @@ Xenon.upsold(laptop);
 // upsold a keyboard
 Xenon.upsold(keyboard);
 ```
+###### HTML example:
+```html
+<script>
+  const laptop = 'Dell XPS'
+  function upsoldOccurred() {
+    Xenon.upsold(laptop)
+    Xenon.commit()
+  }
+</script>
+
+<button onclick="upsoldOccurred()">Add extra item from cart</button>
+```
 
 <br/>
 
 ##### ```upsellDismissed()``` <a id='ecom-upsell-fail'></a>
 > :memo: Note: You want to be consistent between success and failure and match the specifiers
+###### Framework example:
 ```javascript
 import Xenon from 'xenon_view_sdk';
 
@@ -742,6 +1079,18 @@ Xenon.upsellDismissed(laptop);
 // Doesn't add a keyboard during upsell
 Xenon.upsellDismissed(keyboard);
 ```
+###### HTML example:
+```html
+<script>
+  const laptop = 'Dell XPS'
+  function upsellDismissedOccurred() {
+    Xenon.upsellDismissed(laptop)
+    Xenon.commit()
+  }
+</script>
+
+<button onclick="upsellDismissedOccurred()">Remove extra item from cart</button>
+```
 
 <br/>
 
@@ -751,16 +1100,29 @@ Use this call to track when your Customer is checking out.
 <br/>
 
 ##### ```checkedOut()```
+###### Framework example:
 ```javascript
 import Xenon from 'xenon_view_sdk';
 
 // Successful Checkout
 Xenon.checkedOut();
 ```
+###### HTML example:
+```html
+<script>
+  function checkedOutOccurred() {
+    Xenon.checkedOut()
+    Xenon.commit()
+  }
+</script>
+
+<button onclick="checkedOutOccurred()">Checkout</button>
+```
 
 <br/>
 
 ##### ```checkoutCanceled()``` <a id='ecom-checkout-fail'></a>
+###### Framework example:
 ```javascript
 import Xenon from 'xenon_view_sdk';
 
@@ -768,10 +1130,22 @@ import Xenon from 'xenon_view_sdk';
 Xenon.checkoutCanceled();
 
 ```
+###### HTML example:
+```html
+<script>
+  function checkoutCanceledOccurred() {
+    Xenon.checkoutCanceled()
+    Xenon.commit()
+  }
+</script>
+
+<button onclick="checkoutCanceledOccurred()">Cancel Checkout</button>
+```
 
 <br/>
 
 ##### ```productRemoved()``` <a id='ecom-checkout-remove'></a>
+###### Framework example:
 ```javascript
 import Xenon from 'xenon_view_sdk';
 
@@ -784,6 +1158,18 @@ Xenon.productRemoved(laptop);
 // Removes a keyboard during checkout
 Xenon.productRemoved(keyboard);
 ```
+###### HTML example:
+```html
+<script>
+  const laptop = 'Dell XPS'
+  function productRemovedOccurred() {
+    Xenon.productRemoved(laptop)
+    Xenon.commit()
+  }
+</script>
+
+<button onclick="productRemovedOccurred()">Remove product</button>
+```
 
 <br/>
 
@@ -793,6 +1179,7 @@ Use this call to track when your Customer completes a purchase.
 <br/>
 
 ##### ```purchased()```
+###### Framework example:
 ```javascript
 import Xenon from 'xenon_view_sdk';
 
@@ -801,10 +1188,23 @@ const method = 'Stripe';
 // Successful Purchase
 Xenon.purchased(method);
 ```
+###### HTML example:
+```html
+<script>
+  const method = 'Stripe'
+  function purchasedOccurred() {
+    Xenon.purchased(method)
+    Xenon.commit()
+  }
+</script>
+
+<button onclick="purchasedOccurred()">Purchase</button>
+```
 
 <br/>
 
 ##### ```purchaseCanceled()``` <a id='ecom-purchase-fail'></a>
+###### Framework example:
 ```javascript
 import Xenon from 'xenon_view_sdk';
 
@@ -816,6 +1216,18 @@ Xenon.purchaseCanceled();
 Xenon.purchaseCanceled(method);
 
 ```
+###### HTML example:
+```html
+<script>
+  const method = 'Stripe'
+  function purchaseCanceledOccurred() {
+    Xenon.purchaseCanceled(method)
+    Xenon.commit()
+  }
+</script>
+
+<button onclick="purchaseCanceledOccurred()">Cancel Purchase</button>
+```
 
 <br/>
 
@@ -825,21 +1237,45 @@ Use this call to track when your Customer receives a purchase.
 <br/>
 
 ##### ```promiseFulfilled()```
+###### Framework example:
 ```javascript
 import Xenon from 'xenon_view_sdk';
 
 // Successfully Delivered Purchase
 Xenon.promiseFulfilled();
 ```
+###### HTML example:
+```html
+<script>
+  function promiseFulfilledOccurred() {
+    Xenon.promiseFulfilled()
+    Xenon.commit()
+  }
+</script>
+
+<button onclick="promiseFulfilledOccurred()">Product Delivered</button>
+```
 
 <br/>
 
 ##### ```promiseUnfulfilled(()``` <a id='ecom-promise-fulfillment-fail'></a>
+###### Framework example:
 ```javascript
 import Xenon from 'xenon_view_sdk';
 
 // Problem Occurs During Shipping And No Delivery
 Xenon.promiseUnfulfilled();
+```
+###### HTML example:
+```html
+<script>
+  function promiseUnfulfilledOccurred() {
+    Xenon.promiseUnfulfilled()
+    Xenon.commit()
+  }
+</script>
+
+<button onclick="promiseUnfulfilledOccurred()">Product Delivery Failed</button>
 ```
 
 <br/>
@@ -851,6 +1287,7 @@ You can add a specifier string to the call to differentiate as follows:
 <br/>
 
 ##### ```productKept()```
+###### Framework example:
 ```javascript
 import Xenon from 'xenon_view_sdk';
 
@@ -863,11 +1300,24 @@ Xenon.productKept(laptop);
 //Customer keeps a keyboard
 Xenon.productKept(keyboard);
 ```
+###### HTML example:
+```html
+<script>
+  const laptop = 'Dell XPS'
+  function productKeptOccurred() {
+    Xenon.productKept(laptop)
+    Xenon.commit()
+  }
+</script>
+
+<button onclick="productKeptOccurred()">Product Kept</button>
+```
 
 <br/>
 
 ##### ```productReturned()``` <a id='ecom-product-outcome-fail'></a>
 > :memo: Note: You want to be consistent between success and failure and match the specifiers
+###### Framework example:
 ```javascript
 import Xenon from 'xenon_view_sdk';
 
@@ -880,6 +1330,18 @@ Xenon.productReturned(laptop);
 //Customer returns a keyboard
 Xenon.productReturned(keyboard);
 ```
+###### HTML example:
+```html
+<script>
+  const laptop = 'Dell XPS'
+  function productReturnedOccurred() {
+    Xenon.productReturned(laptop)
+    Xenon.commit()
+  }
+</script>
+
+<button onclick="productReturnedOccurred()">Product Returned</button>
+```
 
 <br/>
 
@@ -890,6 +1352,7 @@ You can add a specifier string to the call to differentiate as follows:
 <br/>
 
 ##### ```referral()```
+###### Framework example:
 ```javascript
 import Xenon from 'xenon_view_sdk';
 
@@ -899,11 +1362,25 @@ const detail = 'Dell XPS';
 // Successful referral by sharing a laptop
 Xenon.referral(kind, detail);
 ```
+###### HTML example:
+```html
+<script>
+  const kind = 'Share Product'
+  const detail = 'Dell XPS'
+  function referralOccurred() {
+    Xenon.referral(kind, detail)
+    Xenon.commit()
+  }
+</script>
+
+<button onclick="referralOccurred()">Share Product</button>
+```
 
 <br/>
 
 ##### ```referralDeclined()``` <a id='ecom-referral-fail'></a>
 > :memo: Note: You want to be consistent between success and failure and match the specifiers
+###### Framework example:
 ```javascript
 import Xenon from 'xenon_view_sdk';
 
@@ -912,6 +1389,19 @@ const detail = 'Dell XPS';
 
 //Customer declined referral 
 Xenon.referralDeclined(kind, detail);
+```
+###### HTML example:
+```html
+<script>
+  const kind = 'Share Product'
+  const detail = 'Dell XPS'
+  function referralDeclinedOccurred() {
+    Xenon.referralDeclined(kind, detail)
+    Xenon.commit()
+  }
+</script>
+
+<button onclick="referralDeclinedOccurred()">Decline Sharing Product</button>
 ```
 
 <br/>
@@ -938,6 +1428,7 @@ They differentiate your offering in the market. Typically, they are made up of a
 
 ##### ```featureAttempted()``` <a id='feature-started'></a>
 Use this function to indicate the start of feature usage.
+###### Framework example:
 ```javascript
 import Xenon from 'xenon_view_sdk';
 
@@ -949,11 +1440,25 @@ Xenon.featureAttempted(name, detail);
 // -OR-
 Xenon.featureAttempted(name);
 ```
+###### HTML example:
+```html
+<script>
+  const name = 'Scale Recipe'
+  const detail = 'x2'
+  function featureAttemptedOccurred() {
+    Xenon.featureAttempted(name, detail)
+    Xenon.commit()
+  }
+</script>
+
+<button onclick="featureAttemptedOccurred()">Feature Scale Recipe</button>
+```
 
 <br/>
 
 ##### ```featureCompleted()``` <a id='feature-complete'></a>
 Use this function to indicate the successful completion of the feature.
+###### Framework example:
 ```javascript
 import Xenon from 'xenon_view_sdk';
 
@@ -976,11 +1481,25 @@ Xenon.featureCompleted(name, detail);
 // -OR-
 Xenon.featureCompleted(name);
 ```
+###### HTML example:
+```html
+<script>
+  const name = 'Scale Recipe'
+  const detail = 'x2'
+  function featureCompletedOccurred() {
+    Xenon.featureCompleted(name, detail)
+    Xenon.commit()
+  }
+</script>
+
+<button onclick="featureCompletedOccurred()">Feature Scale Recipe Complete</button>
+```
 
 <br/>
 
 ##### ```featureFailed()``` <a id='feature-failed'></a>
 Use this function to indicate the unsuccessful completion of a feature being used (often in the exception handler).
+###### Framework example:
 ```javascript
 import Xenon from 'xenon_view_sdk';
 
@@ -1001,6 +1520,19 @@ catch(err) {
   Xenon.featureFailed(name);
 }
 
+```
+###### HTML example:
+```html
+<script>
+  const name = 'Scale Recipe'
+  const detail = 'x2'
+  function featureFailedOccurred() {
+    Xenon.featureFailed(name, detail)
+    Xenon.commit()
+  }
+</script>
+
+<button onclick="featureFailedOccurred()">Feature Failed</button>
 ```
 
 <br/>
@@ -1026,6 +1558,7 @@ Typical examples:
 
 ##### ```contentViewed()``` <a id='content-viewed'></a>
 Use this function to indicate a view of specific content.
+###### Framework example:
 ```javascript
 import Xenon from 'xenon_view_sdk';
 
@@ -1037,11 +1570,25 @@ Xenon.contentViewed(contentType, identifier);
 // -OR-
 Xenon.contentViewed(contentType);
 ```
+###### HTML example:
+```html
+<script>
+  const contentType = 'Blog Post'
+  const identifier = 'how-to-install-xenon-view'
+  function contentViewedOccurred() {
+    Xenon.contentViewed(contentType, identifier)
+    Xenon.commit()
+  }
+</script>
+
+<button onclick="contentViewedOccurred()">Content Viewed</button>
+```
 
 <br/>
 
 ##### ```contentEdited()``` <a id='content-edited'></a>
 Use this function to indicate the editing of specific content.
+###### Framework example:
 ```javascript
 import Xenon from 'xenon_view_sdk';
 
@@ -1056,11 +1603,24 @@ Xenon.contentEdited(contentType, identifier);
 // -OR-
 Xenon.contentEdited(contentType);
 ```
+###### HTML example:
+```html
+<script>
+  const contentType = 'Blog Post'
+  function contentEditedOccurred() {
+    Xenon.contentEdited(contentType)
+    Xenon.commit()
+  }
+</script>
+
+<button onclick="contentEditedOccurred()">Content Edited</button>
+```
 
 <br/>
 
 ##### ```contentCreated()``` <a id='content-created'></a>
 Use this function to indicate the creation of specific content.
+###### Framework example:
 ```javascript
 import Xenon from 'xenon_view_sdk';
 
@@ -1072,11 +1632,24 @@ Xenon.contentCreated(contentType, identifier);
 // -OR- 
 Xenon.contentCreated(contentType);
 ```
+###### HTML example:
+```html
+<script>
+  const contentType = 'Blog Post'
+  function contentCreatedOccurred() {
+    Xenon.contentCreated(contentType)
+    Xenon.commit()
+  }
+</script>
+
+<button onclick="contentCreatedOccurred()">Content Created</button>
+```
 
 <br/>
 
 ##### ```contentDeleted()``` <a id='content-deleted'></a>
 Use this function to indicate the deletion of specific content.
+###### Framework example:
 ```javascript
 import Xenon from 'xenon_view_sdk';
 
@@ -1088,11 +1661,24 @@ Xenon.contentDeleted(contentType, identifier);
 // -OR- 
 Xenon.contentDeleted(contentType);
 ```
+###### HTML example:
+```html
+<script>
+  const contentType = 'Blog Post'
+  function contentDeletedOccurred() {
+    Xenon.contentDeleted(contentType)
+    Xenon.commit()
+  }
+</script>
+
+<button onclick="contentDeletedOccurred()">Content Created</button>
+```
 
 <br/>
 
 ##### ```contentRequested()``` <a id='content-requested'></a>
 Use this function to indicate the request for specific content.
+###### Framework example:
 ```javascript
 import Xenon from 'xenon_view_sdk';
 
@@ -1104,11 +1690,24 @@ Xenon.contentRequested(contentType, identifier);
 // -OR- 
 Xenon.contentRequested(contentType);
 ```
+###### HTML example:
+```html
+<script>
+  const contentType = 'Blog Post'
+  function contentRequestedOccurred() {
+    Xenon.contentRequested(contentType)
+    Xenon.commit()
+  }
+</script>
+
+<button onclick="contentRequestedOccurred()">Content Requested</button>
+```
 
 <br/>
 
 ##### ```contentSearched()``` <a id='content-searched'></a>
 Use this function to indicate when a user searches.
+###### Framework example:
 ```javascript
 import Xenon from 'xenon_view_sdk';
 
@@ -1116,6 +1715,18 @@ const contentType = 'Info Product';
 
 // Customer searched for some content
 Xenon.contentSearched(contentType);
+```
+###### HTML example:
+```html
+<script>
+  const contentType = 'Blog Post'
+  function contentSearchedOccurred() {
+    Xenon.contentSearched(contentType)
+    Xenon.commit()
+  }
+</script>
+
+<button onclick="contentSearchedOccurred()">Search</button>
 ```
 
 <br/>
@@ -1131,11 +1742,24 @@ After you have created (by either calling a milestone or outcome) a customer jou
 <br/>
 
 #### `commit()`
+###### Framework example:
 ```javascript
 import Xenon from 'xenon_view_sdk';
 
 // you can commit a journey to Xenon View
 await Xenon.commit();
+```
+###### HTML example:
+```html
+<script>
+  const contentType = 'Blog Post'
+  function contentSearchedOccurred() {
+    Xenon.contentSearched(contentType)
+    Xenon.commit()
+  }
+</script>
+
+<button onclick="contentSearchedOccurred()">Search</button>
 ```
 This call commits a customer journey to Xenon View for analysis.
 
@@ -1157,12 +1781,26 @@ Usage is as follows:
 <br/>
 
 #### `heartbeat()`
+###### Framework example:
 ```javascript
 import Xenon from 'xenon_view_sdk';
 
 // you can heartbeat to Xenon View
 await Xenon.heartbeat();
 ```
+###### HTML example:
+```html
+<script>
+  const contentType = 'Blog Post'
+  function contentSearchedOccurred() {
+    Xenon.contentSearched(contentType)
+    Xenon.heartbeat()
+  }
+</script>
+
+<button onclick="contentSearchedOccurred()">Search</button>
+```
+
 This call commits any uncommitted journeys to Xenon View for analysis and updates the last accessed time.
 
 
@@ -1182,6 +1820,7 @@ After you have initialized Xenon View, you can optionally specify platform detai
 <br/>
 
 #### `platform()`
+###### Framework example:
 ```javascript
 import Xenon from 'xenon_view_sdk';
 
@@ -1194,6 +1833,7 @@ const operatingSystemName = 'Android';
 Xenon.platform(softwareVersion, deviceModel, operatingSystemName, operatingSystemVersion);
 ```
 This adds platform details for each outcome ([Saas](#saas)/[Ecom](#ecom)). Typically, this would be set once at initialization:
+###### Framework example:
 ```javascript
 import Xenon from 'xenon_view_sdk';
 
@@ -1205,6 +1845,25 @@ const operatingSystemVersion = '12.0';
 const operatingSystemName = 'Android';
 Xenon.platform(softwareVersion, deviceModel, operatingSystemName, operatingSystemVersion);
 ```
+###### HTML example:
+```html
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <script src="https://cdn.jsdelivr.net/gh/xenonview-com/view-js-sdk@v0.1.1/dist/xenon_view_sdk.min.js"></script>
+  <script>
+    Xenon.init('<API KEY>')
+    const softwareVersion = '5.1.5'
+    const deviceModel = 'Chrome'
+    const operatingSystemVersion = '12.0'
+    const operatingSystemName = 'Linux'
+    Xenon.platform(softwareVersion, deviceModel, operatingSystemName, operatingSystemVersion)
+  </script>
+  <title>Sample</title>
+</head>
+```
+
 <br/>
 
 [back to top](#contents)
@@ -1219,6 +1878,7 @@ Tagging helps when running experiments such as A/B testing.
 <br/>
 
 #### `tag()`
+###### Framework example:
 ```javascript
 import Xenon from 'xenon_view_sdk';
 
@@ -1226,6 +1886,21 @@ const tag = 'subscription-variant-A';
 
 // you can add tag details to outcomes
 Xenon.tag([tag]);
+```
+###### HTML example:
+```html
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <script src="https://cdn.jsdelivr.net/gh/xenonview-com/view-js-sdk@v0.1.1/dist/xenon_view_sdk.min.js"></script>
+  <script>
+    Xenon.init('<API KEY>')
+    const tag = 'subscription-variant-A'
+    Xenon.tag([tag])
+  </script>
+  <title>Sample</title>
+</head>
 ```
 This adds tags to each outcome ([Saas](#saas)/[Ecom](#ecom)).
 Typically, you would Tag once you know the active experiment for this Customer:
@@ -1236,6 +1911,7 @@ Xenon.init('<API KEY>');
 let experimentTag = getExperiment();
 Xenon.tag([experimentTag]);
 ```
+
 <br/>
 
 #### `untag()`
@@ -1245,6 +1921,7 @@ import Xenon from 'xenon_view_sdk';
 // you can clear all tags with the untag method
 Xenon.untag();
 ```
+
 <br/>
 
 [back to top](#contents)
@@ -1271,6 +1948,7 @@ Usage is as follows:
 <br/>
 
 #### `deanonymize()`
+###### Framework example:
 ```javascript
 import Xenon from 'xenon_view_sdk';
 
@@ -1286,6 +1964,19 @@ let person = {
   UUID: '<some unique ID>'
 }
 await Xenon.deanonymize(person);
+```
+###### HTML example:
+```html
+<script>
+  let person = {
+    name:'JS Test',
+    email:'jstest@example.com'}
+  function personDetailsAvailable() {
+    Xenon.deanonymize(person)
+  }
+</script>
+
+<button onclick="personDetailsAvailable()">Submit User Details</button>
 ```
 This call deanonymizes every journey committed to a particular user.
 
@@ -1308,6 +1999,7 @@ In the event of an API error when committing, the method returns a [promise](htt
 
 > **:memo: Note:** The default handling of this situation will restore the journey (appending newly added pageViews, events, etc.) for future committing. If you want to do something special, you can do so like this:
 
+###### Framework example:
 ```javascript
 import Xenon from 'xenon_view_sdk';
 
@@ -1327,6 +2019,7 @@ You can add custom milestones if you need more than the current Customer Journey
 <br/>
 
 ##### `milestone()`
+###### Framework example:
 ```javascript
 import Xenon from 'xenon_view_sdk';
 
@@ -1336,6 +2029,21 @@ let operation = 'Called';
 let name = 'Query Database';
 let detail = 'User Lookup';
 Xenon.milestone(category, operation, name, detail);
+```
+###### HTML example:
+```html
+<script>
+  let category = 'Function'
+  let operation = 'Called'
+  let name = 'Query Database'
+  let detail = 'User Lookup'
+  function customMilestoneOccurred() {
+    Xenon.milestone(category, operation, name, detail)
+    Xenon.commit()
+  }
+</script>
+
+<button onclick="customMilestoneOccurred()">Custom Milestone</button>
 ```
 This call adds a custom milestone to the customer journey.
 
@@ -1359,6 +2067,7 @@ After you have initialized the Xenon singleton, you can:
 <br/>
 
 ##### `id()`
+###### Framework example:
 ```javascript
 import Xenon from 'xenon_view_sdk';
 // by default has Journey ID
