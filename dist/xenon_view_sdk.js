@@ -1065,7 +1065,7 @@ var Xenon = (function () {
     checkoutCanceled() {
       const content = {
         superOutcome: 'Customer Checkout',
-        outcome: 'Checkout Canceled',
+        outcome: 'Canceled',
         result: 'fail'
       };
       this.outcomeAdd(content);
