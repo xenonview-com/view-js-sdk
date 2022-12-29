@@ -482,7 +482,7 @@ describe('View SDK', () => {
     it('then creates journey with outcome', () => {
       const journey = unit.journey()[0];
       expect(journey.superOutcome).toEqual('Customer Checkout');
-      expect(journey.outcome).toEqual('Checkout Canceled');
+      expect(journey.outcome).toEqual('Canceled');
       expect(journey.result).toEqual('fail');
     });
     beforeEach(() => {

@@ -34,6 +34,7 @@ The Xenon View JavaScript SDK is the JavaScript SDK to interact with [XenonView]
 * [License](#license)
 
 ## What's New <a id='whats-new'></a>
+* v0.1.2 - typo fixed
 * v0.1.1 - [Install](#installation-html) via HTML as plain JavaScript 
 * v0.1.0 - SDK redesign
 
@@ -252,7 +253,7 @@ More are provided for each function.
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <script src="https://cdn.jsdelivr.net/gh/xenonview-com/view-js-sdk@v0.1.1/dist/xenon_view_sdk.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/gh/xenonview-com/view-js-sdk@v0.1.2/dist/xenon_view_sdk.min.js"></script>
   <script>
     Xenon.init('<API KEY>')
   </script>
@@ -299,7 +300,7 @@ Xenon.init('<API KEY>');
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <script src="https://cdn.jsdelivr.net/gh/xenonview-com/view-js-sdk@v0.1.1/dist/xenon_view_sdk.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/gh/xenonview-com/view-js-sdk@v0.1.2/dist/xenon_view_sdk.min.js"></script>
   <script>
     Xenon.init('<API KEY>')
   </script>
@@ -1851,7 +1852,7 @@ Xenon.platform(softwareVersion, deviceModel, operatingSystemName, operatingSyste
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <script src="https://cdn.jsdelivr.net/gh/xenonview-com/view-js-sdk@v0.1.1/dist/xenon_view_sdk.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/gh/xenonview-com/view-js-sdk@v0.1.2/dist/xenon_view_sdk.min.js"></script>
   <script>
     Xenon.init('<API KEY>')
     const softwareVersion = '5.1.5'
@@ -1893,7 +1894,7 @@ Xenon.tag([tag]);
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <script src="https://cdn.jsdelivr.net/gh/xenonview-com/view-js-sdk@v0.1.1/dist/xenon_view_sdk.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/gh/xenonview-com/view-js-sdk@v0.1.2/dist/xenon_view_sdk.min.js"></script>
   <script>
     Xenon.init('<API KEY>')
     const tag = 'subscription-variant-A'
