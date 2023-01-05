@@ -8,12 +8,14 @@ The Xenon View JavaScript SDK is the JavaScript SDK to interact with [XenonView]
 * [Steps To Get Started](#getting-started)
   * [Identify Business Outcomes](#step-1)
   * [Identify Customer Journey Milestones](#step-2)
-  * [Installation](#step-3)
-  * [Instrument Business Outcomes](#step-4)
-  * [Instrument Customer Journey Milestones](#step-5)
-  * [Determine Commit Points](#step-6)
-  * [(Optional) Group Customer Journeys](#step-7)
-  * [Analysis](#step-8)
+  * [Enumerate Technical Stack](#step-3)
+  * [Installation](#step-4)
+  * [Instrument Business Outcomes](#step-5)
+  * [Instrument Customer Journey Milestones](#step-6)
+  * [Determine Commit Points](#step-7)
+  * [(Optional) Group Customer Journeys](#step-8)
+  * [Analysis](#step-9)
+  * [Perform Experiments](#step-10)
 * [Detailed Usage](#detailed-usage)
   * [Installation](#installation)
   * [Initialization](#instantiation)
@@ -33,7 +35,10 @@ The Xenon View JavaScript SDK is the JavaScript SDK to interact with [XenonView]
     * [(Optional) Journey Identification](#cuuid)
 * [License](#license)
 
+<br/>
+
 ## What's New <a id='whats-new'></a>
+* v0.1.2 - Readme update
 * v0.1.2 - typo fixed
 * v0.1.1 - [Install](#installation-html) via HTML as plain JavaScript 
 * v0.1.0 - SDK redesign
@@ -111,7 +116,31 @@ For each Business Outcome, identify potential customer journey milestones leadin
 
 <br/>
 
-### Step 3 - Installation <a id='step-3'></a>
+### Step 3 - Enumerate Technical Stack <a id='step-3'></a>
+
+Next, you will want to figure out which SDK to use. We have some of the most popular languages covered.
+
+Start by listing the technologies involved and what languages your company uses. For example:
+1. Front end - UI (Javascript - react)
+2. Back end - API server (Java)
+3. Mobile app - iPhone (Swift)
+4. Mobile app - Android (Android Java)
+
+Next, figure out how your outcomes spread across those technologies. Below are pointers to our currently supported languages:
+* [React](https://github.com/xenonview-com/view-js-sdk)
+* [Angular](https://github.com/xenonview-com/view-js-sdk)
+* [HTML](https://github.com/xenonview-com/view-js-sdk)
+* [Plain JavaScript](https://github.com/xenonview-com/view-js-sdk)
+* [iPhone/iPad](https://github.com/xenonview-com/view-swift-sdk)
+* [Mac](https://github.com/xenonview-com/view-swift-sdk)
+* [Java](https://github.com/xenonview-com/view-java-sdk)
+* [Android Java](https://github.com/xenonview-com/view-java-sdk)
+* [Python](https://github.com/xenonview-com/view-python-sdk)
+
+Finally, continue the steps below for each technology and outcome.
+
+
+### Step 4 - Installation <a id='step-4'></a>
 
 After you have done the prework of [Step 1](#step-1) and [Step 2](#step-2), you are ready to [install Xenon View](#installation).
 Once installed, you'll need to [initialize the SDK](#instantiation) and get started instrumenting.
@@ -121,7 +150,7 @@ Once installed, you'll need to [initialize the SDK](#instantiation) and get star
 <br/>
 
 
-### Step 4 - Instrument Business Outcomes <a id='step-4'></a>
+### Step 5 - Instrument Business Outcomes <a id='step-5'></a>
 
 We have provided several SDK calls to shortcut your instrumentation and map to the outcomes identified in [Step 1](#step-1).  
 These calls will roll up into the associated Categories during analysis. These rollups allow you to view each Category in totality.
@@ -156,7 +185,7 @@ As you view the categories, you can quickly identify issues (for example, if the
 
 <br/>
 
-### Step 5 - Instrument Customer Journey Milestones <a id='step-5'></a>
+### Step 6 - Instrument Customer Journey Milestones <a id='step-6'></a>
 
 Next, you will want to instrument your website/application/backend/service for the identified Customer Journey Milestones [Step 2](#step-2).
 We have provided several SDK calls to shortcut your instrumentation here as well.  
@@ -180,7 +209,7 @@ Milestones break down into two types (click on a call to see usage):
 
 <br/>
 
-### Step 6 - Commit Points <a id='step-6'></a>
+### Step 7 - Commit Points <a id='step-7'></a>
 
 
 Once instrumented, you'll want to select appropriate [commit points](#commit). Committing will initiate the analysis on your behalf by Xenon View.
@@ -188,7 +217,7 @@ Once instrumented, you'll want to select appropriate [commit points](#commit). C
 <br/>
 <br/>
 
-### Step 7 (Optional) - Group Customer Journeys <a id='step-7'></a>
+### Step 8 (Optional) - Group Customer Journeys <a id='step-8'></a>
 
 All the customer journeys (milestones and outcomes) are anonymous by default.
 For example, if a Customer interacts with your brand in the following way:
@@ -205,10 +234,37 @@ Deanonymizing is optional. Basic matching of the customer journey with outcomes 
 
 <br/>
 
-### Step 8 - Analysis <a id='step-8'></a>
+### Step 9 - Analysis <a id='step-9'></a>
 
 
 Once you have released your instrumented code, you can head to [XenonView](https://xenonview.com/) to view the analytics.
+
+<br/>
+
+### Step 10 - Perform Experiments <a id='step-10'></a>
+
+There are multiple ways you can experiment using XenonView. We'll focus here on three of the most common: time, platform, and tag based cohorts.
+
+#### Time-based cohorts
+Each Outcome and Milestone is timestamped. You can use this during the analysis phase to compare timeframes. A typical example is making a feature change.
+Knowing when the feature went to production, you can filter in the XenonView UI based on the timeframe before and the timeframe after to observe the results.
+
+#### Tag-based cohorts
+You can [tag](#tagging) any journey collection before collecting data. This will allow you to run A/B testing-type experiments (of course not limited to two).
+As an example, let's say you have two alternate content/feature flows and you have a way to direct half of the users to Flow A and the other half to Flow B.
+You can tag each flow before the section of code that performs that flow. After collecting the data, you can filter in the XenonView UI based on each tag to
+observe the results.
+
+#### Platform-based cohorts
+You can [Platform](#platforming) any journey collection before collecting data. This will allow you to experiment against different platforms:
+* Operating System Name
+* Operating System version
+* Device model (Pixel, iPhone 14, Docker Container, Linux VM, Dell Server, etc.)
+* A software version of your application.
+
+As an example, let's say you have an iPhone and Android mobile application and you want to see if an outcome is more successful on one device verse the other.
+You can platform before the section of code that performs that flow. After collecting the data, you can filter in the XenonView UI based on each platform to
+observe the results.
 
 <br/>
 <br/>
