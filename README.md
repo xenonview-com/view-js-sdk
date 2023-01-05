@@ -38,7 +38,7 @@ The Xenon View JavaScript SDK is the JavaScript SDK to interact with [XenonView]
 <br/>
 
 ## What's New <a id='whats-new'></a>
-* v0.1.2 - Readme update
+* v0.1.3 - Readme update
 * v0.1.2 - typo fixed
 * v0.1.1 - [Install](#installation-html) via HTML as plain JavaScript 
 * v0.1.0 - SDK redesign
