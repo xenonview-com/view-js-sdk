@@ -115,8 +115,8 @@ describe('View SDK', () => {
     });
     beforeEach(() => {
       const tags = ['tag']
-      unit.tag(tags)
-      unit.untag()
+      unit.variant(tags)
+      unit.resetVariants()
       unit.applicationInstalled()
     });
   });
@@ -127,8 +127,11 @@ describe('View SDK', () => {
     });
     beforeEach(() => {
       const tags = ['tag']
-      unit.tag(tags)
+      unit.variant(tags)
       unit.applicationInstalled()
+    });
+    afterEach(() => {
+      unit.resetVariants()
     });
   });
   // Stock Business Outcomes tests
@@ -1218,7 +1221,7 @@ describe('View SDK', () => {
           rejectPromise = reject;
         });
         heartbeatApi.fetch.and.returnValue(promise);
-        unit.tag(['tag']);
+        unit.variant(['tag']);
         unit.heartbeat();
       });
     });

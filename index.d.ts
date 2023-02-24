@@ -3,8 +3,8 @@ declare module 'xenon-view-sdk' {
         init: (apiKey: string, apiUrl?: string) => void;
         platform: (softwareVersion: string, deviceModel: string, operatingSystemName: string, operatingSystemVersion: string) => void;
         removePlatform: () => void;
-        tag: (tags: Array<string>) => void;
-        untag: () => void;
+        variant: (variantNames: Array<string>) => void;
+        resetVariants: () => void;
         // Stock Business Outcomes:
         leadCaptured: (specifier: string) => void;
         leadCaptureDeclined: (specifier: string) => void;

@@ -857,11 +857,11 @@ var Xenon = (function () {
       resetSession('view-platform');
     }
 
-    tag(tags) {
-      storeSession('view-tags', tags);
+    variant(variantNames) {
+      storeSession('view-tags', variantNames);
     }
 
-    untag() {
+    resetVariants() {
       resetSession('view-tags');
     }
 

@@ -49,11 +49,11 @@ export class _Xenon {
     resetSession('view-platform')
   }
 
-  tag(tags) {
-    storeSession('view-tags', tags)
+  variant(variantNames) {
+    storeSession('view-tags', variantNames)
   }
 
-  untag() {
+  resetVariants() {
     resetSession('view-tags')
   }
 

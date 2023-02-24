@@ -27,7 +27,7 @@ The Xenon View JavaScript SDK is the JavaScript SDK to interact with [XenonView]
   * [Commit Points](#commiting)
   * [Heartbeats](#heartbeat)
   * [Platforming](#platforming)
-  * [Tagging](#tagging)
+  * [Experiments](#experiments)
   * [Customer Journey Grouping](#deanonymizing-journeys)
   * [Other Considerations](#other)
     * [(Optional) Error Handling](#errors)
@@ -38,6 +38,7 @@ The Xenon View JavaScript SDK is the JavaScript SDK to interact with [XenonView]
 <br/>
 
 ## What's New <a id='whats-new'></a>
+* v0.1.5 - Rename tag to variant
 * v0.1.4 - 0.1 typescript support
 * v0.1.3 - Readme update
 * v0.1.2 - typo fixed
@@ -244,17 +245,19 @@ Once you have released your instrumented code, you can head to [XenonView](https
 
 ### Step 10 - Perform Experiments <a id='step-10'></a>
 
-There are multiple ways you can experiment using XenonView. We'll focus here on three of the most common: time, platform, and tag based cohorts.
+There are multiple ways you can experiment using XenonView. We"ll focus here on three of the most common: time, platform, and variant based cohorts.
 
 #### Time-based cohorts
 Each Outcome and Milestone is timestamped. You can use this during the analysis phase to compare timeframes. A typical example is making a feature change.
 Knowing when the feature went to production, you can filter in the XenonView UI based on the timeframe before and the timeframe after to observe the results.
 
-#### Tag-based cohorts
-You can [tag](#tagging) any journey collection before collecting data. This will allow you to run A/B testing-type experiments (of course not limited to two).
-As an example, let's say you have two alternate content/feature flows and you have a way to direct half of the users to Flow A and the other half to Flow B.
-You can tag each flow before the section of code that performs that flow. After collecting the data, you can filter in the XenonView UI based on each tag to
+
+#### Variant-based cohorts
+You can identify a journey collection as an [experiment](#experiments) before collecting data. This will allow you to run A/B testing-type experiments (of course not limited to two).
+As an example, let"s say you have two alternate content/feature variants and you have a way to direct half of the users to Variant A and the other half to Variant B.
+You can name each variant before the section of code that performs that journey. After collecting the data, you can filter in the XenonView UI based on each variant to
 observe the results.
+
 
 #### Platform-based cohorts
 You can [Platform](#platforming) any journey collection before collecting data. This will allow you to experiment against different platforms:
@@ -310,7 +313,7 @@ More are provided for each function.
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <script src="https://cdn.jsdelivr.net/gh/xenonview-com/view-js-sdk@v0.1.4/dist/xenon_view_sdk.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/gh/xenonview-com/view-js-sdk@v0.1.5/dist/xenon_view_sdk.min.js"></script>
   <script>
     Xenon.init('<API KEY>')
   </script>
@@ -357,7 +360,7 @@ Xenon.init('<API KEY>');
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <script src="https://cdn.jsdelivr.net/gh/xenonview-com/view-js-sdk@v0.1.4/dist/xenon_view_sdk.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/gh/xenonview-com/view-js-sdk@v0.1.5/dist/xenon_view_sdk.min.js"></script>
   <script>
     Xenon.init('<API KEY>')
   </script>
@@ -1909,7 +1912,7 @@ Xenon.platform(softwareVersion, deviceModel, operatingSystemName, operatingSyste
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <script src="https://cdn.jsdelivr.net/gh/xenonview-com/view-js-sdk@v0.1.4/dist/xenon_view_sdk.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/gh/xenonview-com/view-js-sdk@v0.1.5/dist/xenon_view_sdk.min.js"></script>
   <script>
     Xenon.init('<API KEY>')
     const softwareVersion = '5.1.5'
@@ -1926,24 +1929,25 @@ Xenon.platform(softwareVersion, deviceModel, operatingSystemName, operatingSyste
 
 [back to top](#contents)
 
-### Tagging  <a id='tagging'></a>
+### Experiments  <a id="experiments"></a>
 
-After you have initialized Xenon View, you can optionally tag customer journeys.
-Tagging helps when running experiments such as A/B testing.
+After you have initialized Xenon View, you can optionally name variants of customer journeys.
+Named variants facilitate running experiments such as A/B or split testing.
 
-> :memo: Note: You are not limited to just 2 (A or B); there can be many. Additionally, you can add multiple tags.
+
+> :memo: Note: You are not limited to just 2 (A or B); there can be many. Additionally, you can have multiple variant names.
 
 <br/>
 
-#### `tag()`
+#### `variant()`
 ###### Framework example:
 ```javascript
 import Xenon from 'xenon_view_sdk';
 
-const tag = 'subscription-variant-A';
+const variant = 'subscription-variant-A';
 
-// you can add tag details to outcomes
-Xenon.tag([tag]);
+// you can name variants for to outcomes
+Xenon.variant([variant]);
 ```
 ###### HTML example:
 ```html
@@ -1951,33 +1955,32 @@ Xenon.tag([tag]);
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <script src="https://cdn.jsdelivr.net/gh/xenonview-com/view-js-sdk@v0.1.4/dist/xenon_view_sdk.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/gh/xenonview-com/view-js-sdk@v0.1.5/dist/xenon_view_sdk.min.js"></script>
   <script>
     Xenon.init('<API KEY>')
-    const tag = 'subscription-variant-A'
-    Xenon.tag([tag])
+    Xenon.variant(['subscription-variant-A'])
   </script>
   <title>Sample</title>
 </head>
 ```
-This adds tags to each outcome ([Saas](#saas)/[Ecom](#ecom)).
-Typically, you would Tag once you know the active experiment for this Customer:
+This adds variant names to each outcome while the variant in play ([Saas](#saas)/[Ecom](#ecom)).
+Typically, you would name a variant once you know the active experiment for this Customer:
 ```javascript
 import Xenon from 'xenon_view_sdk';
 
 Xenon.init('<API KEY>');
-let experimentTag = getExperiment();
-Xenon.tag([experimentTag]);
+let experimentName = getExperiment();
+Xenon.variant([experimentName]);
 ```
 
 <br/>
 
-#### `untag()`
+#### `resetVariants()`
 ```javascript
 import Xenon from 'xenon_view_sdk';
 
-// you can clear all tags with the untag method
-Xenon.untag();
+// you can clear all variant names with the resetVariants method
+Xenon.resetVariants();
 ```
 
 <br/>
