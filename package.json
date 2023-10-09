@@ -38,7 +38,8 @@
   "files": [
     "index.js",
     "index.d.ts",
-    "src"
+    "src",
+    "dist"
   ],
   "name": "xenon-view-sdk",
   "version": "0.1.5",

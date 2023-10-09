@@ -38,6 +38,7 @@ The Xenon View JavaScript SDK is the JavaScript SDK to interact with [XenonView]
 <br/>
 
 ## What's New <a id='whats-new'></a>
+* v0.1.6 - include minified 
 * v0.1.5 - Rename tag to variant
 * v0.1.4 - 0.1 typescript support
 * v0.1.3 - Readme update
@@ -349,7 +350,7 @@ The View SDK is a JS module you'll need to include in your application. After in
 
 ###### Framework example:
 ```javascript
-import Xenon from 'xenon_view_sdk';
+import Xenon from 'xenon-view-sdk';
 
 // start by initializing Xenon View
 Xenon.init('<API KEY>');
@@ -388,7 +389,7 @@ You can add a specifier string to the call to differentiate as follows:
 
 ###### Framework example:
 ```javascript
-import Xenon from 'xenon_view_sdk';
+import Xenon from 'xenon-view-sdk';
 
 const emailSpecified = 'Email';
 const phoneSpecified = 'Phone Number';
@@ -419,7 +420,7 @@ Xenon.leadCaptured(phoneSpecified);
 > :memo: Note: You want to be consistent between success and failure and match the specifiers
 ###### Framework example:
 ```javascript
-import Xenon from 'xenon_view_sdk';
+import Xenon from 'xenon-view-sdk';
 
 const emailSpecified = 'Email';
 const phoneSpecified = 'Phone Number'; 
@@ -455,7 +456,7 @@ You can add a specifier string to the call to differentiate as follows:
 ##### ```accountSignup()```
 ###### Framework example:
 ```javascript
-import Xenon from 'xenon_view_sdk';
+import Xenon from 'xenon-view-sdk';
 
 const viaFacebook = 'Facebook';
 const viaGoogle = 'Facebook';
@@ -490,7 +491,7 @@ Xenon.accountSignup(viaEmail);
 > :memo: Note: You want to be consistent between success and failure and match the specifiers
 ###### Framework example:
 ```javascript
-import Xenon from 'xenon_view_sdk';
+import Xenon from 'xenon-view-sdk';
 
 const viaFacebook = 'Facebook';
 const viaGoogle = 'Facebook';
@@ -528,7 +529,7 @@ Use this call to track when customers install your application.
 ##### ```applicationInstalled()```
 ###### Framework example:
 ```javascript
-import Xenon from 'xenon_view_sdk';
+import Xenon from 'xenon-view-sdk';
 
 // Successful Application Installation
 Xenon.applicationInstalled();
@@ -551,7 +552,7 @@ Xenon.applicationInstalled();
 > :memo: Note: You want consistency between success and failure.
 ###### Framework example:
 ```javascript
-import Xenon from 'xenon_view_sdk';
+import Xenon from 'xenon-view-sdk';
 
 // Unsuccessful or not completed Application Installation
 Xenon.applicationNotInstalled();
@@ -579,7 +580,7 @@ You can add a specifier string to the call to differentiate as follows:
 ##### ```initialSubscription()```
 ###### Framework example:
 ```javascript
-import Xenon from 'xenon_view_sdk';
+import Xenon from 'xenon-view-sdk';
 
 const tierSilver = 'Silver Monthly';
 const tierGold = 'Gold';
@@ -619,7 +620,7 @@ Xenon.initialSubscription(annualSilver);
 > :memo: Note: You want to be consistent between success and failure and match the specifiers
 ###### Framework example:
 ```javascript
-import Xenon from 'xenon_view_sdk';
+import Xenon from 'xenon-view-sdk';
 
 const tierSilver = 'Silver Monthly';
 const tierGold = 'Gold';
@@ -664,7 +665,7 @@ You can add a specifier string to the call to differentiate as follows:
 ##### ```subscriptionRenewed()```
 ###### Framework example:
 ```javascript
-import Xenon from 'xenon_view_sdk';
+import Xenon from 'xenon-view-sdk';
 
 const tierSilver = 'Silver Monthly';
 const tierGold = 'Gold';
@@ -703,7 +704,7 @@ Xenon.subscriptionRenewed(annualSilver);
 > :memo: Note: You want to be consistent between success and failure and match the specifiers
 ###### Framework example:
 ```javascript
-import Xenon from 'xenon_view_sdk';
+import Xenon from 'xenon-view-sdk';
 
 const tierSilver = 'Silver Monthly';
 const tierGold = 'Gold';
@@ -747,7 +748,7 @@ You can add a specifier string to the call to differentiate as follows:
 ##### ```subscriptionUpsold()```
 ###### Framework example:
 ```javascript
-import Xenon from 'xenon_view_sdk';
+import Xenon from 'xenon-view-sdk';
 
 const tierGold = 'Gold Monthly';
 const tierPlatium = 'Platium';
@@ -784,7 +785,7 @@ Xenon.subscriptionUpsold(annualGold);
 > :memo: Note: You want to be consistent between success and failure and match the specifiers
 ###### Framework example:
 ```javascript
-import Xenon from 'xenon_view_sdk';
+import Xenon from 'xenon-view-sdk';
 
 const tierGold = 'Gold Monthly';
 const tierPlatium = 'Platium';
@@ -826,7 +827,7 @@ You can add a specifier string to the call to differentiate as follows:
 ##### ```referral()```
 ###### Framework example:
 ```javascript
-import Xenon from 'xenon_view_sdk';
+import Xenon from 'xenon-view-sdk';
 
 const kind = 'Share';
 const detail = 'Review'; // optional
@@ -855,7 +856,7 @@ Xenon.referral(kind);
 > :memo: Note: You want to be consistent between success and failure and match the specifiers
 ###### Framework example:
 ```javascript
-import Xenon from 'xenon_view_sdk';
+import Xenon from 'xenon-view-sdk';
 
 const kind = 'Share';
 const detail = 'Review'; // optional
@@ -896,7 +897,7 @@ You can add a specifier string to the call to differentiate as follows:
 ##### ```leadCaptured()```
 ###### Framework example:
 ```javascript
-import Xenon from 'xenon_view_sdk';
+import Xenon from 'xenon-view-sdk';
 
 const emailSpecified = 'Email';
 const phoneSpecified = 'Phone Number';
@@ -926,7 +927,7 @@ Xenon.leadCaptured(phoneSpecified);
 > :memo: Note: You want to be consistent between success and failure and match the specifiers
 ###### Framework example:
 ```javascript
-import Xenon from 'xenon_view_sdk';
+import Xenon from 'xenon-view-sdk';
 
 const emailSpecified = 'Email';
 const phoneSpecified = 'Phone Number'; 
@@ -961,7 +962,7 @@ You can add a specifier string to the call to differentiate as follows:
 ##### ```accountSignup()```
 ###### Framework example:
 ```javascript
-import Xenon from 'xenon_view_sdk';
+import Xenon from 'xenon-view-sdk';
 
 const viaFacebook = 'Facebook';
 const viaGoogle = 'Facebook';
@@ -995,7 +996,7 @@ Xenon.accountSignup(viaEmail);
 > :memo: Note: You want to be consistent between success and failure and match the specifiers
 ###### Framework example:
 ```javascript
-import Xenon from 'xenon_view_sdk';
+import Xenon from 'xenon-view-sdk';
 
 const viaFacebook = 'Facebook';
 const viaGoogle = 'Facebook';
@@ -1034,7 +1035,7 @@ You can add a specifier string to the call to differentiate as follows:
 ##### ```productAddedToCart()```
 ###### Framework example:
 ```javascript
-import Xenon from 'xenon_view_sdk';
+import Xenon from 'xenon-view-sdk';
 
 const laptop = 'Dell XPS';
 const keyboard = 'Apple Magic Keyboard';
@@ -1064,7 +1065,7 @@ Xenon.productAddedToCart(keyboard);
 > :memo: Note: You want to be consistent between success and failure and match the specifiers
 ###### Framework example:
 ```javascript
-import Xenon from 'xenon_view_sdk';
+import Xenon from 'xenon-view-sdk';
 
 const laptop = 'Dell XPS';
 const keyboard = 'Apple Magic Keyboard';
@@ -1099,7 +1100,7 @@ You can add a specifier string to the call to differentiate as follows:
 ##### ```upsold()```
 ###### Framework example:
 ```javascript
-import Xenon from 'xenon_view_sdk';
+import Xenon from 'xenon-view-sdk';
 
 const laptop = 'Dell XPS';
 const keyboard = 'Apple Magic Keyboard';
@@ -1129,7 +1130,7 @@ Xenon.upsold(keyboard);
 > :memo: Note: You want to be consistent between success and failure and match the specifiers
 ###### Framework example:
 ```javascript
-import Xenon from 'xenon_view_sdk';
+import Xenon from 'xenon-view-sdk';
 
 const laptop = 'Dell XPS';
 const keyboard = 'Apple Magic Keyboard';
@@ -1163,7 +1164,7 @@ Use this call to track when your Customer is checking out.
 ##### ```checkedOut()```
 ###### Framework example:
 ```javascript
-import Xenon from 'xenon_view_sdk';
+import Xenon from 'xenon-view-sdk';
 
 // Successful Checkout
 Xenon.checkedOut();
@@ -1185,7 +1186,7 @@ Xenon.checkedOut();
 ##### ```checkoutCanceled()``` <a id='ecom-checkout-fail'></a>
 ###### Framework example:
 ```javascript
-import Xenon from 'xenon_view_sdk';
+import Xenon from 'xenon-view-sdk';
 
 //Customer cancels check out.
 Xenon.checkoutCanceled();
@@ -1208,7 +1209,7 @@ Xenon.checkoutCanceled();
 ##### ```productRemoved()``` <a id='ecom-checkout-remove'></a>
 ###### Framework example:
 ```javascript
-import Xenon from 'xenon_view_sdk';
+import Xenon from 'xenon-view-sdk';
 
 const laptop = 'Dell XPS';
 const keyboard = 'Apple Magic Keyboard';
@@ -1242,7 +1243,7 @@ Use this call to track when your Customer completes a purchase.
 ##### ```purchased()```
 ###### Framework example:
 ```javascript
-import Xenon from 'xenon_view_sdk';
+import Xenon from 'xenon-view-sdk';
 
 const method = 'Stripe';
 
@@ -1267,7 +1268,7 @@ Xenon.purchased(method);
 ##### ```purchaseCanceled()``` <a id='ecom-purchase-fail'></a>
 ###### Framework example:
 ```javascript
-import Xenon from 'xenon_view_sdk';
+import Xenon from 'xenon-view-sdk';
 
 const method = 'Stripe'; // optional
 
@@ -1300,7 +1301,7 @@ Use this call to track when your Customer receives a purchase.
 ##### ```promiseFulfilled()```
 ###### Framework example:
 ```javascript
-import Xenon from 'xenon_view_sdk';
+import Xenon from 'xenon-view-sdk';
 
 // Successfully Delivered Purchase
 Xenon.promiseFulfilled();
@@ -1322,7 +1323,7 @@ Xenon.promiseFulfilled();
 ##### ```promiseUnfulfilled(()``` <a id='ecom-promise-fulfillment-fail'></a>
 ###### Framework example:
 ```javascript
-import Xenon from 'xenon_view_sdk';
+import Xenon from 'xenon-view-sdk';
 
 // Problem Occurs During Shipping And No Delivery
 Xenon.promiseUnfulfilled();
@@ -1350,7 +1351,7 @@ You can add a specifier string to the call to differentiate as follows:
 ##### ```productKept()```
 ###### Framework example:
 ```javascript
-import Xenon from 'xenon_view_sdk';
+import Xenon from 'xenon-view-sdk';
 
 const laptop = 'Dell XPS';
 const keyboard = 'Apple Magic Keyboard';
@@ -1380,7 +1381,7 @@ Xenon.productKept(keyboard);
 > :memo: Note: You want to be consistent between success and failure and match the specifiers
 ###### Framework example:
 ```javascript
-import Xenon from 'xenon_view_sdk';
+import Xenon from 'xenon-view-sdk';
 
 const laptop = 'Dell XPS';
 const keyboard = 'Apple Magic Keyboard';
@@ -1415,7 +1416,7 @@ You can add a specifier string to the call to differentiate as follows:
 ##### ```referral()```
 ###### Framework example:
 ```javascript
-import Xenon from 'xenon_view_sdk';
+import Xenon from 'xenon-view-sdk';
 
 const kind = 'Share Product';
 const detail = 'Dell XPS';
@@ -1443,7 +1444,7 @@ Xenon.referral(kind, detail);
 > :memo: Note: You want to be consistent between success and failure and match the specifiers
 ###### Framework example:
 ```javascript
-import Xenon from 'xenon_view_sdk';
+import Xenon from 'xenon-view-sdk';
 
 const kind = 'Share Product';
 const detail = 'Dell XPS';
@@ -1491,7 +1492,7 @@ They differentiate your offering in the market. Typically, they are made up of a
 Use this function to indicate the start of feature usage.
 ###### Framework example:
 ```javascript
-import Xenon from 'xenon_view_sdk';
+import Xenon from 'xenon-view-sdk';
 
 const name = 'Scale Recipe';
 const detail = 'x2'; // optional
@@ -1521,7 +1522,7 @@ Xenon.featureAttempted(name);
 Use this function to indicate the successful completion of the feature.
 ###### Framework example:
 ```javascript
-import Xenon from 'xenon_view_sdk';
+import Xenon from 'xenon-view-sdk';
 
 const name = 'Scale Recipe';
 const detail = 'x2'; // optional
@@ -1562,7 +1563,7 @@ Xenon.featureCompleted(name);
 Use this function to indicate the unsuccessful completion of a feature being used (often in the exception handler).
 ###### Framework example:
 ```javascript
-import Xenon from 'xenon_view_sdk';
+import Xenon from 'xenon-view-sdk';
 
 
 const name = 'Scale Recipe';
@@ -1621,7 +1622,7 @@ Typical examples:
 Use this function to indicate a view of specific content.
 ###### Framework example:
 ```javascript
-import Xenon from 'xenon_view_sdk';
+import Xenon from 'xenon-view-sdk';
 
 const contentType = 'Blog Post';
 const identifier = 'how-to-install-xenon-view'; // optional
@@ -1651,7 +1652,7 @@ Xenon.contentViewed(contentType);
 Use this function to indicate the editing of specific content.
 ###### Framework example:
 ```javascript
-import Xenon from 'xenon_view_sdk';
+import Xenon from 'xenon-view-sdk';
 
 const contentType = 'Review';
 const identifier = 'Dell XPS'; //optional
@@ -1683,7 +1684,7 @@ Xenon.contentEdited(contentType);
 Use this function to indicate the creation of specific content.
 ###### Framework example:
 ```javascript
-import Xenon from 'xenon_view_sdk';
+import Xenon from 'xenon-view-sdk';
 
 const contentType = 'Blog Comment';
 const identifier = 'how-to-install-xenon-view'; // optional
@@ -1712,7 +1713,7 @@ Xenon.contentCreated(contentType);
 Use this function to indicate the deletion of specific content.
 ###### Framework example:
 ```javascript
-import Xenon from 'xenon_view_sdk';
+import Xenon from 'xenon-view-sdk';
 
 const contentType = 'Blog Comment';
 const identifier = 'how-to-install-xenon-view'; // optional
@@ -1741,7 +1742,7 @@ Xenon.contentDeleted(contentType);
 Use this function to indicate the request for specific content.
 ###### Framework example:
 ```javascript
-import Xenon from 'xenon_view_sdk';
+import Xenon from 'xenon-view-sdk';
 
 const contentType = 'Info Product';
 const identifier = 'how-to-efficiently-use-google-ads'; // optional
@@ -1770,7 +1771,7 @@ Xenon.contentRequested(contentType);
 Use this function to indicate when a user searches.
 ###### Framework example:
 ```javascript
-import Xenon from 'xenon_view_sdk';
+import Xenon from 'xenon-view-sdk';
 
 const contentType = 'Info Product';
 
@@ -1805,7 +1806,7 @@ After you have created (by either calling a milestone or outcome) a customer jou
 #### `commit()`
 ###### Framework example:
 ```javascript
-import Xenon from 'xenon_view_sdk';
+import Xenon from 'xenon-view-sdk';
 
 // you can commit a journey to Xenon View
 await Xenon.commit();
@@ -1844,7 +1845,7 @@ Usage is as follows:
 #### `heartbeat()`
 ###### Framework example:
 ```javascript
-import Xenon from 'xenon_view_sdk';
+import Xenon from 'xenon-view-sdk';
 
 // you can heartbeat to Xenon View
 await Xenon.heartbeat();
@@ -1883,7 +1884,7 @@ After you have initialized Xenon View, you can optionally specify platform detai
 #### `platform()`
 ###### Framework example:
 ```javascript
-import Xenon from 'xenon_view_sdk';
+import Xenon from 'xenon-view-sdk';
 
 const softwareVersion = '5.1.5';
 const deviceModel = 'Pixel 4 XL';
@@ -1896,7 +1897,7 @@ Xenon.platform(softwareVersion, deviceModel, operatingSystemName, operatingSyste
 This adds platform details for each outcome ([Saas](#saas)/[Ecom](#ecom)). Typically, this would be set once at initialization:
 ###### Framework example:
 ```javascript
-import Xenon from 'xenon_view_sdk';
+import Xenon from 'xenon-view-sdk';
 
 Xenon.init('<API KEY>');
 
@@ -1942,7 +1943,7 @@ Named variants facilitate running experiments such as A/B or split testing.
 #### `variant()`
 ###### Framework example:
 ```javascript
-import Xenon from 'xenon_view_sdk';
+import Xenon from 'xenon-view-sdk';
 
 const variant = 'subscription-variant-A';
 
@@ -1966,7 +1967,7 @@ Xenon.variant([variant]);
 This adds variant names to each outcome while the variant in play ([Saas](#saas)/[Ecom](#ecom)).
 Typically, you would name a variant once you know the active experiment for this Customer:
 ```javascript
-import Xenon from 'xenon_view_sdk';
+import Xenon from 'xenon-view-sdk';
 
 Xenon.init('<API KEY>');
 let experimentName = getExperiment();
@@ -1977,7 +1978,7 @@ Xenon.variant([experimentName]);
 
 #### `resetVariants()`
 ```javascript
-import Xenon from 'xenon_view_sdk';
+import Xenon from 'xenon-view-sdk';
 
 // you can clear all variant names with the resetVariants method
 Xenon.resetVariants();
@@ -2011,7 +2012,7 @@ Usage is as follows:
 #### `deanonymize()`
 ###### Framework example:
 ```javascript
-import Xenon from 'xenon_view_sdk';
+import Xenon from 'xenon-view-sdk';
 
 // you can deanonymize before or after you have committed the journey (in this case, after):
 let person = {
@@ -2062,7 +2063,7 @@ In the event of an API error when committing, the method returns a [promise](htt
 
 ###### Framework example:
 ```javascript
-import Xenon from 'xenon_view_sdk';
+import Xenon from 'xenon-view-sdk';
 
 // you can handle errors if necessary
 Xenon.commit().catch(
@@ -2082,7 +2083,7 @@ You can add custom milestones if you need more than the current Customer Journey
 ##### `milestone()`
 ###### Framework example:
 ```javascript
-import Xenon from 'xenon_view_sdk';
+import Xenon from 'xenon-view-sdk';
 
 // you can add a custom milestone to the customer journey
 let category = 'Function';
@@ -2130,7 +2131,7 @@ After you have initialized the Xenon singleton, you can:
 ##### `id()`
 ###### Framework example:
 ```javascript
-import Xenon from 'xenon_view_sdk';
+import Xenon from 'xenon-view-sdk';
 // by default has Journey ID
 expect(Xenon.id()).not.toBeNull();
 expect(Xenon.id()).not.toEqual('');
