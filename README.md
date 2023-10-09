@@ -314,7 +314,7 @@ More are provided for each function.
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <script src="https://cdn.jsdelivr.net/gh/xenonview-com/view-js-sdk@v0.1.5/dist/xenon_view_sdk.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/gh/xenonview-com/view-js-sdk@v0.1.6/dist/xenon_view_sdk.min.js"></script>
   <script>
     Xenon.init('<API KEY>')
   </script>
@@ -361,7 +361,7 @@ Xenon.init('<API KEY>');
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <script src="https://cdn.jsdelivr.net/gh/xenonview-com/view-js-sdk@v0.1.5/dist/xenon_view_sdk.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/gh/xenonview-com/view-js-sdk@v0.1.6/dist/xenon_view_sdk.min.js"></script>
   <script>
     Xenon.init('<API KEY>')
   </script>
@@ -1913,7 +1913,7 @@ Xenon.platform(softwareVersion, deviceModel, operatingSystemName, operatingSyste
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <script src="https://cdn.jsdelivr.net/gh/xenonview-com/view-js-sdk@v0.1.5/dist/xenon_view_sdk.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/gh/xenonview-com/view-js-sdk@v0.1.6/dist/xenon_view_sdk.min.js"></script>
   <script>
     Xenon.init('<API KEY>')
     const softwareVersion = '5.1.5'
@@ -1956,7 +1956,7 @@ Xenon.variant([variant]);
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <script src="https://cdn.jsdelivr.net/gh/xenonview-com/view-js-sdk@v0.1.5/dist/xenon_view_sdk.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/gh/xenonview-com/view-js-sdk@v0.1.6/dist/xenon_view_sdk.min.js"></script>
   <script>
     Xenon.init('<API KEY>')
     Xenon.variant(['subscription-variant-A'])
