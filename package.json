@@ -38,11 +38,12 @@
   "files": [
     "index.js",
     "index.d.ts",
+    "useXenon.js",
     "src",
     "dist"
   ],
   "name": "xenon-view-sdk",
-  "version": "0.1.6",
+  "version": "0.1.7",
   "description": "Javascript access to Xenon View.",
   "homepage": "https://github.com/xenonview-com/view-js-sdk",
   "keywords": [
@@ -57,7 +58,8 @@
   "author": "Luke Woydziak <lwoydziak@gmail.com>",
   "license": "Apache",
   "dependencies": {
-    "isomorphic-fetch": "^3.0.0"
+    "isomorphic-fetch": "^3.0.0",
+    "encoding": "^0.1.13"
   },
   "publishConfig": {
     "registry": "https://registry.npmjs.org"

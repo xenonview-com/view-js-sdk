@@ -38,6 +38,7 @@ The Xenon View JavaScript SDK is the JavaScript SDK to interact with [XenonView]
 <br/>
 
 ## What's New <a id='whats-new'></a>
+* v0.1.7 - Nextjs support 
 * v0.1.6 - include minified 
 * v0.1.5 - Rename tag to variant
 * v0.1.4 - 0.1 typescript support
@@ -314,7 +315,7 @@ More are provided for each function.
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <script src="https://cdn.jsdelivr.net/gh/xenonview-com/view-js-sdk@v0.1.6/dist/xenon_view_sdk.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/gh/xenonview-com/view-js-sdk@v0.1.7/dist/xenon_view_sdk.min.js"></script>
   <script>
     Xenon.init('<API KEY>')
   </script>
@@ -355,13 +356,24 @@ import Xenon from 'xenon-view-sdk';
 // start by initializing Xenon View
 Xenon.init('<API KEY>');
 ```
+###### Nextjs example:
+```javascript
+"use client";
+import Image from 'next/image'
+import {useXenon} from "xenon-view-sdk/useXenon";
+
+export default function Home() {
+  const Xenon = useXenon('<API KEY>');
+  return (<main className="flex min-h-screen flex-col items-center justify-between p-24"/>);
+}
+```
 ###### HTML example:
 ```html
 <!doctype html>
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <script src="https://cdn.jsdelivr.net/gh/xenonview-com/view-js-sdk@v0.1.6/dist/xenon_view_sdk.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/gh/xenonview-com/view-js-sdk@v0.1.7/dist/xenon_view_sdk.min.js"></script>
   <script>
     Xenon.init('<API KEY>')
   </script>
@@ -401,6 +413,23 @@ Xenon.leadCaptured(emailSpecified);
 Xenon.leadCaptured(phoneSpecified);
 ```
 
+###### Nextjs example:
+```javascript
+import {useXenon} from "xenon-view-sdk/useXenon";
+
+export default function Home() {
+  const Xenon = useXenon('<API KEY>');
+
+  const emailSpecified = 'Email';
+  const phoneSpecified = 'Phone Number';
+
+  // Successful Lead Capture of an email
+  Xenon.leadCaptured(emailSpecified);
+  //...
+  // Successful Lead Capture of a phone number
+  Xenon.leadCaptured(phoneSpecified);
+```
+
 ###### HTML example:
 ```html
 <script>
@@ -430,6 +459,23 @@ Xenon.leadCaptureDeclined(emailSpecified);
 // ...
 // Unsuccessful Lead Capture of a phone number
 Xenon.leadCaptureDeclined(phoneSpecified);
+```
+
+###### Nextjs example:
+```javascript
+import {useXenon} from "xenon-view-sdk/useXenon";
+
+export default function Home() {
+  const Xenon = useXenon('<API KEY>');
+
+  const emailSpecified = 'Email';
+  const phoneSpecified = 'Phone Number'; 
+  
+  // Unsuccessful Lead Capture of an email
+  Xenon.leadCaptureDeclined(emailSpecified);
+  // ...
+  // Unsuccessful Lead Capture of a phone number
+  Xenon.leadCaptureDeclined(phoneSpecified);
 ```
 
 ###### HTML example:
@@ -472,6 +518,27 @@ Xenon.accountSignup(viaGoogle);
 Xenon.accountSignup(viaEmail);
 ```
 
+###### Nextjs example:
+```javascript
+import {useXenon} from "xenon-view-sdk/useXenon";
+
+export default function Home() {
+  const Xenon = useXenon('<API KEY>');
+
+  const viaFacebook = 'Facebook';
+  const viaGoogle = 'Facebook';
+  const viaEmail = 'Email';
+  
+  // Successful Account Signup with Facebook
+  Xenon.accountSignup(viaFacebook);
+  // ...
+  // Successful Account Signup with Google
+  Xenon.accountSignup(viaGoogle);
+  // ...
+  // Successful Account Signup with an Email
+  Xenon.accountSignup(viaEmail);
+```
+
 ###### HTML example:
 ```html
 <script>
@@ -506,6 +573,28 @@ Xenon.accountSignupDeclined(viaGoogle);
 // Unsuccessful Account Signup with an Email
 Xenon.accountSignupDeclined(viaEmail);
 ```
+
+###### Nextjs example:
+```javascript
+import {useXenon} from "xenon-view-sdk/useXenon";
+
+export default function Home() {
+  const Xenon = useXenon('<API KEY>');
+
+  const viaFacebook = 'Facebook';
+  const viaGoogle = 'Facebook';
+  const viaEmail = 'Email';
+  
+  // Unsuccessful Account Signup with Facebook
+  Xenon.accountSignupDeclined(viaFacebook);
+  // ...
+  // Unsuccessful Account Signup with Google
+  Xenon.accountSignupDeclined(viaGoogle);
+  // ...
+  // Unsuccessful Account Signup with an Email
+  Xenon.accountSignupDeclined(viaEmail);
+```
+
 ###### HTML example:
 ```html
 <script>
@@ -534,6 +623,16 @@ import Xenon from 'xenon-view-sdk';
 // Successful Application Installation
 Xenon.applicationInstalled();
 ```
+###### Nextjs example:
+```javascript
+import {useXenon} from "xenon-view-sdk/useXenon";
+
+export default function Home() {
+  const Xenon = useXenon('<API KEY>');
+  
+  // Successful Application Installation
+  Xenon.applicationInstalled();
+```
 ###### HTML example:
 ```html
 <script>
@@ -557,6 +656,18 @@ import Xenon from 'xenon-view-sdk';
 // Unsuccessful or not completed Application Installation
 Xenon.applicationNotInstalled();
 ```
+
+###### Nextjs example:
+```javascript
+import {useXenon} from "xenon-view-sdk/useXenon";
+
+export default function Home() {
+  const Xenon = useXenon('<API KEY>');
+
+  // Unsuccessful or not completed Application Installation
+  Xenon.applicationNotInstalled();
+```
+
 ###### HTML example:
 ```html
 <script>
@@ -600,6 +711,33 @@ Xenon.initialSubscription(tierPlatium);
 // Successful subscription of an annual period
 Xenon.initialSubscription(annualSilver);
 ```
+
+###### Nextjs example:
+```javascript
+import {useXenon} from "xenon-view-sdk/useXenon";
+
+export default function Home() {
+  const Xenon = useXenon('<API KEY>');
+  
+  const tierSilver = 'Silver Monthly';
+  const tierGold = 'Gold';
+  const tierPlatium = 'Platium';
+  const annualSilver = 'Silver Annual';
+  const method = 'Stripe'; // optional
+  
+  // Successful subscription of the lowest tier with Stripe
+  Xenon.initialSubscription(tierSilver, method);
+  // ...
+  // Successful subscription of the middle tier
+  Xenon.initialSubscription(tierGold);
+  // ...
+  // Successful subscription to the top tier
+  Xenon.initialSubscription(tierPlatium);
+  // ...
+  // Successful subscription of an annual period
+  Xenon.initialSubscription(annualSilver);
+```
+
 ###### HTML example:
 ```html
 <script>
@@ -639,6 +777,31 @@ Xenon.subscriptionDeclined(tierPlatium);
 // ...
 // Unsuccessful subscription of an annual period
 Xenon.subscriptionDeclined(annualSilver, method);
+```
+###### Nextjs example:
+```javascript
+import {useXenon} from "xenon-view-sdk/useXenon";
+
+export default function Home() {
+  const Xenon = useXenon('<API KEY>');
+
+  const tierSilver = 'Silver Monthly';
+  const tierGold = 'Gold';
+  const tierPlatium = 'Platium';
+  const annualSilver = 'Silver Annual';
+  const method = 'Stripe'; // optional
+  
+  // Unsuccessful subscription of the lowest tier
+  Xenon.subscriptionDeclined(tierSilver);
+  // ...
+  // Unsuccessful subscription of the middle tier
+  Xenon.subscriptionDeclined(tierGold);
+  // ...
+  // Unsuccessful subscription to the top tier
+  Xenon.subscriptionDeclined(tierPlatium);
+  // ...
+  // Unsuccessful subscription of an annual period
+  Xenon.subscriptionDeclined(annualSilver, method);
 ```
 ###### HTML example:
 ```html
@@ -685,6 +848,31 @@ Xenon.subscriptionRenewed(tierPlatium);
 // Successful renewal of an annual period
 Xenon.subscriptionRenewed(annualSilver);
 ```
+###### Nextjs example:
+```javascript
+import {useXenon} from "xenon-view-sdk/useXenon";
+
+export default function Home() {
+  const Xenon = useXenon('<API KEY>');
+
+  const tierSilver = 'Silver Monthly';
+  const tierGold = 'Gold';
+  const tierPlatium = 'Platium';
+  const annualSilver = 'Silver Annual';
+  const method = 'Stripe'; //optional
+  
+  // Successful renewal of the lowest tier with Stripe
+  Xenon.subscriptionRenewed(tierSilver, method);
+  // ...
+  // Successful renewal of the middle tier
+  Xenon.subscriptionRenewed(tierGold);
+  // ...
+  // Successful renewal of the top tier
+  Xenon.subscriptionRenewed(tierPlatium);
+  // ...
+  // Successful renewal of an annual period
+  Xenon.subscriptionRenewed(annualSilver);
+```
 ###### HTML example:
 ```html
 <script>
@@ -723,6 +911,31 @@ Xenon.subscriptionCanceled(tierPlatium);
 // ...
 // Canceled subscription of an annual period with Stripe
 Xenon.subscriptionCanceled(annualSilver, method);
+```
+###### Nextjs example:
+```javascript
+import {useXenon} from "xenon-view-sdk/useXenon";
+
+export default function Home() {
+  const Xenon = useXenon('<API KEY>');
+
+  const tierSilver = 'Silver Monthly';
+  const tierGold = 'Gold';
+  const tierPlatium = 'Platium';
+  const annualSilver = 'Silver Annual';
+  const method = 'Stripe'; //optional
+  
+  // Canceled subscription of the lowest tier
+  Xenon.subscriptionCanceled(tierSilver);
+  // ...
+  // Canceled subscription of the middle tier
+  Xenon.subscriptionCanceled(tierGold);
+  // ...
+  // Canceled subscription of the top tier
+  Xenon.subscriptionCanceled(tierPlatium);
+  // ...
+  // Canceled subscription of an annual period with Stripe
+  Xenon.subscriptionCanceled(annualSilver, method);
 ```
 ###### HTML example:
 ```html
@@ -766,6 +979,29 @@ Xenon.subscriptionUpsold(tierPlatium);
 // Successful upsell of middle tier - annual period
 Xenon.subscriptionUpsold(annualGold);
 ```
+###### Nextjs example:
+```javascript
+import {useXenon} from "xenon-view-sdk/useXenon";
+
+export default function Home() {
+  const Xenon = useXenon('<API KEY>');
+  
+  const tierGold = 'Gold Monthly';
+  const tierPlatium = 'Platium';
+  const annualGold = 'Gold Annual';
+  const method = 'Stripe'; // optional
+  
+  // Assume already subscribed to Silver
+  
+  // Successful upsell of the middle tier with Stripe
+  Xenon.subscriptionUpsold(tierGold, method);
+  // ...
+  // Successful upsell of the top tier
+  Xenon.subscriptionUpsold(tierPlatium);
+  // ...
+  // Successful upsell of middle tier - annual period
+  Xenon.subscriptionUpsold(annualGold);
+```
 ###### HTML example:
 ```html
 <script>
@@ -803,6 +1039,29 @@ Xenon.subscriptionUpsellDeclined(tierPlatium);
 // Rejected upsell of middle tier - annual period with Stripe
 Xenon.subscriptionUpsellDeclined(annualGold, method);
 ```
+###### Nextjs example:
+```javascript
+import {useXenon} from "xenon-view-sdk/useXenon";
+
+export default function Home() {
+  const Xenon = useXenon('<API KEY>');
+
+  const tierGold = 'Gold Monthly';
+  const tierPlatium = 'Platium';
+  const annualGold = 'Gold Annual';
+  const method = 'Stripe'; //optional
+  
+  // Assume already subscribed to Silver
+  
+  // Rejected upsell of the middle tier
+  Xenon.subscriptionUpsellDeclined(tierGold);
+  // ...
+  // Rejected upsell of the top tier
+  Xenon.subscriptionUpsellDeclined(tierPlatium);
+  // ...
+  // Rejected upsell of middle tier - annual period with Stripe
+  Xenon.subscriptionUpsellDeclined(annualGold, method);
+```
 ###### HTML example:
 ```html
 <script>
@@ -837,6 +1096,21 @@ Xenon.referral(kind, detail);
 // -OR-
 Xenon.referral(kind);
 ```
+###### Nextjs example:
+```javascript
+import {useXenon} from "xenon-view-sdk/useXenon";
+
+export default function Home() {
+  const Xenon = useXenon('<API KEY>');
+  
+  const kind = 'Share';
+  const detail = 'Review'; // optional
+  
+  // Successful referral by sharing a review
+  Xenon.referral(kind, detail);
+  // -OR-
+  Xenon.referral(kind);
+```
 ###### HTML example:
 ```html
 <script>
@@ -865,6 +1139,21 @@ const detail = 'Review'; // optional
 Xenon.referralDeclined(kind, detail);
 // -OR-
 Xenon.referralDeclined(kind);
+```
+###### Nextjs example:
+```javascript
+import {useXenon} from "xenon-view-sdk/useXenon";
+
+export default function Home() {
+  const Xenon = useXenon('<API KEY>');
+
+  const kind = 'Share';
+  const detail = 'Review'; // optional
+  
+  //Customer declined referral 
+  Xenon.referralDeclined(kind, detail);
+  // -OR-
+  Xenon.referralDeclined(kind);
 ```
 ###### HTML example:
 ```html
@@ -908,6 +1197,22 @@ Xenon.leadCaptured(emailSpecified);
 // Successful Lead Capture of a phone number
 Xenon.leadCaptured(phoneSpecified);
 ```
+###### Nextjs example:
+```javascript
+import {useXenon} from "xenon-view-sdk/useXenon";
+
+export default function Home() {
+  const Xenon = useXenon('<API KEY>');
+
+  const emailSpecified = 'Email';
+  const phoneSpecified = 'Phone Number';
+  
+  // Successful Lead Capture of an email
+  Xenon.leadCaptured(emailSpecified);
+  // ...
+  // Successful Lead Capture of a phone number
+  Xenon.leadCaptured(phoneSpecified);
+```
 ###### HTML example:
 ```html
 <script>
@@ -937,6 +1242,22 @@ Xenon.leadCaptureDeclined(emailSpecified);
 // ...
 // Unsuccessful Lead Capture of a phone number
 Xenon.leadCaptureDeclined(phoneSpecified);
+```
+###### Nextjs example:
+```javascript
+import {useXenon} from "xenon-view-sdk/useXenon";
+
+export default function Home() {
+  const Xenon = useXenon('<API KEY>');
+
+  const emailSpecified = 'Email';
+  const phoneSpecified = 'Phone Number'; 
+  
+  // Unsuccessful Lead Capture of an email
+  Xenon.leadCaptureDeclined(emailSpecified);
+  // ...
+  // Unsuccessful Lead Capture of a phone number
+  Xenon.leadCaptureDeclined(phoneSpecified);
 ```
 ###### HTML example:
 ```html
@@ -977,6 +1298,26 @@ Xenon.accountSignup(viaGoogle);
 // Successful Account Signup with an Email
 Xenon.accountSignup(viaEmail);
 ```
+###### Nextjs example:
+```javascript
+import {useXenon} from "xenon-view-sdk/useXenon";
+
+export default function Home() {
+  const Xenon = useXenon('<API KEY>');
+
+  const viaFacebook = 'Facebook';
+  const viaGoogle = 'Facebook';
+  const viaEmail = 'Email';
+  
+  // Successful Account Signup with Facebook
+  Xenon.accountSignup(viaFacebook);
+  // ...
+  // Successful Account Signup with Google
+  Xenon.accountSignup(viaGoogle);
+  // ...
+  // Successful Account Signup with an Email
+  Xenon.accountSignup(viaEmail);
+```
 ###### HTML example:
 ```html
 <script>
@@ -1010,6 +1351,26 @@ Xenon.accountSignupDeclined(viaGoogle);
 // ...
 // Unsuccessful Account Signup with an Email
 Xenon.accountSignupDeclined(viaEmail);
+```
+###### Nextjs example:
+```javascript
+import {useXenon} from "xenon-view-sdk/useXenon";
+
+export default function Home() {
+  const Xenon = useXenon('<API KEY>');
+
+  const viaFacebook = 'Facebook';
+  const viaGoogle = 'Facebook';
+  const viaEmail = 'Email';
+  
+  // Unsuccessful Account Signup with Facebook
+  Xenon.accountSignupDeclined(viaFacebook);
+  // ...
+  // Unsuccessful Account Signup with Google
+  Xenon.accountSignupDeclined(viaGoogle);
+  // ...
+  // Unsuccessful Account Signup with an Email
+  Xenon.accountSignupDeclined(viaEmail);
 ```
 ###### HTML example:
 ```html
@@ -1046,6 +1407,22 @@ Xenon.productAddedToCart(laptop);
 // Successful adds a keyboard to the cart
 Xenon.productAddedToCart(keyboard);
 ```
+###### Nextjs example:
+```javascript
+import {useXenon} from "xenon-view-sdk/useXenon";
+
+export default function Home() {
+  const Xenon = useXenon('<API KEY>');
+  
+  const laptop = 'Dell XPS';
+  const keyboard = 'Apple Magic Keyboard';
+  
+  // Successful adds a laptop to the cart
+  Xenon.productAddedToCart(laptop);
+  // ...
+  // Successful adds a keyboard to the cart
+  Xenon.productAddedToCart(keyboard);
+```
 ###### HTML example:
 ```html
 <script>
@@ -1075,6 +1452,22 @@ Xenon.productNotAddedToCart(laptop);
 // ...
 // Doesn't add a keyboard to the cart
 Xenon.productNotAddedToCart(keyboard);
+```
+###### Nextjs example:
+```javascript
+import {useXenon} from "xenon-view-sdk/useXenon";
+
+export default function Home() {
+  const Xenon = useXenon('<API KEY>');
+
+  const laptop = 'Dell XPS';
+  const keyboard = 'Apple Magic Keyboard';
+  
+  // Doesn't add a laptop to the cart
+  Xenon.productNotAddedToCart(laptop);
+  // ...
+  // Doesn't add a keyboard to the cart
+  Xenon.productNotAddedToCart(keyboard);
 ```
 ###### HTML example:
 ```html
@@ -1111,6 +1504,22 @@ Xenon.upsold(laptop);
 // upsold a keyboard
 Xenon.upsold(keyboard);
 ```
+###### Nextjs example:
+```javascript
+import {useXenon} from "xenon-view-sdk/useXenon";
+
+export default function Home() {
+  const Xenon = useXenon('<API KEY>');
+
+  const laptop = 'Dell XPS';
+  const keyboard = 'Apple Magic Keyboard';
+  
+  // upsold a laptop
+  Xenon.upsold(laptop);
+  // ...
+  // upsold a keyboard
+  Xenon.upsold(keyboard);
+```
 ###### HTML example:
 ```html
 <script>
@@ -1141,6 +1550,22 @@ Xenon.upsellDismissed(laptop);
 // Doesn't add a keyboard during upsell
 Xenon.upsellDismissed(keyboard);
 ```
+###### Nextjs example:
+```javascript
+import {useXenon} from "xenon-view-sdk/useXenon";
+
+export default function Home() {
+  const Xenon = useXenon('<API KEY>');
+
+  const laptop = 'Dell XPS';
+  const keyboard = 'Apple Magic Keyboard';
+  
+  // Doesn't add a laptop during upsell
+  Xenon.upsellDismissed(laptop);
+  // ...
+  // Doesn't add a keyboard during upsell
+  Xenon.upsellDismissed(keyboard);
+```
 ###### HTML example:
 ```html
 <script>
@@ -1169,6 +1594,16 @@ import Xenon from 'xenon-view-sdk';
 // Successful Checkout
 Xenon.checkedOut();
 ```
+###### Nextjs example:
+```javascript
+import {useXenon} from "xenon-view-sdk/useXenon";
+
+export default function Home() {
+  const Xenon = useXenon('<API KEY>');
+
+  // Successful Checkout
+  Xenon.checkedOut();
+```
 ###### HTML example:
 ```html
 <script>
@@ -1191,6 +1626,16 @@ import Xenon from 'xenon-view-sdk';
 //Customer cancels check out.
 Xenon.checkoutCanceled();
 
+```
+###### Nextjs example:
+```javascript
+import {useXenon} from "xenon-view-sdk/useXenon";
+
+export default function Home() {
+  const Xenon = useXenon('<API KEY>');
+
+  //Customer cancels check out.
+  Xenon.checkoutCanceled();
 ```
 ###### HTML example:
 ```html
@@ -1219,6 +1664,22 @@ Xenon.productRemoved(laptop);
 // ...
 // Removes a keyboard during checkout
 Xenon.productRemoved(keyboard);
+```
+###### Nextjs example:
+```javascript
+import {useXenon} from "xenon-view-sdk/useXenon";
+
+export default function Home() {
+  const Xenon = useXenon('<API KEY>');
+
+  const laptop = 'Dell XPS';
+  const keyboard = 'Apple Magic Keyboard';
+  
+  // Removes a laptop during checkout
+  Xenon.productRemoved(laptop);
+  // ...
+  // Removes a keyboard during checkout
+  Xenon.productRemoved(keyboard);
 ```
 ###### HTML example:
 ```html
@@ -1250,6 +1711,18 @@ const method = 'Stripe';
 // Successful Purchase
 Xenon.purchased(method);
 ```
+###### Nextjs example:
+```javascript
+import {useXenon} from "xenon-view-sdk/useXenon";
+
+export default function Home() {
+  const Xenon = useXenon('<API KEY>');
+
+  const method = 'Stripe';
+  
+  // Successful Purchase
+  Xenon.purchased(method);
+```
 ###### HTML example:
 ```html
 <script>
@@ -1276,6 +1749,21 @@ const method = 'Stripe'; // optional
 Xenon.purchaseCanceled();
 // -OR-
 Xenon.purchaseCanceled(method);
+
+```
+###### Nextjs example:
+```javascript
+import {useXenon} from "xenon-view-sdk/useXenon";
+
+export default function Home() {
+  const Xenon = useXenon('<API KEY>');
+
+  const method = 'Stripe'; // optional
+  
+  //Customer cancels the purchase.
+  Xenon.purchaseCanceled();
+  // -OR-
+  Xenon.purchaseCanceled(method);
 
 ```
 ###### HTML example:
@@ -1306,6 +1794,16 @@ import Xenon from 'xenon-view-sdk';
 // Successfully Delivered Purchase
 Xenon.promiseFulfilled();
 ```
+###### Nextjs example:
+```javascript
+import {useXenon} from "xenon-view-sdk/useXenon";
+
+export default function Home() {
+  const Xenon = useXenon('<API KEY>');
+
+  // Successfully Delivered Purchase
+  Xenon.promiseFulfilled();
+```
 ###### HTML example:
 ```html
 <script>
@@ -1327,6 +1825,16 @@ import Xenon from 'xenon-view-sdk';
 
 // Problem Occurs During Shipping And No Delivery
 Xenon.promiseUnfulfilled();
+```
+###### Nextjs example:
+```javascript
+import {useXenon} from "xenon-view-sdk/useXenon";
+
+export default function Home() {
+  const Xenon = useXenon('<API KEY>');
+
+  // Problem Occurs During Shipping And No Delivery
+  Xenon.promiseUnfulfilled();
 ```
 ###### HTML example:
 ```html
@@ -1362,6 +1870,22 @@ Xenon.productKept(laptop);
 //Customer keeps a keyboard
 Xenon.productKept(keyboard);
 ```
+###### Nextjs example:
+```javascript
+import {useXenon} from "xenon-view-sdk/useXenon";
+
+export default function Home() {
+  const Xenon = useXenon('<API KEY>');
+
+  const laptop = 'Dell XPS';
+  const keyboard = 'Apple Magic Keyboard';
+  
+  //Customer keeps a laptop
+  Xenon.productKept(laptop);
+  // ...
+  //Customer keeps a keyboard
+  Xenon.productKept(keyboard);
+```
 ###### HTML example:
 ```html
 <script>
@@ -1391,6 +1915,22 @@ Xenon.productReturned(laptop);
 // ...
 //Customer returns a keyboard
 Xenon.productReturned(keyboard);
+```
+###### Nextjs example:
+```javascript
+import {useXenon} from "xenon-view-sdk/useXenon";
+
+export default function Home() {
+  const Xenon = useXenon('<API KEY>');
+
+  const laptop = 'Dell XPS';
+  const keyboard = 'Apple Magic Keyboard';
+  
+  //Customer returns a laptop
+  Xenon.productReturned(laptop);
+  // ...
+  //Customer returns a keyboard
+  Xenon.productReturned(keyboard);
 ```
 ###### HTML example:
 ```html
@@ -1424,6 +1964,19 @@ const detail = 'Dell XPS';
 // Successful referral by sharing a laptop
 Xenon.referral(kind, detail);
 ```
+###### Nextjs example:
+```javascript
+import {useXenon} from "xenon-view-sdk/useXenon";
+
+export default function Home() {
+  const Xenon = useXenon('<API KEY>');
+
+  const kind = 'Share Product';
+  const detail = 'Dell XPS';
+  
+  // Successful referral by sharing a laptop
+  Xenon.referral(kind, detail);
+```
 ###### HTML example:
 ```html
 <script>
@@ -1451,6 +2004,19 @@ const detail = 'Dell XPS';
 
 //Customer declined referral 
 Xenon.referralDeclined(kind, detail);
+```
+###### Nextjs example:
+```javascript
+import {useXenon} from "xenon-view-sdk/useXenon";
+
+export default function Home() {
+  const Xenon = useXenon('<API KEY>');
+
+  const kind = 'Share Product';
+  const detail = 'Dell XPS';
+  
+  //Customer declined referral 
+  Xenon.referralDeclined(kind, detail);
 ```
 ###### HTML example:
 ```html
@@ -1502,6 +2068,21 @@ Xenon.featureAttempted(name, detail);
 // -OR-
 Xenon.featureAttempted(name);
 ```
+###### Nextjs example:
+```javascript
+import {useXenon} from "xenon-view-sdk/useXenon";
+
+export default function Home() {
+  const Xenon = useXenon('<API KEY>');
+
+  const name = 'Scale Recipe';
+  const detail = 'x2'; // optional
+  
+  //Customer initiated using a feature 
+  Xenon.featureAttempted(name, detail);
+  // -OR-
+  Xenon.featureAttempted(name);
+```
 ###### HTML example:
 ```html
 <script>
@@ -1543,6 +2124,32 @@ Xenon.featureCompleted(name, detail);
 // -OR-
 Xenon.featureCompleted(name);
 ```
+###### Nextjs example:
+```javascript
+import {useXenon} from "xenon-view-sdk/useXenon";
+
+export default function Home() {
+  const Xenon = useXenon('<API KEY>');
+
+  const name = 'Scale Recipe';
+  const detail = 'x2'; // optional
+  
+  // ...
+  // Customer used a feature 
+  Xenon.featureCompleted(name, detail);
+  
+  // -OR-
+  
+  // Customer initiated using a feature 
+  Xenon.featureAttempted(name, detail);
+  // ...
+  // feature code/function calls
+  // ...
+  // feature completes successfully 
+  Xenon.featureCompleted(name, detail);
+  // -OR-
+  Xenon.featureCompleted(name);
+```
 ###### HTML example:
 ```html
 <script>
@@ -1581,6 +2188,30 @@ catch(err) {
   // -OR-
   Xenon.featureFailed(name);
 }
+
+```
+###### Nextjs example:
+```javascript
+import {useXenon} from "xenon-view-sdk/useXenon";
+
+export default function Home() {
+  const Xenon = useXenon('<API KEY>');
+
+  const name = 'Scale Recipe';
+  const detail = 'x2'; // optional
+  
+  
+  //Customer initiated using a feature 
+  Xenon.featureAttempted(name, detail);
+  try {
+    // feature code that could fail
+  }
+  catch(err) {
+    //feature completes unsuccessfully 
+    Xenon.featureFailed(name, detail);
+    // -OR-
+    Xenon.featureFailed(name);
+  }
 
 ```
 ###### HTML example:
@@ -1632,6 +2263,21 @@ Xenon.contentViewed(contentType, identifier);
 // -OR-
 Xenon.contentViewed(contentType);
 ```
+###### Nextjs example:
+```javascript
+import {useXenon} from "xenon-view-sdk/useXenon";
+
+export default function Home() {
+  const Xenon = useXenon('<API KEY>');
+
+  const contentType = 'Blog Post';
+  const identifier = 'how-to-install-xenon-view'; // optional
+  
+  // Customer view a blog post 
+  Xenon.contentViewed(contentType, identifier);
+  // -OR-
+  Xenon.contentViewed(contentType);
+```
 ###### HTML example:
 ```html
 <script>
@@ -1665,6 +2311,24 @@ Xenon.contentEdited(contentType, identifier);
 // -OR-
 Xenon.contentEdited(contentType);
 ```
+###### Nextjs example:
+```javascript
+import {useXenon} from "xenon-view-sdk/useXenon";
+
+export default function Home() {
+  const Xenon = useXenon('<API KEY>');
+
+  const contentType = 'Review';
+  const identifier = 'Dell XPS'; //optional
+  const detail = 'Rewrote'; //optional
+  
+  //Customer edited their review about a laptop
+  Xenon.contentEdited(contentType, identifier, detail);
+  // -OR-
+  Xenon.contentEdited(contentType, identifier);
+  // -OR-
+  Xenon.contentEdited(contentType);
+```
 ###### HTML example:
 ```html
 <script>
@@ -1693,6 +2357,21 @@ const identifier = 'how-to-install-xenon-view'; // optional
 Xenon.contentCreated(contentType, identifier);
 // -OR- 
 Xenon.contentCreated(contentType);
+```
+###### Nextjs example:
+```javascript
+import {useXenon} from "xenon-view-sdk/useXenon";
+
+export default function Home() {
+  const Xenon = useXenon('<API KEY>');
+
+  const contentType = 'Blog Comment';
+  const identifier = 'how-to-install-xenon-view'; // optional
+  
+  //Customer wrote a comment on a blog post
+  Xenon.contentCreated(contentType, identifier);
+  // -OR- 
+  Xenon.contentCreated(contentType);
 ```
 ###### HTML example:
 ```html
@@ -1723,6 +2402,21 @@ Xenon.contentDeleted(contentType, identifier);
 // -OR- 
 Xenon.contentDeleted(contentType);
 ```
+###### Nextjs example:
+```javascript
+import {useXenon} from "xenon-view-sdk/useXenon";
+
+export default function Home() {
+  const Xenon = useXenon('<API KEY>');
+
+  const contentType = 'Blog Comment';
+  const identifier = 'how-to-install-xenon-view'; // optional
+  
+  //Customer deleted their comment on a blog post 
+  Xenon.contentDeleted(contentType, identifier);
+  // -OR- 
+  Xenon.contentDeleted(contentType);
+```
 ###### HTML example:
 ```html
 <script>
@@ -1752,6 +2446,21 @@ Xenon.contentRequested(contentType, identifier);
 // -OR- 
 Xenon.contentRequested(contentType);
 ```
+###### Nextjs example:
+```javascript
+import {useXenon} from "xenon-view-sdk/useXenon";
+
+export default function Home() {
+  const Xenon = useXenon('<API KEY>');
+
+  const contentType = 'Info Product';
+  const identifier = 'how-to-efficiently-use-google-ads'; // optional
+  
+  //Customer requested some content
+  Xenon.contentRequested(contentType, identifier);
+  // -OR- 
+  Xenon.contentRequested(contentType);
+```
 ###### HTML example:
 ```html
 <script>
@@ -1777,6 +2486,18 @@ const contentType = 'Info Product';
 
 // Customer searched for some content
 Xenon.contentSearched(contentType);
+```
+###### Nextjs example:
+```javascript
+import {useXenon} from "xenon-view-sdk/useXenon";
+
+export default function Home() {
+  const Xenon = useXenon('<API KEY>');
+
+  const contentType = 'Info Product';
+  
+  // Customer searched for some content
+  Xenon.contentSearched(contentType);
 ```
 ###### HTML example:
 ```html
@@ -1810,6 +2531,16 @@ import Xenon from 'xenon-view-sdk';
 
 // you can commit a journey to Xenon View
 await Xenon.commit();
+```
+###### Nextjs example:
+```javascript
+import {useXenon} from "xenon-view-sdk/useXenon";
+
+export default function Home() {
+  const Xenon = useXenon('<API KEY>');
+
+  // you can commit a journey to Xenon View
+  await Xenon.commit();
 ```
 ###### HTML example:
 ```html
@@ -1849,6 +2580,16 @@ import Xenon from 'xenon-view-sdk';
 
 // you can heartbeat to Xenon View
 await Xenon.heartbeat();
+```
+###### Nextjs example:
+```javascript
+import {useXenon} from "xenon-view-sdk/useXenon";
+
+export default function Home() {
+  const Xenon = useXenon('<API KEY>');
+
+  // you can heartbeat to Xenon View
+  await Xenon.heartbeat();
 ```
 ###### HTML example:
 ```html
@@ -1894,6 +2635,21 @@ const operatingSystemName = 'Android';
 // you can add platform details to outcomes
 Xenon.platform(softwareVersion, deviceModel, operatingSystemName, operatingSystemVersion);
 ```
+###### Nextjs example:
+```javascript
+import {useXenon} from "xenon-view-sdk/useXenon";
+
+export default function Home() {
+  const Xenon = useXenon('<API KEY>');
+
+  const softwareVersion = '5.1.5';
+  const deviceModel = 'Pixel 4 XL';
+  const operatingSystemVersion = '12.0';
+  const operatingSystemName = 'Android';
+  
+  // you can add platform details to outcomes
+  Xenon.platform(softwareVersion, deviceModel, operatingSystemName, operatingSystemVersion);
+```
 This adds platform details for each outcome ([Saas](#saas)/[Ecom](#ecom)). Typically, this would be set once at initialization:
 ###### Framework example:
 ```javascript
@@ -1907,13 +2663,26 @@ const operatingSystemVersion = '12.0';
 const operatingSystemName = 'Android';
 Xenon.platform(softwareVersion, deviceModel, operatingSystemName, operatingSystemVersion);
 ```
+###### Nextjs example:
+```javascript
+import {useXenon} from "xenon-view-sdk/useXenon";
+
+export default function Home() {
+  const Xenon = useXenon('<API KEY>');
+  
+  const softwareVersion = '5.1.5';
+  const deviceModel = 'Pixel 4 XL';
+  const operatingSystemVersion = '12.0';
+  const operatingSystemName = 'Android';
+  Xenon.platform(softwareVersion, deviceModel, operatingSystemName, operatingSystemVersion);
+```
 ###### HTML example:
 ```html
 <!doctype html>
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <script src="https://cdn.jsdelivr.net/gh/xenonview-com/view-js-sdk@v0.1.6/dist/xenon_view_sdk.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/gh/xenonview-com/view-js-sdk@v0.1.7/dist/xenon_view_sdk.min.js"></script>
   <script>
     Xenon.init('<API KEY>')
     const softwareVersion = '5.1.5'
@@ -1950,13 +2719,25 @@ const variant = 'subscription-variant-A';
 // you can name variants for to outcomes
 Xenon.variant([variant]);
 ```
+###### Nextjs example:
+```javascript
+import {useXenon} from "xenon-view-sdk/useXenon";
+
+export default function Home() {
+  const Xenon = useXenon('<API KEY>');
+
+  const variant = 'subscription-variant-A';
+  
+  // you can name variants for to outcomes
+  Xenon.variant([variant]);
+```
 ###### HTML example:
 ```html
 <!doctype html>
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <script src="https://cdn.jsdelivr.net/gh/xenonview-com/view-js-sdk@v0.1.6/dist/xenon_view_sdk.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/gh/xenonview-com/view-js-sdk@v0.1.7/dist/xenon_view_sdk.min.js"></script>
   <script>
     Xenon.init('<API KEY>')
     Xenon.variant(['subscription-variant-A'])
@@ -1982,6 +2763,16 @@ import Xenon from 'xenon-view-sdk';
 
 // you can clear all variant names with the resetVariants method
 Xenon.resetVariants();
+```
+###### Nextjs example:
+```javascript
+import {useXenon} from "xenon-view-sdk/useXenon";
+
+export default function Home() {
+  const Xenon = useXenon('<API KEY>');
+
+  // you can clear all variant names with the resetVariants method
+  Xenon.resetVariants();
 ```
 
 <br/>
@@ -2027,6 +2818,26 @@ let person = {
 }
 await Xenon.deanonymize(person);
 ```
+###### Nextjs example:
+```javascript
+import {useXenon} from "xenon-view-sdk/useXenon";
+
+export default function Home() {
+  const Xenon = useXenon('<API KEY>');
+
+  // you can deanonymize before or after you have committed the journey (in this case, after):
+  let person = {
+    name:'JS Test', 
+    email:'jstest@example.com'}
+  ;
+  await Xenon.deanonymize(person);
+  
+  // you can also deanonymize with a user ID:
+  let person = {
+    UUID: '<some unique ID>'
+  }
+  await Xenon.deanonymize(person);
+```
 ###### HTML example:
 ```html
 <script>
@@ -2071,6 +2882,19 @@ Xenon.commit().catch(
   // handle error
 });
 ```
+###### Nextjs example:
+```javascript
+import {useXenon} from "xenon-view-sdk/useXenon";
+
+export default function Home() {
+  const Xenon = useXenon('<API KEY>');
+
+  // you can handle errors if necessary
+  Xenon.commit().catch(
+  (err) =>{
+    // handle error
+  });
+```
 
 <br/>
 
@@ -2091,6 +2915,20 @@ let operation = 'Called';
 let name = 'Query Database';
 let detail = 'User Lookup';
 Xenon.milestone(category, operation, name, detail);
+```
+###### Nextjs example:
+```javascript
+import {useXenon} from "xenon-view-sdk/useXenon";
+
+export default function Home() {
+  const Xenon = useXenon('<API KEY>');
+
+  // you can add a custom milestone to the customer journey
+  let category = 'Function';
+  let operation = 'Called';
+  let name = 'Query Database';
+  let detail = 'User Lookup';
+  Xenon.milestone(category, operation, name, detail);
 ```
 ###### HTML example:
 ```html
@@ -2145,6 +2983,26 @@ expect(Xenon.id()).toEqual(testId);
 Xenon.newId();
 expect(Xenon.id()).not.toBeNull();
 expect(Xenon.id()).not.toEqual('');
+```
+###### Nextjs example:
+```javascript
+import {useXenon} from "xenon-view-sdk/useXenon";
+
+export default function Home() {
+  const Xenon = useXenon('<API KEY>');
+  // by default has Journey ID
+  expect(Xenon.id()).not.toBeNull();
+  expect(Xenon.id()).not.toEqual('');
+  
+  // you can also set the id
+  let testId = '<some random uuid>';
+  Xenon.id(testId);
+  expect(Xenon.id()).toEqual(testId);
+  
+  // Lastly, you can generate a new Journey ID (useful for serialized async operations that are for different customers)
+  Xenon.newId();
+  expect(Xenon.id()).not.toBeNull();
+  expect(Xenon.id()).not.toEqual('');
 ```
 
 
