@@ -921,7 +921,7 @@ var Xenon = (function () {
       this.outcomeAdd(content);
     }
 
-    initialSubscription(tier, method = null) {
+    initialSubscription(tier, method = null, value=null) {
       const content = {
         superOutcome: 'Initial Subscription',
         outcome: 'Subscribe - ' + tier,
@@ -930,10 +930,13 @@ var Xenon = (function () {
       if (method) {
         content['method'] = method;
       }
+      if (value) {
+        content['value'] = value;
+      }
       this.outcomeAdd(content);
     }
 
-    subscriptionDeclined(tier, method = null) {
+    subscriptionDeclined(tier, method = null, value=null) {
       const content = {
         superOutcome: 'Initial Subscription',
         outcome: 'Decline - ' + tier,
@@ -942,10 +945,13 @@ var Xenon = (function () {
       if (method) {
         content['method'] = method;
       }
+      if (value) {
+        content['value'] = value;
+      }
       this.outcomeAdd(content);
     }
 
-    subscriptionRenewed(tier, method = null) {
+    subscriptionRenewed(tier, method = null, value=null) {
       const content = {
         superOutcome: 'Subscription Renewal',
         outcome: 'Renew - ' + tier,
@@ -954,10 +960,28 @@ var Xenon = (function () {
       if (method) {
         content['method'] = method;
       }
+      if (value) {
+        content['value'] = value;
+      }
       this.outcomeAdd(content);
     }
 
-    subscriptionCanceled(tier, method = null) {
+    subscriptionPaused(tier, method = null, value=null) {
+      const content = {
+        superOutcome: 'Subscription Renewal',
+        outcome: 'Paused - ' + tier,
+        result: 'fail'
+      };
+      if (method) {
+        content['method'] = method;
+      }
+      if (value) {
+        content['value'] = value;
+      }
+      this.outcomeAdd(content);
+    }
+
+    subscriptionCanceled(tier, method = null, value=null) {
       const content = {
         superOutcome: 'Subscription Renewal',
         outcome: 'Cancel - ' + tier,
@@ -966,10 +990,13 @@ var Xenon = (function () {
       if (method) {
         content['method'] = method;
       }
+      if (value) {
+        content['value'] = value;
+      }
       this.outcomeAdd(content);
     }
 
-    subscriptionUpsold(tier, method = null) {
+    subscriptionUpsold(tier, method = null, value=null) {
       const content = {
         superOutcome: 'Subscription Upsold',
         outcome: 'Upsold - ' + tier,
@@ -978,10 +1005,13 @@ var Xenon = (function () {
       if (method) {
         content['method'] = method;
       }
+      if (value) {
+        content['value'] = value;
+      }
       this.outcomeAdd(content);
     }
 
-    subscriptionUpsellDeclined(tier, method = null) {
+    subscriptionUpsellDeclined(tier, method = null, value=null) {
       const content = {
         superOutcome: 'Subscription Upsold',
         outcome: 'Declined - ' + tier,
@@ -989,6 +1019,54 @@ var Xenon = (function () {
       };
       if (method) {
         content['method'] = method;
+      }
+      if (value) {
+        content['value'] = value;
+      }
+      this.outcomeAdd(content);
+    }
+
+    subscriptionDownsell(tier, method = null, value=null) {
+      const content = {
+        superOutcome: 'Subscription Upsold',
+        outcome: 'Downsell - ' + tier,
+        result: 'fail'
+      };
+      if (method) {
+        content['method'] = method;
+      }
+      if (value) {
+        content['value'] = value;
+      }
+      this.outcomeAdd(content);
+    }
+
+    adClicked(provider, id = null, value=null) {
+      const content = {
+        superOutcome: 'Advertisement',
+        outcome: 'Ad Click - ' + provider,
+        result: 'success'
+      };
+      if (id) {
+        content['id'] = id;
+      }
+      if (value) {
+        content['value'] = value;
+      }
+      this.outcomeAdd(content);
+    }
+
+    adIgnored(provider, id = null, value=null) {
+      const content = {
+        superOutcome: 'Advertisement',
+        outcome: 'Ad Ignored - ' + provider,
+        result: 'fail'
+      };
+      if (id) {
+        content['id'] = id;
+      }
+      if (value) {
+        content['value'] = value;
       }
       this.outcomeAdd(content);
     }
@@ -1035,21 +1113,27 @@ var Xenon = (function () {
       this.outcomeAdd(content);
     }
 
-    upsold(product) {
+    upsold(product, value=null) {
       const content = {
         superOutcome: 'Upsold Product',
         outcome: 'Upsold - ' + product,
         result: 'success'
       };
+      if (value) {
+        content['value'] = value;
+      }
       this.outcomeAdd(content);
     }
 
-    upsellDismissed(product) {
+    upsellDismissed(product, value=null) {
       const content = {
         superOutcome: 'Upsold Product',
         outcome: 'Dismissed - ' + product,
         result: 'fail'
       };
+      if (value) {
+        content['value'] = value;
+      }
       this.outcomeAdd(content);
     }
 
@@ -1080,22 +1164,28 @@ var Xenon = (function () {
       this.outcomeAdd(content);
     }
 
-    purchased(method) {
+    purchased(method, value=null) {
       const content = {
         superOutcome: 'Customer Purchase',
         outcome: 'Purchase - ' + method,
         result: 'success'
       };
+      if (value) {
+        content['value'] = value;
+      }
       this.outcomeAdd(content);
     }
 
-    purchaseCanceled(method = null) {
+    purchaseCanceled(method = null, value=null) {
       const outcome = 'Canceled' + (method ? ' - ' + method : '');
       const content = {
         superOutcome: 'Customer Purchase',
         outcome: outcome,
         result: 'fail'
       };
+      if (value) {
+        content['value'] = value;
+      }
       this.outcomeAdd(content);
     }
 
@@ -1216,6 +1306,18 @@ var Xenon = (function () {
       const event = {
         category: 'Content',
         action: 'Deleted',
+        type: contentType,
+      };
+      if (identifier) {
+        event['identifier'] = identifier;
+      }
+      this.journeyAdd(event);
+    }
+
+    contentArchived(contentType, identifier = null) {
+      const event = {
+        category: 'Content',
+        action: 'Archived',
         type: contentType,
       };
       if (identifier) {
