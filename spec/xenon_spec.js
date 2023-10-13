@@ -208,25 +208,30 @@ describe('View SDK', () => {
   describe('when initialSubscription', () => {
     const tierSilver = 'Silver Monthly';
     const method = 'Stripe'; // optional
-    const value = '$25'; // optional
-    describe('when has method and value', () => {
+    const price = '$25'; // optional
+    const term = '30d'; // optional
+    describe('when has method, price and term', () => {
       it('then creates journey with outcome', () => {
         const journey = unit.journey()[0];
-        expect(journey.superOutcome).toEqual('Initial Subscription');
-        expect(journey.outcome).toEqual('Subscribe - ' + tierSilver);
-        expect(journey.result).toEqual('success');
-        expect(journey.value).toEqual(value);
+        expect(journey.term).toEqual(term);
       });
       beforeEach(() => {
-        unit.initialSubscription(tierSilver, method, value)
+        unit.initialSubscription(tierSilver, method, price, term)
+      });
+    });
+    describe('when has method and price', () => {
+      it('then creates journey with outcome', () => {
+        const journey = unit.journey()[0];
+        expect(journey.price).toEqual(price);
+      });
+      beforeEach(() => {
+        unit.initialSubscription(tierSilver, method, price)
       });
     });
     describe('when has method', () => {
       it('then creates journey with outcome', () => {
         const journey = unit.journey()[0];
-        expect(journey.superOutcome).toEqual('Initial Subscription');
-        expect(journey.outcome).toEqual('Subscribe - ' + tierSilver);
-        expect(journey.result).toEqual('success');
+        expect(journey.method).toEqual(method);
       });
       beforeEach(() => {
         unit.initialSubscription(tierSilver, method)
@@ -243,30 +248,34 @@ describe('View SDK', () => {
         unit.initialSubscription(tierSilver)
       });
     });
-
   });
   describe('when subscriptionDeclined', () => {
     const tierSilver = 'Silver Monthly';
     const method = 'Stripe'; // optional
-    const value = '$25'; // optional
-    describe('when has method and value', () => {
+    const price = '$25'; // optional
+    const term = '30d'; // optional
+    describe('when has method, price, and term', () => {
       it('then creates journey with outcome', () => {
         const journey = unit.journey()[0];
-        expect(journey.superOutcome).toEqual('Initial Subscription');
-        expect(journey.outcome).toEqual('Decline - ' + tierSilver);
-        expect(journey.result).toEqual('fail');
-        expect(journey.value).toEqual(value);
+        expect(journey.term).toEqual(term);
       });
       beforeEach(() => {
-        unit.subscriptionDeclined(tierSilver, method, value)
+        unit.subscriptionDeclined(tierSilver, method, price, term)
+      });
+    });
+    describe('when has method and price', () => {
+      it('then creates journey with outcome', () => {
+        const journey = unit.journey()[0];
+        expect(journey.price).toEqual(price);
+      });
+      beforeEach(() => {
+        unit.subscriptionDeclined(tierSilver, method, price)
       });
     });
     describe('when has method', () => {
       it('then creates journey with outcome', () => {
         const journey = unit.journey()[0];
-        expect(journey.superOutcome).toEqual('Initial Subscription');
-        expect(journey.outcome).toEqual('Decline - ' + tierSilver);
-        expect(journey.result).toEqual('fail');
+        expect(journey.method).toEqual(method);
       });
       beforeEach(() => {
         unit.subscriptionDeclined(tierSilver, method)
@@ -283,31 +292,35 @@ describe('View SDK', () => {
         unit.subscriptionDeclined(tierSilver)
       });
     });
-
   });
   describe('when subscriptionRenewed', () => {
     const tierSilver = 'Silver Monthly';
     const method = 'Stripe'; // optional
-    const value = '$25'; // optional
+    const price = '$25'; // optional
+    const term = '30d'; // optional
 
-    describe('when has method and value', () => {
+    describe('when has method, price and term', () => {
       it('then creates journey with outcome', () => {
         const journey = unit.journey()[0];
-        expect(journey.superOutcome).toEqual('Subscription Renewal');
-        expect(journey.outcome).toEqual('Renew - ' + tierSilver);
-        expect(journey.result).toEqual('success');
-        expect(journey.value).toEqual(value);
+        expect(journey.term).toEqual(term);
       });
       beforeEach(() => {
-        unit.subscriptionRenewed(tierSilver, method, value)
+        unit.subscriptionRenewed(tierSilver, method, price, term)
+      });
+    });
+    describe('when has method and price', () => {
+      it('then creates journey with outcome', () => {
+        const journey = unit.journey()[0];
+        expect(journey.price).toEqual(price);
+      });
+      beforeEach(() => {
+        unit.subscriptionRenewed(tierSilver, method, price)
       });
     });
     describe('when has method', () => {
       it('then creates journey with outcome', () => {
         const journey = unit.journey()[0];
-        expect(journey.superOutcome).toEqual('Subscription Renewal');
-        expect(journey.outcome).toEqual('Renew - ' + tierSilver);
-        expect(journey.result).toEqual('success');
+        expect(journey.method).toEqual(method);
       });
       beforeEach(() => {
         unit.subscriptionRenewed(tierSilver, method)
@@ -329,26 +342,31 @@ describe('View SDK', () => {
   describe('when subscriptionPaused', () => {
     const tierSilver = 'Silver Monthly';
     const method = 'Stripe'; // optional
-    const value = '$25'; // optional
+    const price = '$25'; // optional
+    const term = '30d'; // optional
 
-    describe('when has method and value', () => {
+    describe('when has method, price, and term', () => {
       it('then creates journey with outcome', () => {
         const journey = unit.journey()[0];
-        expect(journey.superOutcome).toEqual('Subscription Renewal');
-        expect(journey.outcome).toEqual('Paused - ' + tierSilver);
-        expect(journey.result).toEqual('fail');
-        expect(journey.value).toEqual(value);
+        expect(journey.term).toEqual(term);
       });
       beforeEach(() => {
-        unit.subscriptionPaused(tierSilver, method, value)
+        unit.subscriptionPaused(tierSilver, method, price, term)
+      });
+    });
+    describe('when has method and price', () => {
+      it('then creates journey with outcome', () => {
+        const journey = unit.journey()[0];
+        expect(journey.price).toEqual(price);
+      });
+      beforeEach(() => {
+        unit.subscriptionPaused(tierSilver, method, price)
       });
     });
     describe('when has method', () => {
       it('then creates journey with outcome', () => {
         const journey = unit.journey()[0];
-        expect(journey.superOutcome).toEqual('Subscription Renewal');
-        expect(journey.outcome).toEqual('Paused - ' + tierSilver);
-        expect(journey.result).toEqual('fail');
+        expect(journey.method).toEqual(method);
       });
       beforeEach(() => {
         unit.subscriptionPaused(tierSilver, method)
@@ -365,31 +383,35 @@ describe('View SDK', () => {
         unit.subscriptionPaused(tierSilver)
       });
     });
-
   });
   describe('when subscriptionCanceled', () => {
     const tierSilver = 'Silver Monthly';
     const method = 'Stripe'; // optional
-    const value = '$25'; // optional
+    const price = '$25'; // optional
+    const term = '30d'; // optional
 
-    describe('when has method and value', () => {
+    describe('when has method, price, and term', () => {
       it('then creates journey with outcome', () => {
         const journey = unit.journey()[0];
-        expect(journey.superOutcome).toEqual('Subscription Renewal');
-        expect(journey.outcome).toEqual('Cancel - ' + tierSilver);
-        expect(journey.result).toEqual('fail');
-        expect(journey.value).toEqual(value);
+        expect(journey.term).toEqual(term);
       });
       beforeEach(() => {
-        unit.subscriptionCanceled(tierSilver, method, value)
+        unit.subscriptionCanceled(tierSilver, method, price, term)
+      });
+    });
+    describe('when has method and price', () => {
+      it('then creates journey with outcome', () => {
+        const journey = unit.journey()[0];
+        expect(journey.price).toEqual(price);
+      });
+      beforeEach(() => {
+        unit.subscriptionCanceled(tierSilver, method, price)
       });
     });
     describe('when has method', () => {
       it('then creates journey with outcome', () => {
         const journey = unit.journey()[0];
-        expect(journey.superOutcome).toEqual('Subscription Renewal');
-        expect(journey.outcome).toEqual('Cancel - ' + tierSilver);
-        expect(journey.result).toEqual('fail');
+        expect(journey.method).toEqual(method);
       });
       beforeEach(() => {
         unit.subscriptionCanceled(tierSilver, method)
@@ -411,26 +433,30 @@ describe('View SDK', () => {
   describe('when subscriptionUpsold', () => {
     const tierSilver = 'Silver Monthly';
     const method = 'Stripe'; // optional
-    const value = '$25'; // optional
-
-    describe('when has method and value', () => {
+    const price = '$25'; // optional
+    const term = '30d'; // optional
+    describe('when has method, price and term', () => {
       it('then creates journey with outcome', () => {
         const journey = unit.journey()[0];
-        expect(journey.superOutcome).toEqual('Subscription Upsold');
-        expect(journey.outcome).toEqual('Upsold - ' + tierSilver);
-        expect(journey.result).toEqual('success');
-        expect(journey.value).toEqual(value);
+        expect(journey.term).toEqual(term);
       });
       beforeEach(() => {
-        unit.subscriptionUpsold(tierSilver, method, value)
+        unit.subscriptionUpsold(tierSilver, method, price, term)
+      });
+    });
+    describe('when has method and price', () => {
+      it('then creates journey with outcome', () => {
+        const journey = unit.journey()[0];
+        expect(journey.price).toEqual(price);
+      });
+      beforeEach(() => {
+        unit.subscriptionUpsold(tierSilver, method, price)
       });
     });
     describe('when has method', () => {
       it('then creates journey with outcome', () => {
         const journey = unit.journey()[0];
-        expect(journey.superOutcome).toEqual('Subscription Upsold');
-        expect(journey.outcome).toEqual('Upsold - ' + tierSilver);
-        expect(journey.result).toEqual('success');
+        expect(journey.method).toEqual(method);
       });
       beforeEach(() => {
         unit.subscriptionUpsold(tierSilver, method)
@@ -452,26 +478,31 @@ describe('View SDK', () => {
   describe('when subscriptionUpsellDeclined', () => {
     const tierSilver = 'Silver Monthly';
     const method = 'Stripe'; // optional
-    const value = '$25'; // optional
+    const price = '$25'; // optional
+    const term = '30d'; // optional
 
-    describe('when has method and value', () => {
+    describe('when has method, price and term', () => {
       it('then creates journey with outcome', () => {
         const journey = unit.journey()[0];
-        expect(journey.superOutcome).toEqual('Subscription Upsold');
-        expect(journey.outcome).toEqual('Declined - ' + tierSilver);
-        expect(journey.result).toEqual('fail');
-        expect(journey.value).toEqual(value);
+        expect(journey.term).toEqual(term);
       });
       beforeEach(() => {
-        unit.subscriptionUpsellDeclined(tierSilver, method, value);
+        unit.subscriptionUpsellDeclined(tierSilver, method, price, term);
+      });
+    });
+    describe('when has method, and price', () => {
+      it('then creates journey with outcome', () => {
+        const journey = unit.journey()[0];
+        expect(journey.price).toEqual(price);
+      });
+      beforeEach(() => {
+        unit.subscriptionUpsellDeclined(tierSilver, method, price);
       });
     });
     describe('when has method', () => {
       it('then creates journey with outcome', () => {
         const journey = unit.journey()[0];
-        expect(journey.superOutcome).toEqual('Subscription Upsold');
-        expect(journey.outcome).toEqual('Declined - ' + tierSilver);
-        expect(journey.result).toEqual('fail');
+        expect(journey.method).toEqual(method);
       });
       beforeEach(() => {
         unit.subscriptionUpsellDeclined(tierSilver, method);
@@ -493,26 +524,30 @@ describe('View SDK', () => {
   describe('when subscriptionDownsell', () => {
     const tierSilver = 'Silver Monthly';
     const method = 'Stripe'; // optional
-    const value = '$25'; // optional
-
-    describe('when has method and value', () => {
+    const price = '$25'; // optional
+    const term = '30d'; // optional
+    describe('when has method, price and term', () => {
       it('then creates journey with outcome', () => {
         const journey = unit.journey()[0];
-        expect(journey.superOutcome).toEqual('Subscription Upsold');
-        expect(journey.outcome).toEqual('Downsell - ' + tierSilver);
-        expect(journey.result).toEqual('fail');
-        expect(journey.value).toEqual(value);
+        expect(journey.term).toEqual(term);
       });
       beforeEach(() => {
-        unit.subscriptionDownsell(tierSilver, method, value);
+        unit.subscriptionDownsell(tierSilver, method, price, term);
+      });
+    });
+    describe('when has method and price', () => {
+      it('then creates journey with outcome', () => {
+        const journey = unit.journey()[0];
+        expect(journey.price).toEqual(price);
+      });
+      beforeEach(() => {
+        unit.subscriptionDownsell(tierSilver, method, price);
       });
     });
     describe('when has method', () => {
       it('then creates journey with outcome', () => {
         const journey = unit.journey()[0];
-        expect(journey.superOutcome).toEqual('Subscription Upsold');
-        expect(journey.outcome).toEqual('Downsell - ' + tierSilver);
-        expect(journey.result).toEqual('fail');
+        expect(journey.method).toEqual(method);
       });
       beforeEach(() => {
         unit.subscriptionDownsell(tierSilver, method);
@@ -533,19 +568,19 @@ describe('View SDK', () => {
   describe('when adCicked', () => {
     const provider = 'AdMob';
     const id = 'ID-1234'; // optional
-    const value = '$0.225'; // optional
+    const price = '$0.225'; // optional
 
-    describe('when has id and value', () => {
+    describe('when has id and price', () => {
       it('then creates journey with outcome', () => {
         const journey = unit.journey()[0];
         expect(journey.superOutcome).toEqual('Advertisement');
         expect(journey.outcome).toEqual('Ad Click - ' + provider);
         expect(journey.result).toEqual('success');
         expect(journey.id).toEqual(id);
-        expect(journey.value).toEqual(value);
+        expect(journey.price).toEqual(price);
       });
       beforeEach(() => {
-        unit.adClicked(provider, id, value);
+        unit.adClicked(provider, id, price);
       });
     });
     describe('when has id', () => {
@@ -575,19 +610,19 @@ describe('View SDK', () => {
   describe('when adIgnored', () => {
     const provider = 'AdMob';
     const id = 'ID-1234'; // optional
-    const value = '$0.225'; // optional
+    const price = '$0.225'; // optional
 
-    describe('when has id and value', () => {
+    describe('when has id and price', () => {
       it('then creates journey with outcome', () => {
         const journey = unit.journey()[0];
         expect(journey.superOutcome).toEqual('Advertisement');
         expect(journey.outcome).toEqual('Ad Ignored - ' + provider);
         expect(journey.result).toEqual('fail');
         expect(journey.id).toEqual(id);
-        expect(journey.value).toEqual(value);
+        expect(journey.price).toEqual(price);
       });
       beforeEach(() => {
-        unit.adIgnored(provider, id, value);
+        unit.adIgnored(provider, id, price);
       });
     });
     describe('when has id', () => {
@@ -695,21 +730,21 @@ describe('View SDK', () => {
   });
   describe('when upsold', () => {
     const laptop = 'Dell XPS';
-    const value = '$25'; // optional
+    const price = '$25'; // optional
 
-    describe('when has value', () => {
+    describe('when has price', () => {
       it('then creates journey with outcome', () => {
         const journey = unit.journey()[0];
         expect(journey.superOutcome).toEqual('Upsold Product');
         expect(journey.outcome).toEqual('Upsold - ' + laptop);
         expect(journey.result).toEqual('success');
-        expect(journey.value).toEqual(value);
+        expect(journey.price).toEqual(price);
       });
       beforeEach(() => {
-        unit.upsold(laptop, value)
+        unit.upsold(laptop, price)
       });
     });
-    describe('when no value', () => {
+    describe('when no price', () => {
       it('then creates journey with outcome', () => {
         const journey = unit.journey()[0];
         expect(journey.superOutcome).toEqual('Upsold Product');
@@ -723,21 +758,21 @@ describe('View SDK', () => {
   });
   describe('when upsellDismissed', () => {
     const laptop = 'Dell XPS';
-    const value = '$25'; // optional
+    const price = '$25'; // optional
 
-    describe('when value', () => {
+    describe('when price', () => {
       it('then creates journey with outcome', () => {
         const journey = unit.journey()[0];
         expect(journey.superOutcome).toEqual('Upsold Product');
         expect(journey.outcome).toEqual('Dismissed - ' + laptop);
         expect(journey.result).toEqual('fail');
-        expect(journey.value).toEqual(value);
+        expect(journey.price).toEqual(price);
       });
       beforeEach(() => {
-        unit.upsellDismissed(laptop, value)
+        unit.upsellDismissed(laptop, price)
       });
     });
-    describe('when no value', () => {
+    describe('when no price', () => {
       it('then creates journey with outcome', () => {
         const journey = unit.journey()[0];
         expect(journey.superOutcome).toEqual('Upsold Product');
@@ -785,20 +820,20 @@ describe('View SDK', () => {
   });
   describe('when purchased', () => {
     const method = 'Stripe';
-    const value = '$25'; // optional
-    describe('when value', () => {
+    const price = '$25'; // optional
+    describe('when price', () => {
       it('then creates journey with outcome', () => {
         const journey = unit.journey()[0];
         expect(journey.superOutcome).toEqual('Customer Purchase');
         expect(journey.outcome).toEqual('Purchase - ' + method);
         expect(journey.result).toEqual('success');
-        expect(journey.value).toEqual(value);
+        expect(journey.price).toEqual(price);
       });
       beforeEach(() => {
-        unit.purchased(method, value)
+        unit.purchased(method, price)
       });
     });
-    describe('when no value', () => {
+    describe('when no price', () => {
       it('then creates journey with outcome', () => {
         const journey = unit.journey()[0];
         expect(journey.superOutcome).toEqual('Customer Purchase');
@@ -812,18 +847,18 @@ describe('View SDK', () => {
   });
   describe('when purchaseCanceled', () => {
     const method = 'Stripe';
-    const value = '$25'; // optional
+    const price = '$25'; // optional
 
-    describe('when method and value', () => {
+    describe('when method and price', () => {
       it('then creates journey with outcome', () => {
         const journey = unit.journey()[0];
         expect(journey.superOutcome).toEqual('Customer Purchase');
         expect(journey.outcome).toEqual('Canceled - ' + method);
         expect(journey.result).toEqual('fail');
-        expect(journey.value).toEqual(value);
+        expect(journey.price).toEqual(price);
       });
       beforeEach(() => {
-        unit.purchaseCanceled(method, value)
+        unit.purchaseCanceled(method, price)
       });
     });
     describe('when method', () => {

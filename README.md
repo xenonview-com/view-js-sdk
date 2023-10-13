@@ -6,38 +6,39 @@ The Xenon View JavaScript SDK is the JavaScript SDK to interact with [XenonView]
 * [What's New](#whats-new)
 * [Introduction](#intro)
 * [Steps To Get Started](#getting-started)
-  * [Identify Business Outcomes](#step-1)
-  * [Identify Customer Journey Milestones](#step-2)
-  * [Enumerate Technical Stack](#step-3)
-  * [Installation](#step-4)
-  * [Instrument Business Outcomes](#step-5)
-  * [Instrument Customer Journey Milestones](#step-6)
-  * [Determine Commit Points](#step-7)
-  * [(Optional) Group Customer Journeys](#step-8)
-  * [Analysis](#step-9)
-  * [Perform Experiments](#step-10)
+    * [Identify Business Outcomes](#step-1)
+    * [Identify Customer Journey Milestones](#step-2)
+    * [Enumerate Technical Stack](#step-3)
+    * [Installation](#step-4)
+    * [Instrument Business Outcomes](#step-5)
+    * [Instrument Customer Journey Milestones](#step-6)
+    * [Determine Commit Points](#step-7)
+    * [(Optional) Group Customer Journeys](#step-8)
+    * [Analysis](#step-9)
+    * [Perform Experiments](#step-10)
 * [Detailed Usage](#detailed-usage)
-  * [Installation](#installation)
-  * [Initialization](#instantiation)
-  * [Service/Subscription/SaaS Business Outcomes](#saas)
-  * [Ecommerce Business Outcomes](#ecom)
-  * [Customer Journey Milestones](#milestones)
-    * [Features Usage](#feature-usage)
-    * [Content Interaction](#content-interaction)
-  * [Commit Points](#commiting)
-  * [Heartbeats](#heartbeat)
-  * [Platforming](#platforming)
-  * [Experiments](#experiments)
-  * [Customer Journey Grouping](#deanonymizing-journeys)
-  * [Other Considerations](#other)
-    * [(Optional) Error Handling](#errors)
-    * [(Optional) Custom Customer Journey Milestones](#custom)
-    * [(Optional) Journey Identification](#cuuid)
+    * [Installation](#installation)
+    * [Initialization](#instantiation)
+    * [Service/Subscription/SaaS Business Outcomes](#saas)
+    * [Ecommerce Business Outcomes](#ecom)
+    * [Customer Journey Milestones](#milestones)
+        * [Features Usage](#feature-usage)
+        * [Content Interaction](#content-interaction)
+    * [Commit Points](#commiting)
+    * [Heartbeats](#heartbeat)
+    * [Platforming](#platforming)
+    * [Experiments](#experiments)
+    * [Customer Journey Grouping](#deanonymizing-journeys)
+    * [Other Considerations](#other)
+        * [(Optional) Error Handling](#errors)
+        * [(Optional) Custom Customer Journey Milestones](#custom)
+        * [(Optional) Journey Identification](#cuuid)
 * [License](#license)
 
 <br/>
 
 ## What's New <a id='whats-new'></a>
+* v0.1.9 - Added: Term length as well and changed value to price for correctness
 * v0.1.8 - Added: Downsell, Ad, Content Archive, Subscription Pause and included price for all subscriptions
 * v0.1.7 - Nextjs support 
 * v0.1.6 - include minified 
@@ -699,13 +700,14 @@ const tierGold = 'Gold';
 const tierPlatium = 'Platium';
 const annualSilver = 'Silver Annual';
 const method = 'Stripe'; // optional
-const value = '$25'; //optional
+const term = '30d'; //optional
+const price = '$25'; //optional
 
 // Successful subscription of the lowest tier with Stripe
 Xenon.initialSubscription(tierSilver, method);
 
-// Successful subscription of the lowest tier with Stripe for $25
-Xenon.initialSubscription(tierSilver, method, value);
+// Successful subscription of the lowest tier with Stripe for $25 for 30days
+Xenon.initialSubscription(tierSilver, method, price, term);
 // ...
 // Successful subscription of the middle tier
 Xenon.initialSubscription(tierGold);
@@ -729,14 +731,15 @@ export default function Home() {
   const tierPlatium = 'Platium';
   const annualSilver = 'Silver Annual';
   const method = 'Stripe'; // optional
-  const value = '$25'; //optional
+  const term = '30d'; //optional
+  const price = '$25'; //optional
 
 
   // Successful subscription of the lowest tier with Stripe
   Xenon.initialSubscription(tierSilver, method);
 
   // Successful subscription of the lowest tier with Stripe for $25
-  Xenon.initialSubscription(tierSilver, method, value);
+  Xenon.initialSubscription(tierSilver, method, price, term);
   // ...
   // Successful subscription of the middle tier
   Xenon.initialSubscription(tierGold);
@@ -753,9 +756,10 @@ export default function Home() {
 <script>
   const annualSilver = 'Silver Annual'
   const method = 'Stripe'
-  const value = '$25'
+  const price = '$25'
+  const term = '30d'
   function initialSubscriptionOccurred() {
-    Xenon.initialSubscription(annualSilver, method, value)
+    Xenon.initialSubscription(annualSilver, method, price, term)
     Xenon.commit()
   }
 </script>
@@ -776,7 +780,8 @@ const tierGold = 'Gold';
 const tierPlatium = 'Platium';
 const annualSilver = 'Silver Annual';
 const method = 'Stripe'; // optional
-const value = '$25';
+const term = '30d'; //optional
+const price = '$25'; //optional
 
 // Unsuccessful subscription of the lowest tier
 Xenon.subscriptionDeclined(tierSilver);
@@ -790,8 +795,8 @@ Xenon.subscriptionDeclined(tierPlatium);
 // Unsuccessful subscription of an annual period
 Xenon.subscriptionDeclined(annualSilver, method);
 
-// Unsuccessful subscription of an annual period for $25
-Xenon.subscriptionDeclined(annualSilver, method, value);
+// Unsuccessful subscription of an annual period for $25 for 30dys
+Xenon.subscriptionDeclined(annualSilver, method, price, term);
 ```
 ###### Nextjs example:
 ```javascript
@@ -805,7 +810,8 @@ export default function Home() {
   const tierPlatium = 'Platium';
   const annualSilver = 'Silver Annual';
   const method = 'Stripe'; // optional
-  const value = '$25';
+  const price = '$25'; // optional
+  const term = '30d'; //optional
   
   // Unsuccessful subscription of the lowest tier
   Xenon.subscriptionDeclined(tierSilver);
@@ -819,17 +825,18 @@ export default function Home() {
   // Unsuccessful subscription of an annual period
   Xenon.subscriptionDeclined(annualSilver, method);
 
-  // Unsuccessful subscription of an annual period for $25
-  Xenon.subscriptionDeclined(annualSilver, method, value);
+  // Unsuccessful subscription of an annual period for $25 for 30days
+  Xenon.subscriptionDeclined(annualSilver, method, price, term);
 ```
 ###### HTML example:
 ```html
 <script>
   const annualSilver = 'Silver Annual'
   const method = 'Stripe'
-  const value = '$25'
+  const price = '$25'
+  const term = '30d'
   function subscriptionDeclinedOccurred() {
-    Xenon.subscriptionDeclined(annualSilver, method, value)
+    Xenon.subscriptionDeclined(annualSilver, method, price, term)
     Xenon.commit()
   }
 </script>
@@ -855,13 +862,14 @@ const tierGold = 'Gold';
 const tierPlatium = 'Platium';
 const annualSilver = 'Silver Annual';
 const method = 'Stripe'; //optional
-const value = '$25';
+const price = '$25'; //optional
+const term = '30d'; //optional
 
 // Successful renewal of the lowest tier with Stripe
 Xenon.subscriptionRenewed(tierSilver, method);
 
-// Successful renewal of the lowest tier with Stripe for $25
-Xenon.subscriptionRenewed(tierSilver, method, value);
+// Successful renewal of the lowest tier with Stripe for $25 for 30days
+Xenon.subscriptionRenewed(tierSilver, method, price, term);
 // ...
 // Successful renewal of the middle tier
 Xenon.subscriptionRenewed(tierGold);
@@ -884,13 +892,14 @@ export default function Home() {
   const tierPlatium = 'Platium';
   const annualSilver = 'Silver Annual';
   const method = 'Stripe'; //optional
-  const value = '$25';
+  const price = '$25'; //optional
+  const term = '30d'; //optional
   
   // Successful renewal of the lowest tier with Stripe
   Xenon.subscriptionRenewed(tierSilver, method);
 
-  // Successful renewal of the lowest tier with Stripe for $25
-  Xenon.subscriptionRenewed(annualSilver, method, value);
+  // Successful renewal of the lowest tier with Stripe for $25 for 30days
+  Xenon.subscriptionRenewed(annualSilver, method, price, term);
   // ...
   // Successful renewal of the middle tier
   Xenon.subscriptionRenewed(tierGold);
@@ -906,9 +915,10 @@ export default function Home() {
 <script>
   const annualSilver = 'Silver Annual'
   const method = 'Stripe'
-  const value = '$25'
+  const price = '$25'
+  const term = '30d'
   function subscriptionRenewedOccurred() {
-    Xenon.subscriptionRenewed(annualSilver, method, value)
+    Xenon.subscriptionRenewed(annualSilver, method, price, term)
     Xenon.commit()
   }
 </script>
@@ -929,7 +939,8 @@ const tierGold = 'Gold';
 const tierPlatium = 'Platium';
 const annualSilver = 'Silver Annual';
 const method = 'Stripe'; //optional
-const value = '$25'; //optional
+const price = '$25'; //optional
+const term = '30d'; //optional
 
 // Canceled subscription of the lowest tier
 Xenon.subscriptionCanceled(tierSilver);
@@ -943,8 +954,8 @@ Xenon.subscriptionCanceled(tierPlatium);
 // Canceled subscription of an annual period with Stripe
 Xenon.subscriptionCanceled(annualSilver, method);
 
-// Canceled subscription of an annual period with Stripe for $25
-Xenon.subscriptionCanceled(annualSilver, method, value);
+// Canceled subscription of an annual period with Stripe for $25 for 30days
+Xenon.subscriptionCanceled(annualSilver, method, price, term);
 ```
 ###### Nextjs example:
 ```javascript
@@ -958,7 +969,8 @@ export default function Home() {
   const tierPlatium = 'Platium';
   const annualSilver = 'Silver Annual';
   const method = 'Stripe'; //optional
-  const value = '$25'; //optional
+  const price = '$25'; //optional
+  const term = '30d'; //optional
 
 
   // Canceled subscription of the lowest tier
@@ -970,17 +982,18 @@ export default function Home() {
   // Canceled subscription of the top tier
   Xenon.subscriptionCanceled(tierPlatium);
   // ...
-  // Canceled subscription of an annual period with Stripe for $25
-  Xenon.subscriptionCanceled(annualSilver, method, value);
+  // Canceled subscription of an annual period with Stripe for $25 for 30days
+  Xenon.subscriptionCanceled(annualSilver, method, price, term);
 ```
 ###### HTML example:
 ```html
 <script>
   const annualSilver = 'Silver Annual'
   const method = 'Stripe'
-  const value = '$25'
+  const price = '$25'
+  const term = '30d'
   function subscriptionCanceledOccurred() {
-    Xenon.subscriptionCanceled(annualSilver, method, value)
+    Xenon.subscriptionCanceled(annualSilver, method, price, term)
     Xenon.commit()
   }
 </script>
@@ -1002,7 +1015,8 @@ const tierGold = 'Gold';
 const tierPlatium = 'Platium';
 const annualSilver = 'Silver Annual';
 const method = 'Stripe'; //optional
-const value = '$25'; //optional
+const price = '$25'; //optional
+const term = '30d'; //optional
 
 // Paused subscription of the lowest tier
 Xenon.subscriptionPaused(tierSilver);
@@ -1016,8 +1030,8 @@ Xenon.subscriptionPaused(tierPlatium);
 // Paused subscription of an annual period with Stripe
 Xenon.subscriptionPaused(annualSilver, method);
 
-// Paused subscription of an annual period with Stripe for $25
-Xenon.subscriptionPaused(annualSilver, method, value);
+// Paused subscription of an annual period with Stripe for $25 for 30days
+Xenon.subscriptionPaused(annualSilver, method, price, term);
 ```
 ###### Nextjs example:
 ```javascript
@@ -1031,7 +1045,8 @@ export default function Home() {
   const tierPlatium = 'Platium';
   const annualSilver = 'Silver Annual';
   const method = 'Stripe'; //optional
-  const value = '$25'; //optional
+  const price = '$25'; //optional
+  const term = '30d'; //optional
   
   // Paused subscription of the lowest tier
   Xenon.subscriptionPaused(tierSilver);
@@ -1046,16 +1061,17 @@ export default function Home() {
   Xenon.subscriptionPaused(annualSilver, method);
 
   // Paused subscription of an annual period with Stripe for $25
-  Xenon.subscriptionPaused(annualSilver, method, value);
+  Xenon.subscriptionPaused(annualSilver, method, price, term);
 ```
 ###### HTML example:
 ```html
 <script>
   const annualSilver = 'Silver Annual'
   const method = 'Stripe'
-  const value = '$25'
+  const price = '$25'
+  const term = '30d'
   function subscriptionPausedOccurred() {
-    Xenon.subscriptionPaused(annualSilver, method, value)
+    Xenon.subscriptionPaused(annualSilver, method, price, term)
     Xenon.commit()
   }
 </script>
@@ -1080,7 +1096,8 @@ const tierGold = 'Gold Monthly';
 const tierPlatium = 'Platium';
 const annualGold = 'Gold Annual';
 const method = 'Stripe'; // optional
-const value = '$25'; //optional
+const price = '$25'; //optional
+const term = '30d'; //optional
 
 
 // Assume already subscribed to Silver
@@ -1088,8 +1105,8 @@ const value = '$25'; //optional
 // Successful upsell of the middle tier with Stripe
 Xenon.subscriptionUpsold(tierGold, method);
 
-// Successful upsell of the middle tier with Stripe for $25
-Xenon.subscriptionUpsold(tierGold, method, value);
+// Successful upsell of the middle tier with Stripe for $25 for 30days
+Xenon.subscriptionUpsold(tierGold, method, price, term);
 // ...
 // Successful upsell of the top tier
 Xenon.subscriptionUpsold(tierPlatium);
@@ -1108,7 +1125,8 @@ export default function Home() {
   const tierPlatium = 'Platium';
   const annualGold = 'Gold Annual';
   const method = 'Stripe'; // optional
-  const value = '$25'; //optional
+  const price = '$25'; //optional
+  const term = '30d'; //optional
 
 
   // Assume already subscribed to Silver
@@ -1116,8 +1134,8 @@ export default function Home() {
   // Successful upsell of the middle tier with Stripe
   Xenon.subscriptionUpsold(tierGold, method);
 
-  // Successful upsell of the middle tier with Stripe for $25
-  Xenon.subscriptionUpsold(tierGold, method, value);
+  // Successful upsell of the middle tier with Stripe for $25 for 30-days
+  Xenon.subscriptionUpsold(tierGold, method, price, term);
   // ...
   // Successful upsell of the top tier
   Xenon.subscriptionUpsold(tierPlatium);
@@ -1130,9 +1148,10 @@ export default function Home() {
 <script>
   const annualSilver = 'Silver Annual'
   const method = 'Stripe'
-  const value = '$25'
+  const price = '$25'
+  const term = '30d'
   function subscriptionUpsoldOccurred() {
-    Xenon.subscriptionUpsold(annualSilver, method, value)
+    Xenon.subscriptionUpsold(annualSilver, method, price, term)
     Xenon.commit()
   }
 </script>
@@ -1152,7 +1171,8 @@ const tierGold = 'Gold Monthly';
 const tierPlatium = 'Platium';
 const annualGold = 'Gold Annual';
 const method = 'Stripe'; //optional
-const value = '$25'; //optional
+const price = '$25'; //optional
+const term = '30d'; //optional
 
 
 // Assume already subscribed to Silver
@@ -1167,7 +1187,7 @@ Xenon.subscriptionUpsellDeclined(tierPlatium);
 Xenon.subscriptionUpsellDeclined(annualGold, method);
 
 // Rejected upsell of middle tier - annual period with Stripe for $25
-Xenon.subscriptionUpsellDeclined(annualGold, method, value);
+Xenon.subscriptionUpsellDeclined(annualGold, method, price, term);
 ```
 ###### Nextjs example:
 ```javascript
@@ -1180,7 +1200,8 @@ export default function Home() {
   const tierPlatium = 'Platium';
   const annualGold = 'Gold Annual';
   const method = 'Stripe'; //optional
-  const value = '$25'; //optional
+  const price = '$25'; //optional
+  const term = '30d'; //optional
 
   // Assume already subscribed to Silver
   
@@ -1193,17 +1214,18 @@ export default function Home() {
   // Rejected upsell of middle tier - annual period with Stripe
   Xenon.subscriptionUpsellDeclined(annualGold, method);
   
-  // Rejected upsell of middle tier - annual period with Stripe for $25
-  Xenon.subscriptionUpsellDeclined(annualGold, method, value);
+  // Rejected upsell of middle tier - annual period with Stripe for $25 for 30days
+  Xenon.subscriptionUpsellDeclined(annualGold, method, price, term);
 ```
 ###### HTML example:
 ```html
 <script>
   const annualSilver = 'Silver Annual'
   const method = 'Stripe'
-  const value = '$25'
+  const price = '$25'
+  const term = '30d'
   function subscriptionUpsellDeclinedOccurred() {
-    Xenon.subscriptionUpsellDeclined(annualSilver, method, value)
+    Xenon.subscriptionUpsellDeclined(annualSilver, method, price, term)
     Xenon.commit()
   }
 </script>
@@ -1223,7 +1245,8 @@ const tierGold = 'Gold Monthly';
 const tierPlatium = 'Platium';
 const annualGold = 'Gold Annual';
 const method = 'Stripe'; //optional
-const value = '$15'; //optional
+const price = '$15'; //optional
+const term = '30d'; //optional
 
 // Assume already subscribed to Silver
 
@@ -1233,8 +1256,8 @@ Xenon.subscriptionDownsell(tierGold);
 // Downsell to middle tier - annual period with Stripe
 Xenon.subscriptionDownsell(annualGold, method);
 
-// Downsell to middle tier - annual period with Stripe for $15
-Xenon.subscriptionDownsell(annualGold, method, value);
+// Downsell to middle tier - annual period with Stripe for $15 for 30days
+Xenon.subscriptionDownsell(annualGold, method, price, term);
 ```
 ###### Nextjs example:
 ```javascript
@@ -1247,7 +1270,8 @@ export default function Home() {
   const tierPlatium = 'Platium';
   const annualGold = 'Gold Annual';
   const method = 'Stripe'; //optional
-  const value = '$15'; //optional
+  const price = '$15'; //optional
+  const term = '30d'; //optional
   
   // Assume already subscribed to Silver
   
@@ -1257,17 +1281,18 @@ export default function Home() {
   // Downsell to middle tier - annual period with Stripe
   Xenon.subscriptionDownsell(annualGold, method);
 
-  // Downsell to middle tier - annual period with Stripe for $15
-  Xenon.subscriptionDownsell(annualGold, method, value);
+  // Downsell to middle tier - annual period with Stripe for $15 for 30days
+  Xenon.subscriptionDownsell(annualGold, method, price, term);
 ```
 ###### HTML example:
 ```html
 <script>
   const annualSilver = 'Silver Annual'
   const method = 'Stripe'
-  const value = '$15'
+  const price = '$15'
+  const term = '30d'
   function subscriptionDownsellOccurred() {
-    Xenon.subscriptionDownsell(annualSilver, method, value)
+    Xenon.subscriptionDownsell(annualSilver, method, price, term)
     Xenon.commit()
   }
 </script>
@@ -1290,13 +1315,13 @@ import Xenon from 'xenon-view-sdk';
 
 const provider = 'AdMob';
 const id = 'ID-1234'; // optional
-const value = '$0.15'; //optional
+const price = '$0.15'; //optional
 
 // Click an Ad from AdMob identfied by ID-1234
 Xenon.adClicked(provider, id);
 
 // Click an Ad from AdMob identfied by ID-1234
-Xenon.adClicked(provider, id, value);
+Xenon.adClicked(provider, id, price);
 // ...
 // Click an Ad from AdMob
 Xenon.adClicked(provider);
@@ -1311,13 +1336,13 @@ export default function Home() {
 
   const provider = 'AdMob';
   const id = 'ID-1234'; // optional
-  const value = '$0.15'; //optional
+  const price = '$0.15'; //optional
 
   // Click an Ad from AdMob identfied by ID-1234
   Xenon.adClicked(provider, id);
 
   // Click an Ad from AdMob identfied by ID-1234
-  Xenon.adClicked(provider, id, value);
+  Xenon.adClicked(provider, id, price);
   // ...
   // Click an Ad from AdMob
   Xenon.adClicked(provider);
@@ -1328,10 +1353,10 @@ export default function Home() {
 <script>
   const provider = 'AdMob'
   const id = 'ID-1234'
-  const value = '$0.15'
+  const price = '$0.15'
   
   function adClickedOccurred() {
-    Xenon.adClicked(provider, id, value)
+    Xenon.adClicked(provider, id, price)
     Xenon.commit()
   }
 </script>
@@ -1348,13 +1373,13 @@ import Xenon from 'xenon-view-sdk';
 
 const provider = 'AdMob';
 const id = 'ID-1234'; // optional
-const value = '$0.15'; //optional
+const price = '$0.15'; //optional
 
 // No action on an Ad from AdMob identfied by ID-1234
 Xenon.adIgnored(provider, id);
 
 // No action on an Ad from AdMob identfied by ID-1234 for $0.15
-Xenon.adIgnored(provider, id, value);
+Xenon.adIgnored(provider, id, price);
 // ...
 // No action on an Ad from AdMob
 Xenon.adIgnored(provider);
@@ -1369,13 +1394,13 @@ export default function Home() {
 
   const provider = 'AdMob';
   const id = 'ID-1234'; // optional
-  const value = '$0.15'; //optional
+  const price = '$0.15'; //optional
 
   // No action on an Ad from AdMob identfied by ID-1234
   Xenon.adIgnored(provider, id);
 
   // No action on an Ad from AdMob identfied by ID-1234 for $0.15
-  Xenon.adIgnored(provider, id, value);
+  Xenon.adIgnored(provider, id, price);
   // ...
   // No action on an Ad from AdMob
   Xenon.adIgnored(provider);
@@ -1386,10 +1411,10 @@ export default function Home() {
 <script>
   const provider = 'AdMob'
   const id = 'ID-1234'
-  const value = '$0.15'
+  const price = '$0.15'
   
   function adIgnored() {
-    Xenon.adIgnored(provider, id, value)
+    Xenon.adIgnored(provider, id, price)
     Xenon.commit()
   }
 </script>
@@ -1819,15 +1844,15 @@ You can add a specifier string to the call to differentiate as follows:
 import Xenon from 'xenon-view-sdk';
 
 const laptop = 'Dell XPS';
-const laptopValue = '$1459'; //optional
+const laptopPrice = '$1459'; //optional
 const keyboard = 'Apple Magic Keyboard';
-const keyboardValue = '$139'; //optional
+const keyboardPrice = '$139'; //optional
 
 // upsold a laptop
-Xenon.upsold(laptop, laptopValue);
+Xenon.upsold(laptop, laptopPrice);
 // ...
 // upsold a keyboard
-Xenon.upsold(keyboard, keyboardValue);
+Xenon.upsold(keyboard, keyboardPrice);
 ```
 ###### Nextjs example:
 ```javascript
@@ -1837,23 +1862,23 @@ export default function Home() {
   const Xenon = useXenon('<API KEY>');
 
   const laptop = 'Dell XPS';
-  const laptopValue = '$1459'; //optional
+  const laptopPrice = '$1459'; //optional
   const keyboard = 'Apple Magic Keyboard';
-  const keyboardValue = '$139'; //optional
+  const keyboardPrice = '$139'; //optional
 
   // upsold a laptop
-  Xenon.upsold(laptop, laptopValue);
+  Xenon.upsold(laptop, laptopPrice);
   // ...
   // upsold a keyboard
-  Xenon.upsold(keyboard, keyboardValue);
+  Xenon.upsold(keyboard, keyboardPrice);
 ```
 ###### HTML example:
 ```html
 <script>
   const laptop = 'Dell XPS'
-  const laptopValue = '$1459'
+  const laptopPrice = '$1459'
   function upsoldOccurred() {
-    Xenon.upsold(laptop, laptopValue)
+    Xenon.upsold(laptop, laptopPrice)
     Xenon.commit()
   }
 </script>
@@ -1871,13 +1896,13 @@ import Xenon from 'xenon-view-sdk';
 
 const laptop = 'Dell XPS';
 const keyboard = 'Apple Magic Keyboard';
-const keyboardValue = '$139'; //optional
+const keyboardPrice = '$139'; //optional
 
 // Doesn't add a laptop during upsell
 Xenon.upsellDismissed(laptop);
 // ...
 // Doesn't add a keyboard during upsell
-Xenon.upsellDismissed(keyboard, keyboardValue);
+Xenon.upsellDismissed(keyboard, keyboardPrice);
 ```
 ###### Nextjs example:
 ```javascript
@@ -1888,22 +1913,22 @@ export default function Home() {
 
   const laptop = 'Dell XPS';
   const keyboard = 'Apple Magic Keyboard';
-  const keyboardValue = '$139'; //optional
+  const keyboardPrice = '$139'; //optional
   
   // Doesn't add a laptop during upsell
   Xenon.upsellDismissed(laptop);
   // ...
   // Doesn't add a keyboard during upsell
-  Xenon.upsellDismissed(keyboard, keyboardValue);
+  Xenon.upsellDismissed(keyboard, keyboardPrice);
 ```
 ###### HTML example:
 ```html
 <script>
   const laptop = 'Dell XPS'
-  const laptopValue = '$1459'
+  const laptopPrice = '$1459'
 
   function upsellDismissedOccurred() {
-    Xenon.upsellDismissed(laptop, laptopValue)
+    Xenon.upsellDismissed(laptop, laptopPrice)
     Xenon.commit()
   }
 </script>
@@ -2039,13 +2064,13 @@ Use this call to track when your Customer completes a purchase.
 import Xenon from 'xenon-view-sdk';
 
 const method = 'Stripe';
-const value = '$2011'; // optional
+const price = '$2011'; // optional
 
 // Successful Purchase
 Xenon.purchased(method);
 
 // Successful Purchase for $2011
-Xenon.purchased(method, value);
+Xenon.purchased(method, price);
 ```
 ###### Nextjs example:
 ```javascript
@@ -2055,21 +2080,21 @@ export default function Home() {
   const Xenon = useXenon('<API KEY>');
 
   const method = 'Stripe';
-  const value = '$2011'; // optional
+  const price = '$2011'; // optional
 
   // Successful Purchase
   Xenon.purchased(method);
 
   // Successful Purchase for $2011
-  Xenon.purchased(method, value);
+  Xenon.purchased(method, price);
 ```
 ###### HTML example:
 ```html
 <script>
   const method = 'Stripe'
-  const value = '$2011'
+  const price = '$2011'
   function purchasedOccurred() {
-    Xenon.purchased(method, value)
+    Xenon.purchased(method, price)
     Xenon.commit()
   }
 </script>
@@ -2085,14 +2110,14 @@ export default function Home() {
 import Xenon from 'xenon-view-sdk';
 
 const method = 'Stripe'; // optional
-const value = '$2011'; // optional
+const price = '$2011'; // optional
 
 //Customer cancels the purchase.
 Xenon.purchaseCanceled();
 // -OR-
 Xenon.purchaseCanceled(method);
 // -OR-
-Xenon.purchaseCanceled(method, value);
+Xenon.purchaseCanceled(method, price);
 
 ```
 ###### Nextjs example:
@@ -2103,24 +2128,24 @@ export default function Home() {
   const Xenon = useXenon('<API KEY>');
 
   const method = 'Stripe'; // optional
-  const value = '$2011'; // optional
+  const price = '$2011'; // optional
 
   //Customer cancels the purchase.
   Xenon.purchaseCanceled();
   // -OR-
   Xenon.purchaseCanceled(method);
   // -OR-
-  Xenon.purchaseCanceled(method, value);
+  Xenon.purchaseCanceled(method, price);
 
 ```
 ###### HTML example:
 ```html
 <script>
   const method = 'Stripe'
-  const value = '$2011'
+  const price = '$2011'
 
   function purchaseCanceledOccurred() {
-    Xenon.purchaseCanceled(method, value)
+    Xenon.purchaseCanceled(method, price)
     Xenon.commit()
   }
 </script>

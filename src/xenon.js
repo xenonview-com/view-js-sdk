@@ -113,7 +113,7 @@ export class _Xenon {
     this.outcomeAdd(content)
   }
 
-  initialSubscription(tier, method = null, value=null) {
+  initialSubscription(tier, method = null, price = null, term = null) {
     const content = {
       superOutcome: 'Initial Subscription',
       outcome: 'Subscribe - ' + tier,
@@ -122,13 +122,16 @@ export class _Xenon {
     if (method) {
       content['method'] = method
     }
-    if (value) {
-      content['value'] = value
+    if (price) {
+      content['price'] = price
+    }
+    if (term) {
+      content['term'] = term
     }
     this.outcomeAdd(content)
   }
 
-  subscriptionDeclined(tier, method = null, value=null) {
+  subscriptionDeclined(tier, method = null, price = null, term = null) {
     const content = {
       superOutcome: 'Initial Subscription',
       outcome: 'Decline - ' + tier,
@@ -137,13 +140,16 @@ export class _Xenon {
     if (method) {
       content['method'] = method
     }
-    if (value) {
-      content['value'] = value
+    if (price) {
+      content['price'] = price
+    }
+    if (term) {
+      content['term'] = term
     }
     this.outcomeAdd(content)
   }
 
-  subscriptionRenewed(tier, method = null, value=null) {
+  subscriptionRenewed(tier, method = null, price = null, term = null) {
     const content = {
       superOutcome: 'Subscription Renewal',
       outcome: 'Renew - ' + tier,
@@ -152,13 +158,16 @@ export class _Xenon {
     if (method) {
       content['method'] = method;
     }
-    if (value) {
-      content['value'] = value
+    if (price) {
+      content['price'] = price
+    }
+    if (term) {
+      content['term'] = term
     }
     this.outcomeAdd(content)
   }
 
-  subscriptionPaused(tier, method = null, value=null) {
+  subscriptionPaused(tier, method = null, price = null, term = null) {
     const content = {
       superOutcome: 'Subscription Renewal',
       outcome: 'Paused - ' + tier,
@@ -167,13 +176,16 @@ export class _Xenon {
     if (method) {
       content['method'] = method
     }
-    if (value) {
-      content['value'] = value
+    if (price) {
+      content['price'] = price
+    }
+    if (term) {
+      content['term'] = term
     }
     this.outcomeAdd(content)
   }
 
-  subscriptionCanceled(tier, method = null, value=null) {
+  subscriptionCanceled(tier, method = null, price = null, term = null) {
     const content = {
       superOutcome: 'Subscription Renewal',
       outcome: 'Cancel - ' + tier,
@@ -182,13 +194,16 @@ export class _Xenon {
     if (method) {
       content['method'] = method
     }
-    if (value) {
-      content['value'] = value
+    if (price) {
+      content['price'] = price
+    }
+    if (term) {
+      content['term'] = term
     }
     this.outcomeAdd(content)
   }
 
-  subscriptionUpsold(tier, method = null, value=null) {
+  subscriptionUpsold(tier, method = null, price = null, term = null) {
     const content = {
       superOutcome: 'Subscription Upsold',
       outcome: 'Upsold - ' + tier,
@@ -197,13 +212,16 @@ export class _Xenon {
     if (method) {
       content['method'] = method
     }
-    if (value) {
-      content['value'] = value
+    if (price) {
+      content['price'] = price
+    }
+    if (term) {
+      content['term'] = term
     }
     this.outcomeAdd(content)
   }
 
-  subscriptionUpsellDeclined(tier, method = null, value=null) {
+  subscriptionUpsellDeclined(tier, method = null, price = null, term = null) {
     const content = {
       superOutcome: 'Subscription Upsold',
       outcome: 'Declined - ' + tier,
@@ -212,13 +230,16 @@ export class _Xenon {
     if (method) {
       content['method'] = method
     }
-    if (value) {
-      content['value'] = value
+    if (price) {
+      content['price'] = price
+    }
+    if (term) {
+      content['term'] = term
     }
     this.outcomeAdd(content)
   }
 
-  subscriptionDownsell(tier, method = null, value=null) {
+  subscriptionDownsell(tier, method = null, price = null, term = null) {
     const content = {
       superOutcome: 'Subscription Upsold',
       outcome: 'Downsell - ' + tier,
@@ -227,13 +248,16 @@ export class _Xenon {
     if (method) {
       content['method'] = method
     }
-    if (value) {
-      content['value'] = value
+    if (price) {
+      content['price'] = price
+    }
+    if (term) {
+      content['term'] = term
     }
     this.outcomeAdd(content)
   }
 
-  adClicked(provider, id = null, value=null) {
+  adClicked(provider, id = null, price = null, term = null) {
     const content = {
       superOutcome: 'Advertisement',
       outcome: 'Ad Click - ' + provider,
@@ -242,13 +266,13 @@ export class _Xenon {
     if (id) {
       content['id'] = id
     }
-    if (value) {
-      content['value'] = value
+    if (price) {
+      content['price'] = price
     }
     this.outcomeAdd(content)
   }
 
-  adIgnored(provider, id = null, value=null) {
+  adIgnored(provider, id = null, price = null) {
     const content = {
       superOutcome: 'Advertisement',
       outcome: 'Ad Ignored - ' + provider,
@@ -257,8 +281,8 @@ export class _Xenon {
     if (id) {
       content['id'] = id
     }
-    if (value) {
-      content['value'] = value
+    if (price) {
+      content['price'] = price
     }
     this.outcomeAdd(content)
   }
@@ -305,26 +329,26 @@ export class _Xenon {
     this.outcomeAdd(content)
   }
 
-  upsold(product, value=null) {
+  upsold(product, price = null) {
     const content = {
       superOutcome: 'Upsold Product',
       outcome: 'Upsold - ' + product,
       result: 'success'
     }
-    if (value) {
-      content['value'] = value
+    if (price) {
+      content['price'] = price
     }
     this.outcomeAdd(content)
   }
 
-  upsellDismissed(product, value=null) {
+  upsellDismissed(product, price = null) {
     const content = {
       superOutcome: 'Upsold Product',
       outcome: 'Dismissed - ' + product,
       result: 'fail'
     }
-    if (value) {
-      content['value'] = value
+    if (price) {
+      content['price'] = price
     }
     this.outcomeAdd(content)
   }
@@ -356,27 +380,27 @@ export class _Xenon {
     this.outcomeAdd(content)
   }
 
-  purchased(method, value=null) {
+  purchased(method, price = null) {
     const content = {
       superOutcome: 'Customer Purchase',
       outcome: 'Purchase - ' + method,
       result: 'success'
     }
-    if (value) {
-      content['value'] = value
+    if (price) {
+      content['price'] = price
     }
     this.outcomeAdd(content)
   }
 
-  purchaseCanceled(method = null, value=null) {
+  purchaseCanceled(method = null, price = null) {
     const outcome = 'Canceled' + (method ? ' - ' + method : '');
     const content = {
       superOutcome: 'Customer Purchase',
       outcome: outcome,
       result: 'fail'
     }
-    if (value) {
-      content['value'] = value
+    if (price) {
+      content['price'] = price
     }
     this.outcomeAdd(content)
   }
