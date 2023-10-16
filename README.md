@@ -34,10 +34,12 @@ The Xenon View JavaScript SDK is the JavaScript SDK to interact with [XenonView]
         * [(Optional) Custom Customer Journey Milestones](#custom)
         * [(Optional) Journey Identification](#cuuid)
 * [License](#license)
+* [FAQ-Next.Js](#faq)
 
 <br/>
 
 ## What's New <a id='whats-new'></a>
+* v0.1.12 - Readme updates
 * v0.1.11 - Fix: typescript export definitions for useXenon
 * v0.1.10 - Added: typescript definitions for useXenon
 * v0.1.9 - Added: Term length as well and changed value to price for correctness
@@ -167,31 +169,31 @@ As you view the categories, you can quickly identify issues (for example, if the
 
 **[Service/Subscription/SaaS Related Outcome Calls](#saas)**  (click on a call to see usage)
 
-| Category | Success | Failure | 
-| --- | --- | --- |
-| Lead Capture | [`leadCaptured()`](#saas-lead-capture) | [`leadCaptureDeclined()`](#saas-lead-capture-fail) | 
-| Account Signup | [`accountSignup()`](#saas-account-signup) | [`accountSignupDeclined()`](#saas-account-signup-fail) | 
-| Application Installation | [`applicationInstalled()`](#saas-application-install) |  [`applicationNotInstalled()`](#saas-application-install-fail) | 
-| Initial Subscription | [`initialSubscription()`](#saas-initial-subscription) | [`subscriptionDeclined()`](#saas-initial-subscription-fail) |
-| Subscription Renewed | [`subscriptionRenewed()`](#saas-renewed-subscription) | [`subscriptionCanceled()`](#saas-renewed-subscription-fail) / [`subscriptionPaused()`](#saas-paused-subscription) | 
-| Subscription Upsell | [`subscriptionUpsold()`](#saas-upsell-subscription) | [`subscriptionUpsellDeclined()`](#saas-upsell-subscription-fail) / [`subscriptionDownsell()`](#saas-downsell-subscription)| 
-| Ad Clicked | [`adClicked()`](#saas-ad-clicked) | [`adIgnored()`](#saas-ad-ignored) |
-| Referral | [`referral()`](#saas-referral) | [`referralDeclined()`](#saas-referral-fail) | 
+| Category | Success | Decline |                                                                                                                   | 
+| --- | --- |----------------------------------------------------------------------------------------------------------------------------|
+| Lead Capture | [`leadCaptured()`](#saas-lead-capture) | [`leadCaptureDeclined()`](#saas-lead-capture-fail)                                                                         | 
+| Account Signup | [`accountSignup()`](#saas-account-signup) | [`accountSignupDeclined()`](#saas-account-signup-fail)                                                                     | 
+| Application Installation | [`applicationInstalled()`](#saas-application-install) | [`applicationNotInstalled()`](#saas-application-install-fail)                                                              | 
+| Initial Subscription | [`initialSubscription()`](#saas-initial-subscription) | [`subscriptionDeclined()`](#saas-initial-subscription-fail)                                                                |
+| Subscription Renewed | [`subscriptionRenewed()`](#saas-renewed-subscription) | [`subscriptionCanceled()`](#saas-renewed-subscription-fail) / [`subscriptionPaused()`](#saas-paused-subscription)          | 
+| Subscription Upsell | [`subscriptionUpsold()`](#saas-upsell-subscription) | [`subscriptionUpsellDeclined()`](#saas-upsell-subscription-fail) / [`subscriptionDownsell()`](#saas-downsell-subscription) | 
+| Ad Clicked | [`adClicked()`](#saas-ad-clicked) | [`adIgnored()`](#saas-ad-ignored)                                                                                          |
+| Referral | [`referral()`](#saas-referral) | [`referralDeclined()`](#saas-referral-fail)                                                                                | 
 
 
 **[Ecom Related Outcome Calls](#ecom)** (click on a call to see usage)
 
-| Category | Success | Failure |
-| --- | --- | --- | 
-| Lead Capture | [`leadCaptured()`](#ecom-lead-capture) | [`leadCaptureDeclined()`](#ecom-lead-capture-fail) | 
-| Account Signup | [`accountSignup()`](#ecom-account-signup) | [`accountSignupDeclined()`](#ecom-account-signup-fail) | 
-| Add To Cart | [`productAddedToCart()`](#ecom-product-to-cart) | [`productNotAddedToCart()`](#ecom-product-to-cart-fail) |
-| Product Upsell | [`upsold()`](#ecom-upsell) | [`upsellDismissed()`](#ecom-upsell-fail) | 
+| Category | Success | Decline |                                                                                  |
+| --- | --- |-------------------------------------------------------------------------------------------| 
+| Lead Capture | [`leadCaptured()`](#ecom-lead-capture) | [`leadCaptureDeclined()`](#ecom-lead-capture-fail)                                        | 
+| Account Signup | [`accountSignup()`](#ecom-account-signup) | [`accountSignupDeclined()`](#ecom-account-signup-fail)                                    | 
+| Add To Cart | [`productAddedToCart()`](#ecom-product-to-cart) | [`productNotAddedToCart()`](#ecom-product-to-cart-fail)                                   |
+| Product Upsell | [`upsold()`](#ecom-upsell) | [`upsellDismissed()`](#ecom-upsell-fail)                                                  | 
 | Checkout | [`checkedOut()`](#ecom-checkout) | [`checkoutCanceled()`](#ecom-checkout-fail) / [`productRemoved()`](#ecom-checkout-remove) | 
-| Purchase | [`purchased()`](#ecom-purchase) | [`purchaseCanceled()`](#ecom-purchase-fail) | 
-| Promise Fulfillment | [`promiseFulfilled()`](#ecom-promise-fulfillment) | [`promiseUnfulfilled()`](#ecom-promise-fulfillment-fail) | 
-| Product Disposition | [`productKept()`](#ecom-product-outcome) | [`productReturned()`](#ecom-product-outcome-fail) |
-| Referral | [`referral()`](#ecom-referral) | [`referralDeclined()`](#ecom-referral-fail) |
+| Purchase | [`purchased()`](#ecom-purchase) | [`purchaseCanceled()`](#ecom-purchase-fail)                                               | 
+| Promise Fulfillment | [`promiseFulfilled()`](#ecom-promise-fulfillment) | [`promiseUnfulfilled()`](#ecom-promise-fulfillment-fail)                                  | 
+| Product Disposition | [`productKept()`](#ecom-product-outcome) | [`productReturned()`](#ecom-product-outcome-fail)                                         |
+| Referral | [`referral()`](#ecom-referral) | [`referralDeclined()`](#ecom-referral-fail)                                               |
 
 <br/>
 
@@ -319,7 +321,7 @@ More are provided for each function.
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <script src="https://cdn.jsdelivr.net/gh/xenonview-com/view-js-sdk@v0.1.11/dist/xenon_view_sdk.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/gh/xenonview-com/view-js-sdk@v0.1.12/dist/xenon_view_sdk.min.js"></script>
   <script>
     Xenon.init('<API KEY>')
   </script>
@@ -377,7 +379,7 @@ export default function Home() {
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <script src="https://cdn.jsdelivr.net/gh/xenonview-com/view-js-sdk@v0.1.11/dist/xenon_view_sdk.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/gh/xenonview-com/view-js-sdk@v0.1.12/dist/xenon_view_sdk.min.js"></script>
   <script>
     Xenon.init('<API KEY>')
   </script>
@@ -3103,7 +3105,7 @@ export default function Home() {
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <script src="https://cdn.jsdelivr.net/gh/xenonview-com/view-js-sdk@v0.1.11/dist/xenon_view_sdk.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/gh/xenonview-com/view-js-sdk@v0.1.12/dist/xenon_view_sdk.min.js"></script>
   <script>
     Xenon.init('<API KEY>')
     const softwareVersion = '5.1.5'
@@ -3158,7 +3160,7 @@ export default function Home() {
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <script src="https://cdn.jsdelivr.net/gh/xenonview-com/view-js-sdk@v0.1.11/dist/xenon_view_sdk.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/gh/xenonview-com/view-js-sdk@v0.1.12/dist/xenon_view_sdk.min.js"></script>
   <script>
     Xenon.init('<API KEY>')
     Xenon.variant(['subscription-variant-A'])
@@ -3436,6 +3438,60 @@ export default function Home() {
 Apache Version 2.0
 
 See [LICENSE](https://github.com/xenonview-com/view-js-sdk/blob/main/LICENSE)
+
+[back to top](#contents)
+
+## FAQ Next.js <a name='faq'></a>
+
+### Runtime Error with Pages Router
+```text
+import {useEffect, useState} from "react";
+^^^^^^
+
+SyntaxError: Cannot use import statement outside a module
+    at Object.compileFunction (node:vm:360:18)
+    at wrapSafe (node:internal/modules/cjs/loader:1124:15)
+    at Module._compile (node:internal/modules/cjs/loader:1160:27)
+    at Object.Module._extensions..js (node:internal/modules/cjs/loader:1250:10)
+    at Module.load (node:internal/modules/cjs/loader:1074:32)
+    at Function.Module._load (node:internal/modules/cjs/loader:909:12)
+    at Module.require (node:internal/modules/cjs/loader:1098:19)
+    at Module.mod.require (.../node_modules/next/dist/server/require-hook.js:64:28)
+    at require (node:internal/modules/cjs/helpers:108:18)
+    at Object.xenon-view-sdk/useXenon (.../.next/server/pages/page1.js:274:18)
+    at __webpack_require__ (.../.next/server/webpack-runtime.js:33:43)
+    at eval (webpack-internal:///./src/utils/xenon.ts:6:81)
+    at Function.__webpack_require__.a (.../.next/server/webpack-runtime.js:97:13)
+    at eval (webpack-internal:///./src/utils/xenon.ts:1:21)
+    at Module../src/utils/xenon.ts (..../.next/server/src_components_page1_tsx.js:45:1) {
+  page: '/page1'
+}
+```
+This error is solved by using a dynamic import on the page using Xenon with SSR disabled:
+```javascript
+const page1 =  dynamic(()=>import('~/components/page1'), {ssr:false});
+```
+-vs.-
+```javascript
+import page1 from '~/components/page1';
+```
+
+### Dynamic Import error with Pages Router
+```text
+Argument of type '() => Promise<typeof import("/src/components/page1")>' is not assignable to parameter of type 'DynamicOptions<{}> | Loader<{}>'.
+  Type '() => Promise<typeof import(".../src/components/page")>' is not assignable to type '() => LoaderComponent<{}>'.
+    Type 'Promise<typeof import(".../src/components/page1")>' is not assignable to type 'LoaderComponent<{}>'.
+      Type 'typeof import(".../src/components/page1")' is not assignable to type 'ComponentType<{}> | ComponentModule<{}>'.ts(2345)
+```
+This error is solved by using a default export for the component:
+```javascript
+export default function Page1() {
+```
+-vs.-
+```javascript
+export function Page1() {
+```
+
 
 [back to top](#contents)
 
