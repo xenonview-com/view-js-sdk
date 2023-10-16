@@ -1,5 +1,5 @@
 declare module 'xenon-view-sdk' {
-    interface XenonInterface {
+    export interface XenonInterface {
         init: (apiKey: string, apiUrl?: string) => void;
         platform: (softwareVersion: string, deviceModel: string, operatingSystemName: string, operatingSystemVersion: string) => void;
         removePlatform: () => void;
