@@ -39,6 +39,7 @@
     "index.js",
     "index.d.ts",
     "useXenon.js",
+    "useXenon.d.ts",
     "src",
     "dist"
   ],
