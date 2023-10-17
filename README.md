@@ -169,31 +169,31 @@ As you view the categories, you can quickly identify issues (for example, if the
 
 **[Service/Subscription/SaaS Related Outcome Calls](#saas)**  (click on a call to see usage)
 
-| Category | Success | Decline |                                                                                                                   | 
-| --- | --- |----------------------------------------------------------------------------------------------------------------------------|
-| Lead Capture | [`leadCaptured()`](#saas-lead-capture) | [`leadCaptureDeclined()`](#saas-lead-capture-fail)                                                                         | 
-| Account Signup | [`accountSignup()`](#saas-account-signup) | [`accountSignupDeclined()`](#saas-account-signup-fail)                                                                     | 
-| Application Installation | [`applicationInstalled()`](#saas-application-install) | [`applicationNotInstalled()`](#saas-application-install-fail)                                                              | 
-| Initial Subscription | [`initialSubscription()`](#saas-initial-subscription) | [`subscriptionDeclined()`](#saas-initial-subscription-fail)                                                                |
-| Subscription Renewed | [`subscriptionRenewed()`](#saas-renewed-subscription) | [`subscriptionCanceled()`](#saas-renewed-subscription-fail) / [`subscriptionPaused()`](#saas-paused-subscription)          | 
-| Subscription Upsell | [`subscriptionUpsold()`](#saas-upsell-subscription) | [`subscriptionUpsellDeclined()`](#saas-upsell-subscription-fail) / [`subscriptionDownsell()`](#saas-downsell-subscription) | 
-| Ad Clicked | [`adClicked()`](#saas-ad-clicked) | [`adIgnored()`](#saas-ad-ignored)                                                                                          |
-| Referral | [`referral()`](#saas-referral) | [`referralDeclined()`](#saas-referral-fail)                                                                                | 
+| Category | Success | Decline |
+| --- | --- | --- |
+| Lead Capture | [`leadCaptured()`](#saas-lead-capture) | [`leadCaptureDeclined()`](#saas-lead-capture-fail) |
+| Account Signup | [`accountSignup()`](#saas-account-signup) | [`accountSignupDeclined()`](#saas-account-signup-fail) |
+| Application Installation | [`applicationInstalled()`](#saas-application-install) | [`applicationNotInstalled()`](#saas-application-install-fail)|
+| Initial Subscription | [`initialSubscription()`](#saas-initial-subscription) | [`subscriptionDeclined()`](#saas-initial-subscription-fail) |
+| Subscription Renewed | [`subscriptionRenewed()`](#saas-renewed-subscription) | [`subscriptionCanceled()`](#saas-renewed-subscription-fail) / [`subscriptionPaused()`](#saas-paused-subscription) |
+| Subscription Upsell | [`subscriptionUpsold()`](#saas-upsell-subscription) | [`subscriptionUpsellDeclined()`](#saas-upsell-subscription-fail) / [`subscriptionDownsell()`](#saas-downsell-subscription) |
+| Ad Clicked | [`adClicked()`](#saas-ad-clicked) | [`adIgnored()`](#saas-ad-ignored) |
+| Referral | [`referral()`](#saas-referral) | [`referralDeclined()`](#saas-referral-fail) |
 
 
 **[Ecom Related Outcome Calls](#ecom)** (click on a call to see usage)
 
-| Category | Success | Decline |                                                                                  |
-| --- | --- |-------------------------------------------------------------------------------------------| 
-| Lead Capture | [`leadCaptured()`](#ecom-lead-capture) | [`leadCaptureDeclined()`](#ecom-lead-capture-fail)                                        | 
-| Account Signup | [`accountSignup()`](#ecom-account-signup) | [`accountSignupDeclined()`](#ecom-account-signup-fail)                                    | 
-| Add To Cart | [`productAddedToCart()`](#ecom-product-to-cart) | [`productNotAddedToCart()`](#ecom-product-to-cart-fail)                                   |
-| Product Upsell | [`upsold()`](#ecom-upsell) | [`upsellDismissed()`](#ecom-upsell-fail)                                                  | 
+| Category | Success | Decline |
+| --- | --- | --- |
+| Lead Capture | [`leadCaptured()`](#ecom-lead-capture) | [`leadCaptureDeclined()`](#ecom-lead-capture-fail) | 
+| Account Signup | [`accountSignup()`](#ecom-account-signup) | [`accountSignupDeclined()`](#ecom-account-signup-fail) | 
+| Add To Cart | [`productAddedToCart()`](#ecom-product-to-cart) | [`productNotAddedToCart()`](#ecom-product-to-cart-fail) |
+| Product Upsell | [`upsold()`](#ecom-upsell) | [`upsellDismissed()`](#ecom-upsell-fail) | 
 | Checkout | [`checkedOut()`](#ecom-checkout) | [`checkoutCanceled()`](#ecom-checkout-fail) / [`productRemoved()`](#ecom-checkout-remove) | 
-| Purchase | [`purchased()`](#ecom-purchase) | [`purchaseCanceled()`](#ecom-purchase-fail)                                               | 
-| Promise Fulfillment | [`promiseFulfilled()`](#ecom-promise-fulfillment) | [`promiseUnfulfilled()`](#ecom-promise-fulfillment-fail)                                  | 
-| Product Disposition | [`productKept()`](#ecom-product-outcome) | [`productReturned()`](#ecom-product-outcome-fail)                                         |
-| Referral | [`referral()`](#ecom-referral) | [`referralDeclined()`](#ecom-referral-fail)                                               |
+| Purchase | [`purchased()`](#ecom-purchase) | [`purchaseCanceled()`](#ecom-purchase-fail) | 
+| Promise Fulfillment | [`promiseFulfilled()`](#ecom-promise-fulfillment) | [`promiseUnfulfilled()`](#ecom-promise-fulfillment-fail) | 
+| Product Disposition | [`productKept()`](#ecom-product-outcome) | [`productReturned()`](#ecom-product-outcome-fail) |
+| Referral | [`referral()`](#ecom-referral) | [`referralDeclined()`](#ecom-referral-fail) |
 
 <br/>
 
