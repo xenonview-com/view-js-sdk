@@ -39,6 +39,7 @@ The Xenon View JavaScript SDK is the JavaScript SDK to interact with [XenonView]
 <br/>
 
 ## What's New <a id='whats-new'></a>
+* v0.1.13 - React JS SDK Errors are not being rethrown - fixed
 * v0.1.12 - Readme updates
 * v0.1.11 - Fix: typescript export definitions for useXenon
 * v0.1.10 - Added: typescript definitions for useXenon
@@ -3300,7 +3301,7 @@ In the event of an API error when committing, the method returns a [promise](htt
 import Xenon from 'xenon-view-sdk';
 
 // you can handle errors if necessary
-Xenon.commit().catch(
+Xenon.commit(true).catch(
 (err) =>{
   // handle error
 });
@@ -3313,7 +3314,7 @@ export default function Home() {
   const Xenon = useXenon('<API KEY>');
 
   // you can handle errors if necessary
-  Xenon.commit().catch(
+  Xenon.commit(true).catch(
   (err) =>{
     // handle error
   });

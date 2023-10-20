@@ -42,8 +42,12 @@ yarn test:coverage
 
 _We (package maintainers) handle this step so this is more of internal notes:_
 
-To publish the package (we use ```np```, for help go [here](https://github.com/sindresorhus/np)):
+To build CommonJs:
+```shell
+yarn compile
+```
 
+To publish the package (we use ```np```, for help go [here](https://github.com/sindresorhus/np)):
 ```shell
 yarn release
 ```

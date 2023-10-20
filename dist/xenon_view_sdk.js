@@ -1385,7 +1385,7 @@ var Xenon = (function () {
 
     // API Communication:
 
-    commit() {
+    commit(surfaceErrors=false) {
       let params = {
         data: {
           id: this.id(),
@@ -1399,10 +1399,11 @@ var Xenon = (function () {
         .fetch(params)
         .catch((err) => {
           this.restore();
+          return (surfaceErrors ? Promise.reject(err) : Promise.resolve());
         });
     }
 
-    heartbeat() {
+    heartbeat(surfaceErrors=false) {
       const platform = retrieveSession('view-platform');
       const tags = retrieveSession('view-tags');
       let params = {
@@ -1420,6 +1421,7 @@ var Xenon = (function () {
         .fetch(params)
         .catch((err) => {
           this.restore();
+          return (surfaceErrors ? Promise.reject(err) : Promise.resolve());
         });
     }
 
