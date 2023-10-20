@@ -473,7 +473,6 @@ describe('View SDK', () => {
         unit.subscriptionUpsold(tierSilver)
       });
     });
-
   });
   describe('when subscriptionUpsellDeclined', () => {
     const tierSilver = 'Silver Monthly';
@@ -1461,42 +1460,64 @@ describe('View SDK', () => {
   describe('when committing a journey', () => {
     const feature = 'committing';
     describe('when default', () => {
-      it('then calls the view journey API', () => {
-        expect(JourneyApi).toHaveBeenCalledWith(apiUrl);
-        expect(journeyApi.fetch).toHaveBeenCalledWith({
-          data: {
-            id: jasmine.any(String),
-            journey: [
-              {category: 'Feature', action: 'Attempted', name: feature, timestamp: jasmine.any(Number)}
-            ],
-            token: apiKey,
-            timestamp: jasmine.any(Number)
-          }
-        });
-      });
-      it('then resets journey', () => {
-        expect(unit.journey()).toEqual([]);
-      });
       let resolvePromise = null;
       let rejectPromise = null;
-      describe('when API fails', () => {
-        it('then restores journey', () => {
-          expect(unit.journey().length).toEqual(1);
-          const journey = unit.journey()[0];
-          expect(journey.name).toEqual(feature);
+      let caughtError = null;
+      describe('when normal', () => {
+        it('then calls the view journey API', () => {
+          expect(JourneyApi).toHaveBeenCalledWith(apiUrl);
+          expect(journeyApi.fetch).toHaveBeenCalledWith({
+            data: {
+              id: jasmine.any(String),
+              journey: [
+                {category: 'Feature', action: 'Attempted', name: feature, timestamp: jasmine.any(Number)}
+              ],
+              token: apiKey,
+              timestamp: jasmine.any(Number)
+            }
+          });
+        });
+        it('then resets journey', () => {
+          expect(unit.journey()).toEqual([]);
+        });
+        describe('when API fails', () => {
+          it('then restores journey', () => {
+            expect(unit.journey().length).toEqual(1);
+            const journey = unit.journey()[0];
+            expect(journey.name).toEqual(feature);
+          });
+          beforeEach(() => {
+            rejectPromise(new Error('failure'));
+            UnblockPromises();
+          });
         });
         beforeEach(() => {
-          rejectPromise(new Error('failure'));
-          UnblockPromises();
+          let promise = new Promise(function (resolve, reject) {
+            resolvePromise = resolve;
+            rejectPromise = reject;
+          });
+          journeyApi.fetch.and.returnValue(promise);
+          unit.commit();
         });
       });
-      beforeEach(() => {
-        let promise = new Promise(function (resolve, reject) {
-          resolvePromise = resolve;
-          rejectPromise = reject;
+      describe('when surfacing', () => {
+        describe('when API fails', () => {
+          it('then rethrows', () => {
+            expect(caughtError.toString()).toEqual('Error: failure');
+          });
+          beforeEach(() => {
+            rejectPromise(new Error('failure'));
+            UnblockPromises();
+          });
         });
-        journeyApi.fetch.and.returnValue(promise);
-        unit.commit();
+        beforeEach(() => {
+          let promise = new Promise(function (resolve, reject) {
+            resolvePromise = resolve;
+            rejectPromise = reject;
+          });
+          journeyApi.fetch.and.returnValue(promise);
+          unit.commit(true).catch((err) => caughtError = err);
+        });
       });
     });
     describe('when custom key', () => {
@@ -1528,44 +1549,67 @@ describe('View SDK', () => {
   describe('when heartbeating', () => {
     const feature = 'heartbeating';
     describe('when default', () => {
-      it('then calls the view heartbeat API', () => {
-        expect(HeartbeatApi).toHaveBeenCalledWith(apiUrl);
-        expect(heartbeatApi.fetch).toHaveBeenCalledWith({
-          data: {
-            id: jasmine.any(String),
-            journey: [
-              {category: 'Feature', action: 'Attempted', name: feature, timestamp: jasmine.any(Number)}
-            ],
-            token: apiKey,
-            tags: [],
-            platform: {},
-            timestamp: jasmine.any(Number)
-          }
-        });
-      });
-      it('then resets journey', () => {
-        expect(unit.journey()).toEqual([]);
-      });
       let resolvePromise = null;
       let rejectPromise = null;
-      describe('when API fails', () => {
-        it('then restores journey', () => {
-          expect(unit.journey().length).toEqual(1);
-          const journey = unit.journey()[0];
-          expect(journey.name).toEqual(feature);
+      let caughtError = null;
+      describe('when default failure', () => {
+        it('then calls the view heartbeat API', () => {
+          expect(HeartbeatApi).toHaveBeenCalledWith(apiUrl);
+          expect(heartbeatApi.fetch).toHaveBeenCalledWith({
+            data: {
+              id: jasmine.any(String),
+              journey: [
+                {category: 'Feature', action: 'Attempted', name: feature, timestamp: jasmine.any(Number)}
+              ],
+              token: apiKey,
+              tags: [],
+              platform: {},
+              timestamp: jasmine.any(Number)
+            }
+          });
+        });
+        it('then resets journey', () => {
+          expect(unit.journey()).toEqual([]);
+        });
+
+        describe('when API fails', () => {
+          it('then restores journey', () => {
+            expect(unit.journey().length).toEqual(1);
+            const journey = unit.journey()[0];
+            expect(journey.name).toEqual(feature);
+          });
+          beforeEach(() => {
+            rejectPromise(new Error('failure'));
+            UnblockPromises();
+          });
         });
         beforeEach(() => {
-          rejectPromise(new Error('failure'));
-          UnblockPromises();
+          let promise = new Promise(function (resolve, reject) {
+            resolvePromise = resolve;
+            rejectPromise = reject;
+          });
+          heartbeatApi.fetch.and.returnValue(promise);
+          unit.heartbeat();
         });
       });
-      beforeEach(() => {
-        let promise = new Promise(function (resolve, reject) {
-          resolvePromise = resolve;
-          rejectPromise = reject;
+      describe('when surface errors', () => {
+        describe('when API fails', () => {
+          it('then rethrows', () => {
+            expect(caughtError.toString()).toEqual('Error: failure');
+          });
+          beforeEach(() => {
+            rejectPromise(new Error('failure'));
+            UnblockPromises();
+          });
         });
-        heartbeatApi.fetch.and.returnValue(promise);
-        unit.heartbeat();
+        beforeEach(() => {
+          let promise = new Promise(function (resolve, reject) {
+            resolvePromise = resolve;
+            rejectPromise = reject;
+          });
+          heartbeatApi.fetch.and.returnValue(promise);
+          unit.heartbeat(true).catch((err) => caughtError = err);
+        });
       });
     });
     describe('when tags', () => {

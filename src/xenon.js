@@ -577,7 +577,7 @@ export class _Xenon {
 
   // API Communication:
 
-  commit() {
+  commit(surfaceErrors=false) {
     let params = {
       data: {
         id: this.id(),
@@ -591,10 +591,11 @@ export class _Xenon {
       .fetch(params)
       .catch((err) => {
         this.restore();
+        return (surfaceErrors ? Promise.reject(err) : Promise.resolve());
       });
   }
 
-  heartbeat() {
+  heartbeat(surfaceErrors=false) {
     const platform = retrieveSession('view-platform');
     const tags = retrieveSession('view-tags');
     let params = {
@@ -612,6 +613,7 @@ export class _Xenon {
       .fetch(params)
       .catch((err) => {
         this.restore();
+        return (surfaceErrors ? Promise.reject(err) : Promise.resolve());
       });
   }
 
