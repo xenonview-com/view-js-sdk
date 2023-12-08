@@ -58,6 +58,17 @@ export class _Xenon {
   }
 
   // Stock Business Outcomes:
+  leadAttributed(source, identifier) {
+    const content = {
+      superOutcome: 'Lead Attributed',
+      outcome: source,
+      result: 'success'
+    }
+    if (identifier) {
+      content['id'] = identifier
+    }
+    this.outcomeAdd(content)
+  }
 
   leadCaptured(specifier) {
     const content = {

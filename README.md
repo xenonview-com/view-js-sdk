@@ -39,6 +39,7 @@ The Xenon View JavaScript SDK is the JavaScript SDK to interact with [XenonView]
 <br/>
 
 ## What's New <a id='whats-new'></a>
+* v0.1.14 - Added leadAttribution outcome
 * v0.1.13 - React JS SDK Errors are not being rethrown - fixed
 * v0.1.12 - Readme updates
 * v0.1.11 - Fix: typescript export definitions for useXenon
@@ -170,31 +171,33 @@ As you view the categories, you can quickly identify issues (for example, if the
 
 **[Service/Subscription/SaaS Related Outcome Calls](#saas)**  (click on a call to see usage)
 
-| Category | Success | Decline |
-| --- | --- | --- |
-| Lead Capture | [`leadCaptured()`](#saas-lead-capture) | [`leadCaptureDeclined()`](#saas-lead-capture-fail) |
-| Account Signup | [`accountSignup()`](#saas-account-signup) | [`accountSignupDeclined()`](#saas-account-signup-fail) |
-| Application Installation | [`applicationInstalled()`](#saas-application-install) | [`applicationNotInstalled()`](#saas-application-install-fail)|
-| Initial Subscription | [`initialSubscription()`](#saas-initial-subscription) | [`subscriptionDeclined()`](#saas-initial-subscription-fail) |
-| Subscription Renewed | [`subscriptionRenewed()`](#saas-renewed-subscription) | [`subscriptionCanceled()`](#saas-renewed-subscription-fail) / [`subscriptionPaused()`](#saas-paused-subscription) |
-| Subscription Upsell | [`subscriptionUpsold()`](#saas-upsell-subscription) | [`subscriptionUpsellDeclined()`](#saas-upsell-subscription-fail) / [`subscriptionDownsell()`](#saas-downsell-subscription) |
-| Ad Clicked | [`adClicked()`](#saas-ad-clicked) | [`adIgnored()`](#saas-ad-ignored) |
-| Referral | [`referral()`](#saas-referral) | [`referralDeclined()`](#saas-referral-fail) |
+| Category                 | Success                                               | Decline                                                                                                                    |
+|--------------------------|-------------------------------------------------------|----------------------------------------------------------------------------------------------------------------------------|
+| Lead Attribution         | [`leadAttribution()`](#saas-lead-attribution)         |                                                                                                                            |
+| Lead Capture             | [`leadCaptured()`](#saas-lead-capture)                | [`leadCaptureDeclined()`](#saas-lead-capture-fail)                                                                         |
+| Account Signup           | [`accountSignup()`](#saas-account-signup)             | [`accountSignupDeclined()`](#saas-account-signup-fail)                                                                     |
+| Application Installation | [`applicationInstalled()`](#saas-application-install) | [`applicationNotInstalled()`](#saas-application-install-fail)                                                              |
+| Initial Subscription     | [`initialSubscription()`](#saas-initial-subscription) | [`subscriptionDeclined()`](#saas-initial-subscription-fail)                                                                |
+| Subscription Renewed     | [`subscriptionRenewed()`](#saas-renewed-subscription) | [`subscriptionCanceled()`](#saas-renewed-subscription-fail) / [`subscriptionPaused()`](#saas-paused-subscription)          |
+| Subscription Upsell      | [`subscriptionUpsold()`](#saas-upsell-subscription)   | [`subscriptionUpsellDeclined()`](#saas-upsell-subscription-fail) / [`subscriptionDownsell()`](#saas-downsell-subscription) |
+| Ad Clicked               | [`adClicked()`](#saas-ad-clicked)                     | [`adIgnored()`](#saas-ad-ignored)                                                                                          |
+| Referral                 | [`referral()`](#saas-referral)                        | [`referralDeclined()`](#saas-referral-fail)                                                                                |
 
 
 **[Ecom Related Outcome Calls](#ecom)** (click on a call to see usage)
 
-| Category | Success | Decline |
-| --- | --- | --- |
-| Lead Capture | [`leadCaptured()`](#ecom-lead-capture) | [`leadCaptureDeclined()`](#ecom-lead-capture-fail) | 
-| Account Signup | [`accountSignup()`](#ecom-account-signup) | [`accountSignupDeclined()`](#ecom-account-signup-fail) | 
-| Add To Cart | [`productAddedToCart()`](#ecom-product-to-cart) | [`productNotAddedToCart()`](#ecom-product-to-cart-fail) |
-| Product Upsell | [`upsold()`](#ecom-upsell) | [`upsellDismissed()`](#ecom-upsell-fail) | 
-| Checkout | [`checkedOut()`](#ecom-checkout) | [`checkoutCanceled()`](#ecom-checkout-fail) / [`productRemoved()`](#ecom-checkout-remove) | 
-| Purchase | [`purchased()`](#ecom-purchase) | [`purchaseCanceled()`](#ecom-purchase-fail) | 
-| Promise Fulfillment | [`promiseFulfilled()`](#ecom-promise-fulfillment) | [`promiseUnfulfilled()`](#ecom-promise-fulfillment-fail) | 
-| Product Disposition | [`productKept()`](#ecom-product-outcome) | [`productReturned()`](#ecom-product-outcome-fail) |
-| Referral | [`referral()`](#ecom-referral) | [`referralDeclined()`](#ecom-referral-fail) |
+| Category            | Success                                           | Decline                                                                                   |
+|---------------------|---------------------------------------------------|-------------------------------------------------------------------------------------------|
+| Lead Attribution    | [`leadAttribution()`](#ecom-lead-attribution)     |                                                                                           |
+| Lead Capture        | [`leadCaptured()`](#ecom-lead-capture)            | [`leadCaptureDeclined()`](#ecom-lead-capture-fail)                                        | 
+| Account Signup      | [`accountSignup()`](#ecom-account-signup)         | [`accountSignupDeclined()`](#ecom-account-signup-fail)                                    | 
+| Add To Cart         | [`productAddedToCart()`](#ecom-product-to-cart)   | [`productNotAddedToCart()`](#ecom-product-to-cart-fail)                                   |
+| Product Upsell      | [`upsold()`](#ecom-upsell)                        | [`upsellDismissed()`](#ecom-upsell-fail)                                                  | 
+| Checkout            | [`checkedOut()`](#ecom-checkout)                  | [`checkoutCanceled()`](#ecom-checkout-fail) / [`productRemoved()`](#ecom-checkout-remove) | 
+| Purchase            | [`purchased()`](#ecom-purchase)                   | [`purchaseCanceled()`](#ecom-purchase-fail)                                               | 
+| Promise Fulfillment | [`promiseFulfilled()`](#ecom-promise-fulfillment) | [`promiseUnfulfilled()`](#ecom-promise-fulfillment-fail)                                  | 
+| Product Disposition | [`productKept()`](#ecom-product-outcome)          | [`productReturned()`](#ecom-product-outcome-fail)                                         |
+| Referral            | [`referral()`](#ecom-referral)                    | [`referralDeclined()`](#ecom-referral-fail)                                               |
 
 <br/>
 
@@ -322,7 +325,7 @@ More are provided for each function.
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <script src="https://cdn.jsdelivr.net/gh/xenonview-com/view-js-sdk@v0.1.12/dist/xenon_view_sdk.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/gh/xenonview-com/view-js-sdk@v0.1.14/dist/xenon_view_sdk.min.js"></script>
   <script>
     Xenon.init('<API KEY>')
   </script>
@@ -380,7 +383,7 @@ export default function Home() {
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <script src="https://cdn.jsdelivr.net/gh/xenonview-com/view-js-sdk@v0.1.12/dist/xenon_view_sdk.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/gh/xenonview-com/view-js-sdk@v0.1.14/dist/xenon_view_sdk.min.js"></script>
   <script>
     Xenon.init('<API KEY>')
   </script>
@@ -395,6 +398,59 @@ Of course, you'll have to make the following modifications to the above code:
 [back to top](#contents)
 
 ### Service/Subscription/SaaS Related Business Outcomes <a id='saas'></a>
+<br/>
+
+#### Lead Attributed  <a id='saas-lead-attributed'></a>
+Use this call to track Lead Attribution (Google Ads, Facebook Ads, etc.)
+You can add a source and identifier string to the call to differentiate as follows:
+
+<br/>
+
+##### ```leadAttributed()```
+
+###### Framework example:
+```javascript
+import Xenon from 'xenon-view-sdk';
+
+const source = 'Google Ad';
+const identifier = 'Search';
+
+// Successful Lead Attributed to Google Ad
+Xenon.leadAttributed(source);
+//...
+// Successful Lead Attributed to Google Search Ad
+Xenon.leadAttributed(source, identifier);
+```
+
+###### Nextjs example:
+```javascript
+import {useXenon} from "xenon-view-sdk/useXenon";
+
+export default function Home() {
+  const Xenon = useXenon('<API KEY>');
+
+  const source = 'Google Ad';
+  const identifier = 'Search';
+
+  // Successful Lead Attributed to Google Ad
+  Xenon.leadAttributed(source);
+  //...
+  // Successful Lead Attributed to Google Search Ad
+  Xenon.leadAttributed(source, identifier);
+```
+
+###### HTML example:
+```html
+<script>
+  const source = 'Google Ad'
+  function leadAttributedOccurred() {
+    Xenon.leadAttributed(source)
+    Xenon.commit()
+  }
+</script>
+
+<button onclick="leadAttributedOccurred()">Lead Attributed</button>
+```
 
 <br/>
 
@@ -3106,7 +3162,7 @@ export default function Home() {
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <script src="https://cdn.jsdelivr.net/gh/xenonview-com/view-js-sdk@v0.1.12/dist/xenon_view_sdk.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/gh/xenonview-com/view-js-sdk@v0.1.14/dist/xenon_view_sdk.min.js"></script>
   <script>
     Xenon.init('<API KEY>')
     const softwareVersion = '5.1.5'
@@ -3161,7 +3217,7 @@ export default function Home() {
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <script src="https://cdn.jsdelivr.net/gh/xenonview-com/view-js-sdk@v0.1.12/dist/xenon_view_sdk.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/gh/xenonview-com/view-js-sdk@v0.1.14/dist/xenon_view_sdk.min.js"></script>
   <script>
     Xenon.init('<API KEY>')
     Xenon.variant(['subscription-variant-A'])

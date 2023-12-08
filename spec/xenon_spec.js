@@ -135,6 +135,33 @@ describe('View SDK', () => {
     });
   });
   // Stock Business Outcomes tests
+  describe('when leadAttributed', () => {
+    const source = 'Google Ad';
+    const identifier = 'Search';
+    describe('when has id', () => {
+      it('then creates journey with outcome', () => {
+        const journey = unit.journey()[0];
+        expect(journey.superOutcome).toEqual('Lead Attributed');
+        expect(journey.outcome).toEqual(source);
+        expect(journey.id).toEqual(identifier);
+        expect(journey.result).toEqual('success');
+      });
+      beforeEach(() => {
+        unit.leadAttributed(source, identifier)
+      });
+    });
+    describe('when no id', () => {
+      it('then creates journey with outcome', () => {
+        const journey = unit.journey()[0];
+        expect(journey.superOutcome).toEqual('Lead Attributed');
+        expect(journey.outcome).toEqual(source);
+        expect(journey.result).toEqual('success');
+      });
+      beforeEach(() => {
+        unit.leadAttributed(source)
+      });
+    });
+  });
   describe('when leadCaptured', () => {
     const phone = 'Phone Number'
     it('then creates journey with outcome', () => {
