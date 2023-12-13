@@ -39,6 +39,7 @@ The Xenon View JavaScript SDK is the JavaScript SDK to interact with [XenonView]
 <br/>
 
 ## What's New <a id='whats-new'></a>
+* v0.1.14.1 - Next.js pages router install issue solution in README
 * v0.1.14 - Added leadAttribution outcome
 * v0.1.13 - React JS SDK Errors are not being rethrown - fixed
 * v0.1.12 - Readme updates
