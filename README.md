@@ -39,6 +39,7 @@ The Xenon View JavaScript SDK is the JavaScript SDK to interact with [XenonView]
 <br/>
 
 ## What's New <a id='whats-new'></a>
+* v0.1.15 - checkedOut -> checkOut
 * v0.1.14.1 - Next.js pages router install issue solution in README
 * v0.1.14 - Added leadAttribution outcome
 * v0.1.13 - React JS SDK Errors are not being rethrown - fixed
@@ -194,7 +195,7 @@ As you view the categories, you can quickly identify issues (for example, if the
 | Account Signup      | [`accountSignup()`](#ecom-account-signup)         | [`accountSignupDeclined()`](#ecom-account-signup-fail)                                    | 
 | Add To Cart         | [`productAddedToCart()`](#ecom-product-to-cart)   | [`productNotAddedToCart()`](#ecom-product-to-cart-fail)                                   |
 | Product Upsell      | [`upsold()`](#ecom-upsell)                        | [`upsellDismissed()`](#ecom-upsell-fail)                                                  | 
-| Checkout            | [`checkedOut()`](#ecom-checkout)                  | [`checkoutCanceled()`](#ecom-checkout-fail) / [`productRemoved()`](#ecom-checkout-remove) | 
+| Checkout            | [`checkOut()`](#ecom-checkout)                  | [`checkoutCanceled()`](#ecom-checkout-fail) / [`productRemoved()`](#ecom-checkout-remove) | 
 | Purchase            | [`purchased()`](#ecom-purchase)                   | [`purchaseCanceled()`](#ecom-purchase-fail)                                               | 
 | Promise Fulfillment | [`promiseFulfilled()`](#ecom-promise-fulfillment) | [`promiseUnfulfilled()`](#ecom-promise-fulfillment-fail)                                  | 
 | Product Disposition | [`productKept()`](#ecom-product-outcome)          | [`productReturned()`](#ecom-product-outcome-fail)                                         |
@@ -326,7 +327,7 @@ More are provided for each function.
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <script src="https://cdn.jsdelivr.net/gh/xenonview-com/view-js-sdk@v0.1.14/dist/xenon_view_sdk.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/gh/xenonview-com/view-js-sdk@v0.1.15/dist/xenon_view_sdk.min.js"></script>
   <script>
     Xenon.init('<API KEY>')
   </script>
@@ -384,7 +385,7 @@ export default function Home() {
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <script src="https://cdn.jsdelivr.net/gh/xenonview-com/view-js-sdk@v0.1.14/dist/xenon_view_sdk.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/gh/xenonview-com/view-js-sdk@v0.1.15/dist/xenon_view_sdk.min.js"></script>
   <script>
     Xenon.init('<API KEY>')
   </script>
@@ -2005,13 +2006,13 @@ Use this call to track when your Customer is checking out.
 
 <br/>
 
-##### ```checkedOut()```
+##### ```checkOut()```
 ###### Framework example:
 ```javascript
 import Xenon from 'xenon-view-sdk';
 
 // Successful Checkout
-Xenon.checkedOut();
+Xenon.checkOut();
 ```
 ###### Nextjs example:
 ```javascript
@@ -2021,18 +2022,18 @@ export default function Home() {
   const Xenon = useXenon('<API KEY>');
 
   // Successful Checkout
-  Xenon.checkedOut();
+  Xenon.checkOut();
 ```
 ###### HTML example:
 ```html
 <script>
-  function checkedOutOccurred() {
-    Xenon.checkedOut()
+  function checkOutOccurred() {
+    Xenon.checkOut()
     Xenon.commit()
   }
 </script>
 
-<button onclick="checkedOutOccurred()">Checkout</button>
+<button onclick="checkOutOccurred()">Checkout</button>
 ```
 
 <br/>
@@ -3163,7 +3164,7 @@ export default function Home() {
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <script src="https://cdn.jsdelivr.net/gh/xenonview-com/view-js-sdk@v0.1.14/dist/xenon_view_sdk.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/gh/xenonview-com/view-js-sdk@v0.1.15/dist/xenon_view_sdk.min.js"></script>
   <script>
     Xenon.init('<API KEY>')
     const softwareVersion = '5.1.5'
@@ -3218,7 +3219,7 @@ export default function Home() {
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <script src="https://cdn.jsdelivr.net/gh/xenonview-com/view-js-sdk@v0.1.14/dist/xenon_view_sdk.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/gh/xenonview-com/view-js-sdk@v0.1.15/dist/xenon_view_sdk.min.js"></script>
   <script>
     Xenon.init('<API KEY>')
     Xenon.variant(['subscription-variant-A'])

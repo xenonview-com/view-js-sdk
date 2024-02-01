@@ -1172,10 +1172,10 @@ var Xenon = (function () {
       this.outcomeAdd(content);
     }
 
-    checkedOut() {
+    checkOut() {
       const content = {
         superOutcome: 'Customer Checkout',
-        outcome: 'Checked Out',
+        outcome: 'Check Out',
         result: 'success'
       };
       this.outcomeAdd(content);

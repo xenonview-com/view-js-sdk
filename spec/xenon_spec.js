@@ -810,15 +810,15 @@ describe('View SDK', () => {
       });
     });
   });
-  describe('when checkedOut', () => {
+  describe('when checkOut', () => {
     it('then creates journey with outcome', () => {
       const journey = unit.journey()[0];
       expect(journey.superOutcome).toEqual('Customer Checkout');
-      expect(journey.outcome).toEqual('Checked Out');
+      expect(journey.outcome).toEqual('Check Out');
       expect(journey.result).toEqual('success');
     });
     beforeEach(() => {
-      unit.checkedOut()
+      unit.checkOut()
     });
   });
   describe('when checkoutCanceled', () => {
