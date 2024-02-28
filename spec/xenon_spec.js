@@ -845,60 +845,60 @@ describe('View SDK', () => {
     });
   });
   describe('when purchased', () => {
-    const method = 'Stripe';
+    const SKUs = '12345, 6789-b';
     const price = '$25'; // optional
     describe('when price', () => {
       it('then creates journey with outcome', () => {
         const journey = unit.journey()[0];
         expect(journey.superOutcome).toEqual('Customer Purchase');
-        expect(journey.outcome).toEqual('Purchase - ' + method);
+        expect(journey.outcome).toEqual('Purchase - ' + SKUs);
         expect(journey.result).toEqual('success');
         expect(journey.price).toEqual(price);
       });
       beforeEach(() => {
-        unit.purchased(method, price)
+        unit.purchase(SKUs, price)
       });
     });
     describe('when no price', () => {
       it('then creates journey with outcome', () => {
         const journey = unit.journey()[0];
         expect(journey.superOutcome).toEqual('Customer Purchase');
-        expect(journey.outcome).toEqual('Purchase - ' + method);
+        expect(journey.outcome).toEqual('Purchase - ' + SKUs);
         expect(journey.result).toEqual('success');
       });
       beforeEach(() => {
-        unit.purchased(method)
+        unit.purchase(SKUs)
       });
     });
   });
   describe('when purchaseCanceled', () => {
-    const method = 'Stripe';
+    const SKUs = '12345, 6789-b';
     const price = '$25'; // optional
 
-    describe('when method and price', () => {
+    describe('when SKUs and price', () => {
       it('then creates journey with outcome', () => {
         const journey = unit.journey()[0];
         expect(journey.superOutcome).toEqual('Customer Purchase');
-        expect(journey.outcome).toEqual('Canceled - ' + method);
+        expect(journey.outcome).toEqual('Canceled - ' + SKUs);
         expect(journey.result).toEqual('fail');
         expect(journey.price).toEqual(price);
       });
       beforeEach(() => {
-        unit.purchaseCanceled(method, price)
+        unit.purchaseCancel(SKUs, price)
       });
     });
-    describe('when method', () => {
+    describe('when SKUs', () => {
       it('then creates journey with outcome', () => {
         const journey = unit.journey()[0];
         expect(journey.superOutcome).toEqual('Customer Purchase');
-        expect(journey.outcome).toEqual('Canceled - ' + method);
+        expect(journey.outcome).toEqual('Canceled - ' + SKUs);
         expect(journey.result).toEqual('fail');
       });
       beforeEach(() => {
-        unit.purchaseCanceled(method)
+        unit.purchaseCancel(SKUs)
       });
     });
-    describe('when without method', () => {
+    describe('when without SKUs', () => {
       it('then creates journey with outcome', () => {
         const journey = unit.journey()[0];
         expect(journey.superOutcome).toEqual('Customer Purchase');
@@ -906,7 +906,7 @@ describe('View SDK', () => {
         expect(journey.result).toEqual('fail');
       });
       beforeEach(() => {
-        unit.purchaseCanceled()
+        unit.purchaseCancel()
       });
     });
   });

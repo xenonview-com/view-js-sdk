@@ -39,6 +39,7 @@ The Xenon View JavaScript SDK is the JavaScript SDK to interact with [XenonView]
 <br/>
 
 ## What's New <a id='whats-new'></a>
+* v0.1.16 - purchased -> purchase, purchaseCanceled -> purchaseCancel
 * v0.1.15 - checkedOut -> checkOut
 * v0.1.14.1 - Next.js pages router install issue solution in README
 * v0.1.14 - Added leadAttribution outcome
@@ -196,7 +197,7 @@ As you view the categories, you can quickly identify issues (for example, if the
 | Add To Cart         | [`productAddedToCart()`](#ecom-product-to-cart)   | [`productNotAddedToCart()`](#ecom-product-to-cart-fail)                                   |
 | Product Upsell      | [`upsold()`](#ecom-upsell)                        | [`upsellDismissed()`](#ecom-upsell-fail)                                                  | 
 | Checkout            | [`checkOut()`](#ecom-checkout)                  | [`checkoutCanceled()`](#ecom-checkout-fail) / [`productRemoved()`](#ecom-checkout-remove) | 
-| Purchase            | [`purchased()`](#ecom-purchase)                   | [`purchaseCanceled()`](#ecom-purchase-fail)                                               | 
+| Purchase            | [`purchase()`](#ecom-purchase)                   | [`purchaseCancel()`](#ecom-purchase-fail)                                               | 
 | Promise Fulfillment | [`promiseFulfilled()`](#ecom-promise-fulfillment) | [`promiseUnfulfilled()`](#ecom-promise-fulfillment-fail)                                  | 
 | Product Disposition | [`productKept()`](#ecom-product-outcome)          | [`productReturned()`](#ecom-product-outcome-fail)                                         |
 | Referral            | [`referral()`](#ecom-referral)                    | [`referralDeclined()`](#ecom-referral-fail)                                               |
@@ -327,7 +328,7 @@ More are provided for each function.
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <script src="https://cdn.jsdelivr.net/gh/xenonview-com/view-js-sdk@v0.1.15/dist/xenon_view_sdk.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/gh/xenonview-com/view-js-sdk@v0.1.16/dist/xenon_view_sdk.min.js"></script>
   <script>
     Xenon.init('<API KEY>')
   </script>
@@ -385,7 +386,7 @@ export default function Home() {
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <script src="https://cdn.jsdelivr.net/gh/xenonview-com/view-js-sdk@v0.1.15/dist/xenon_view_sdk.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/gh/xenonview-com/view-js-sdk@v0.1.16/dist/xenon_view_sdk.min.js"></script>
   <script>
     Xenon.init('<API KEY>')
   </script>
@@ -1584,7 +1585,61 @@ export default function Home() {
 [back to top](#contents)
 
 ### Ecommerce Related Outcomes <a id='ecom'></a>
+<br/>
 
+#### Lead Attributed  <a id='ecom-lead-attributed'></a>
+Use this call to track Lead Attribution (Google Ads, Facebook Ads, etc.)
+You can add a source and identifier string to the call to differentiate as follows:
+
+<br/>
+
+##### ```leadAttributed()```
+
+###### Framework example:
+```javascript
+import Xenon from 'xenon-view-sdk';
+
+const source = 'Google Ad';
+const identifier = 'Search';
+
+// Successful Lead Attributed to Google Ad
+Xenon.leadAttributed(source);
+//...
+// Successful Lead Attributed to Google Search Ad
+Xenon.leadAttributed(source, identifier);
+```
+
+###### Nextjs example:
+```javascript
+import {useXenon} from "xenon-view-sdk/useXenon";
+
+export default function Home() {
+  const Xenon = useXenon('<API KEY>');
+
+  const source = 'Google Ad';
+  const identifier = 'Search';
+
+  // Successful Lead Attributed to Google Ad
+  Xenon.leadAttributed(source);
+  //...
+  // Successful Lead Attributed to Google Search Ad
+  Xenon.leadAttributed(source, identifier);
+```
+
+###### HTML example:
+```html
+<script>
+  const source = 'Google Ad'
+  function leadAttributedOccurred() {
+    Xenon.leadAttributed(source)
+    Xenon.commit()
+  }
+</script>
+
+<button onclick="leadAttributedOccurred()">Lead Attributed</button>
+```
+
+<br/>
 
 <br/>
 
@@ -2121,19 +2176,19 @@ Use this call to track when your Customer completes a purchase.
 
 <br/>
 
-##### ```purchased()```
+##### ```purchase()```
 ###### Framework example:
 ```javascript
 import Xenon from 'xenon-view-sdk';
 
-const method = 'Stripe';
+const SKUs = '12345, 6789-b';
 const price = '$2011'; // optional
 
 // Successful Purchase
-Xenon.purchased(method);
+Xenon.purchase(SKUs);
 
 // Successful Purchase for $2011
-Xenon.purchased(method, price);
+Xenon.purchase(SKUs, price);
 ```
 ###### Nextjs example:
 ```javascript
@@ -2142,22 +2197,22 @@ import {useXenon} from "xenon-view-sdk/useXenon";
 export default function Home() {
   const Xenon = useXenon('<API KEY>');
 
-  const method = 'Stripe';
+  const SKUs = '12345, 6789-b';
   const price = '$2011'; // optional
 
   // Successful Purchase
-  Xenon.purchased(method);
+  Xenon.purchase(SKUs);
 
   // Successful Purchase for $2011
-  Xenon.purchased(method, price);
+  Xenon.purchase(SKUs, price);
 ```
 ###### HTML example:
 ```html
 <script>
-  const method = 'Stripe'
+  const SKUs = '12345, 6789-b';
   const price = '$2011'
   function purchasedOccurred() {
-    Xenon.purchased(method, price)
+    Xenon.purchase(SKUs, price)
     Xenon.commit()
   }
 </script>
@@ -2167,20 +2222,20 @@ export default function Home() {
 
 <br/>
 
-##### ```purchaseCanceled()``` <a id='ecom-purchase-fail'></a>
+##### ```purchaseCancel()``` <a id='ecom-purchase-fail'></a>
 ###### Framework example:
 ```javascript
 import Xenon from 'xenon-view-sdk';
 
-const method = 'Stripe'; // optional
+const SKUs = '12345, 6789-b'; // optional
 const price = '$2011'; // optional
 
 //Customer cancels the purchase.
-Xenon.purchaseCanceled();
+Xenon.purchaseCancel();
 // -OR-
-Xenon.purchaseCanceled(method);
+Xenon.purchaseCancel(SKUs);
 // -OR-
-Xenon.purchaseCanceled(method, price);
+Xenon.purchaseCancel(SKUs, price);
 
 ```
 ###### Nextjs example:
@@ -2190,25 +2245,25 @@ import {useXenon} from "xenon-view-sdk/useXenon";
 export default function Home() {
   const Xenon = useXenon('<API KEY>');
 
-  const method = 'Stripe'; // optional
+  const SKUs = '12345, 6789-b'; // optional
   const price = '$2011'; // optional
 
   //Customer cancels the purchase.
-  Xenon.purchaseCanceled();
+  Xenon.purchaseCancel();
   // -OR-
-  Xenon.purchaseCanceled(method);
+  Xenon.purchaseCancel(SKUs);
   // -OR-
-  Xenon.purchaseCanceled(method, price);
+  Xenon.purchaseCancel(SKUs, price);
 
 ```
 ###### HTML example:
 ```html
 <script>
-  const method = 'Stripe'
+  const SKUs = '12345, 6789-b';
   const price = '$2011'
 
   function purchaseCanceledOccurred() {
-    Xenon.purchaseCanceled(method, price)
+    Xenon.purchaseCancel(SKUs, price)
     Xenon.commit()
   }
 </script>
@@ -3164,7 +3219,7 @@ export default function Home() {
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <script src="https://cdn.jsdelivr.net/gh/xenonview-com/view-js-sdk@v0.1.15/dist/xenon_view_sdk.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/gh/xenonview-com/view-js-sdk@v0.1.16/dist/xenon_view_sdk.min.js"></script>
   <script>
     Xenon.init('<API KEY>')
     const softwareVersion = '5.1.5'
@@ -3219,7 +3274,7 @@ export default function Home() {
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <script src="https://cdn.jsdelivr.net/gh/xenonview-com/view-js-sdk@v0.1.15/dist/xenon_view_sdk.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/gh/xenonview-com/view-js-sdk@v0.1.16/dist/xenon_view_sdk.min.js"></script>
   <script>
     Xenon.init('<API KEY>')
     Xenon.variant(['subscription-variant-A'])

@@ -1199,10 +1199,10 @@ var Xenon = (function () {
       this.outcomeAdd(content);
     }
 
-    purchased(method, price = null) {
+    purchase(SKUs, price = null) {
       const content = {
         superOutcome: 'Customer Purchase',
-        outcome: 'Purchase - ' + method,
+        outcome: 'Purchase - ' + SKUs,
         result: 'success'
       };
       if (price) {
@@ -1211,8 +1211,8 @@ var Xenon = (function () {
       this.outcomeAdd(content);
     }
 
-    purchaseCanceled(method = null, price = null) {
-      const outcome = 'Canceled' + (method ? ' - ' + method : '');
+    purchaseCancel(SKUs = null, price = null) {
+      const outcome = 'Canceled' + (SKUs ? ' - ' + SKUs : '');
       const content = {
         superOutcome: 'Customer Purchase',
         outcome: outcome,
