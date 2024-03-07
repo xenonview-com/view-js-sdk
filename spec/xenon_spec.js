@@ -10,16 +10,18 @@
 import {_Xenon} from '../src/xenon';
 import './helper/api_helper';
 import {UnblockPromises} from './helper/api_helper';
+import {retrieveLocal} from "../src/storage/storage";
+
 
 
 describe('View SDK', () => {
   let unit = null;
   let unit2 = null;
-  let journeyApi = jasmine.createSpyObj('MyJourneyApi', ['fetch'])
+  let journeyApi = jasmine.createSpyObj('MyJourneyApi', ['fetch']);
   let JourneyApi = jasmine.createSpy('constructor').and.returnValue(journeyApi);
-  let deanonApi = jasmine.createSpyObj('MyDeanonApi', ['fetch'])
+  let deanonApi = jasmine.createSpyObj('MyDeanonApi', ['fetch']);
   let DeanonApi = jasmine.createSpy('constructor').and.returnValue(deanonApi);
-  let heartbeatApi = jasmine.createSpyObj('MyHeartbeatApi', ['fetch'])
+  let heartbeatApi = jasmine.createSpyObj('MyHeartbeatApi', ['fetch']);
   let HeartbeatApi = jasmine.createSpy('constructor').and.returnValue(heartbeatApi);
   let apiKey = '<token>';
   let apiUrl = 'https://localhost';
@@ -78,56 +80,56 @@ describe('View SDK', () => {
   });
   describe('when adding outcome after platform reset', () => {
     it('then journey doesn\'t contain platform', () => {
-      const journey = unit.journey()[0]
+      const journey = unit.journey()[0];
       expect(Object.keys(journey)).not.toContain('platform')
     });
     beforeEach(() => {
-      const softwareVersion = '5.1.5'
-      const deviceModel = 'Pixel 4 XL'
-      const operatingSystemName = 'Android'
-      const operatingSystemVersion = '12.0'
-      unit.platform(softwareVersion, deviceModel, operatingSystemName, operatingSystemVersion)
-      unit.removePlatform()
+      const softwareVersion = '5.1.5';
+      const deviceModel = 'Pixel 4 XL';
+      const operatingSystemName = 'Android';
+      const operatingSystemVersion = '12.0';
+      unit.platform(softwareVersion, deviceModel, operatingSystemName, operatingSystemVersion);
+      unit.removePlatform();
       unit.applicationInstalled()
     });
   });
   describe('when adding outcome after platform set', () => {
     it('then journey contains platform', () => {
-      const journey = unit.journey()[0]
+      const journey = unit.journey()[0];
       expect(journey.platform.softwareVersion).toEqual('5.1.5');
       expect(journey.platform.deviceModel).toEqual('Pixel 4 XL');
       expect(journey.platform.operatingSystemName).toEqual('Android');
       expect(journey.platform.operatingSystemVersion).toEqual('12.0');
     });
     beforeEach(() => {
-      const softwareVersion = '5.1.5'
-      const deviceModel = 'Pixel 4 XL'
-      const operatingSystemName = 'Android'
-      const operatingSystemVersion = '12.0'
-      unit.platform(softwareVersion, deviceModel, operatingSystemName, operatingSystemVersion)
+      const softwareVersion = '5.1.5';
+      const deviceModel = 'Pixel 4 XL';
+      const operatingSystemName = 'Android';
+      const operatingSystemVersion = '12.0';
+      unit.platform(softwareVersion, deviceModel, operatingSystemName, operatingSystemVersion);
       unit.applicationInstalled()
     });
   });
   describe('when adding outcome after tags reset', () => {
     it('then journey doesn\'t contain tags', () => {
-      const journey = unit.journey()[0]
+      const journey = unit.journey()[0];
       expect(Object.keys(journey)).not.toContain('tags')
     });
     beforeEach(() => {
-      const tags = ['tag']
-      unit.variant(tags)
-      unit.resetVariants()
+      const tags = ['tag'];
+      unit.variant(tags);
+      unit.resetVariants();
       unit.applicationInstalled()
     });
   });
   describe('when adding outcome after tags', () => {
     it('then journey contains tags', () => {
-      const journey = unit.journey()[0]
+      const journey = unit.journey()[0];
       expect(journey.tags).toEqual(['tag'])
     });
     beforeEach(() => {
-      const tags = ['tag']
-      unit.variant(tags)
+      const tags = ['tag'];
+      unit.variant(tags);
       unit.applicationInstalled()
     });
     afterEach(() => {
@@ -163,7 +165,7 @@ describe('View SDK', () => {
     });
   });
   describe('when leadCaptured', () => {
-    const phone = 'Phone Number'
+    const phone = 'Phone Number';
     it('then creates journey with outcome', () => {
       const journey = unit.journey()[0];
       expect(journey.superOutcome).toEqual('Lead Capture');
@@ -175,7 +177,7 @@ describe('View SDK', () => {
     });
   });
   describe('when leadCaptureDeclined', () => {
-    const phone = 'Phone Number'
+    const phone = 'Phone Number';
     it('then creates journey with outcome', () => {
       const journey = unit.journey()[0];
       expect(journey.superOutcome).toEqual('Lead Capture');
@@ -1323,10 +1325,10 @@ describe('View SDK', () => {
     });
   });
   describe('when adding duplicate milestone', () => {
-    const category = 'Function'
-    const operation = 'Called'
-    const name = 'Query Database'
-    const detail = 'User Lookup'
+    const category = 'Function';
+    const operation = 'Called';
+    const name = 'Query Database';
+    const detail = 'User Lookup';
     it('then has a journey with a single event', () => {
       const journey = unit.journey()[0];
       expect(journey.count).toEqual(2);
@@ -1388,7 +1390,7 @@ describe('View SDK', () => {
     });
     beforeEach(() => {
       unit.milestone(category, operation, name, detail);
-      unit.milestone(category, operation, name, detail+'2');
+      unit.milestone(category, operation, name, detail + '2');
     });
   });
   describe('when resetting', () => {
@@ -1435,33 +1437,33 @@ describe('View SDK', () => {
   describe('isDuplicate', () => {
     describe('when same keys no category', () => {
       it('then is not dup', () => {
-        expect(unit.isDuplicate({test:'1'}, {test: '2'})).toBeFalse();
+        expect(unit.isDuplicate({test: '1'}, {test: '2'})).toBeFalse();
       });
     });
     describe('when categories are not equal', () => {
       it('then is not dup', () => {
-        expect(unit.isDuplicate({category:'1'}, {category: '2'})).toBeFalse();
+        expect(unit.isDuplicate({category: '1'}, {category: '2'})).toBeFalse();
       });
     });
     describe('when category without action', () => {
       it('then is not dup', () => {
-        expect(unit.isDuplicate({category:'1'}, {category: '1'})).toBeFalse();
+        expect(unit.isDuplicate({category: '1'}, {category: '1'})).toBeFalse();
       });
     });
   });
   describe('duplicateContent', () => {
     describe('when content with no type', () => {
       it('then is not dup', () => {
-        const noType ={category: 'Content'};
-        const noTypeKey = []
+        const noType = {category: 'Content'};
+        const noTypeKey = [];
         expect(unit.duplicateContent(noType, noType, noTypeKey, noTypeKey)).toBeTrue();
       });
     });
     describe('when content with mismatch type', () => {
       it('then is not dup', () => {
-        const type1 ={category: 'Content', type: '1'};
-        const type2 ={category: 'Content', type: '2'};
-        const noTypeKey = ['type']
+        const type1 = {category: 'Content', type: '1'};
+        const type2 = {category: 'Content', type: '2'};
+        const noTypeKey = ['type'];
         expect(unit.duplicateContent(type1, type2, noTypeKey, noTypeKey)).toBeFalse();
       });
     });
@@ -1481,6 +1483,30 @@ describe('View SDK', () => {
       it('then is not dup', () => {
         expect(unit.duplicateMilestone({category: '1', name: '1'}, {category: '1', name: '2'})).toBeFalse();
       });
+    });
+  });
+  describe('hasClassInHierarchy', () => {
+    const classAtTopLevel = {className: "class"};
+    const classAtSecondLevel = {
+        className: "",
+        parentElement: {
+          className: "class"
+        }
+    };
+    it('then catches class at first level', () => {
+      expect(unit.hasClassInHierarchy(classAtTopLevel, 'class', 1)).toBeTrue()
+    });
+    it('then doesn\'t have class at first level', () => {
+      expect(unit.hasClassInHierarchy(classAtTopLevel, 'other', 1)).toBeFalse()
+    });
+    it('then catches class at second level', () => {
+      expect(unit.hasClassInHierarchy(classAtSecondLevel, 'class', 2)).toBeTrue()
+    });
+    it('then doesn\'t have class at second level', () => {
+      expect(unit.hasClassInHierarchy(classAtSecondLevel, 'other', 2)).toBeFalse()
+    });
+    it('then doesn\'t go to deep', () => {
+      expect(unit.hasClassInHierarchy(classAtSecondLevel, 'other', 1)).toBeFalse()
     });
   });
   // API Communication tests
@@ -1698,6 +1724,234 @@ describe('View SDK', () => {
         heartbeatApi.fetch.and.returnValue(promise);
         unit.platform('a', 'b', 'c', 'd');
         unit.heartbeat();
+      });
+    });
+    describe('when ecom abandonment', () => {
+      let resolvePromise = null;
+      let rejectPromise = null;
+      beforeEach(() => {
+        let promise = new Promise(function (resolve, reject) {
+          resolvePromise = resolve;
+          rejectPromise = reject;
+        });
+        heartbeatApi.fetch.and.returnValue(promise);
+        unit.ecomAbandonment();
+      });
+      describe('when ecom stage 0', () => {
+        it('then calls the view heartbeat API', () => {
+          expect(HeartbeatApi).toHaveBeenCalledWith(apiUrl);
+          expect(heartbeatApi.fetch).toHaveBeenCalledWith({
+            data: {
+              id: jasmine.any(String),
+              journey: [
+                {category: 'Feature', action: 'Attempted', name: feature, timestamp: jasmine.any(Number)}
+              ],
+              token: apiKey,
+              tags: [],
+              timestamp: jasmine.any(Number),
+              platform: {},
+              watchdog: {
+                expires_in_seconds: 600,
+                if_abandoned: {superOutcome: 'Add Product To Cart', outcome: 'Abandoned', result: 'fail'}
+              }
+            }
+          })
+        });
+        beforeEach(() => {
+          unit.heartbeat();
+        });
+        afterEach(() => {
+          unit.reset();
+        })
+      });
+      describe('when ecom stage 1', () => {
+        it('then calls the view heartbeat API', () => {
+          expect(HeartbeatApi).toHaveBeenCalledWith(apiUrl);
+          expect(heartbeatApi.fetch).toHaveBeenCalledWith({
+            data: {
+              id: jasmine.any(String),
+              journey: [
+                {category: 'Feature', action: 'Attempted', name: feature, timestamp: jasmine.any(Number)},
+                {superOutcome: 'Add Product To Cart', outcome: 'Add - product', result: 'success', timestamp: jasmine.any(Number)}
+              ],
+              token: apiKey,
+              tags: [],
+              timestamp: jasmine.any(Number),
+              platform: {},
+              watchdog: {
+                expires_in_seconds: 600,
+                if_abandoned: {superOutcome: 'Customer Checkout', outcome: 'Abandoned', result: 'fail'}
+              }
+            }
+          })
+        });
+        beforeEach(() => {
+          unit.productAddedToCart("product");
+          unit.heartbeat();
+        });
+        afterEach(() => {
+          unit.reset();
+        })
+      });
+      describe('when ecom stage 2', () => {
+        it('then calls the view heartbeat API', () => {
+          expect(HeartbeatApi).toHaveBeenCalledWith(apiUrl);
+          expect(heartbeatApi.fetch).toHaveBeenCalledWith({
+            data: {
+              id: jasmine.any(String),
+              journey: [
+                {category: 'Feature', action: 'Attempted', name: feature, timestamp: jasmine.any(Number)},
+                {superOutcome: 'Customer Checkout', outcome: 'Check Out', result: 'success', timestamp: jasmine.any(Number)}
+              ],
+              token: apiKey,
+              tags: [],
+              timestamp: jasmine.any(Number),
+              platform: {},
+              watchdog: {
+                expires_in_seconds: 600,
+                if_abandoned: {superOutcome: 'Customer Purchase', outcome: 'Abandoned', result: 'fail'}
+              }
+            }
+          })
+        });
+        beforeEach(() => {
+          unit.checkOut();
+          unit.heartbeat();
+          resolvePromise();
+        });
+        afterEach(() => {
+          unit.reset();
+        })
+      });
+      describe('when ecom stage 3', () => {
+        it('then calls the view heartbeat API', () => {
+          expect(HeartbeatApi).toHaveBeenCalledWith(apiUrl);
+          expect(heartbeatApi.fetch).toHaveBeenCalledWith({
+            data: {
+              id: jasmine.any(String),
+              journey: [
+                {category: 'Feature', action: 'Attempted', name: feature, timestamp: jasmine.any(Number)},
+                {superOutcome: 'Customer Purchase', outcome: 'Purchase - SKU', result: 'success', timestamp: jasmine.any(Number)}
+              ],
+              token: apiKey,
+              tags: [],
+              timestamp: jasmine.any(Number),
+              platform: {},
+              watchdog: {
+                remove: true
+              }
+            }
+          })
+        });
+        it('then resets heartbeat state', () => {
+          const type = retrieveLocal('heartbeat_type');
+          const outcome = retrieveLocal('heartbeat_outcome');
+          const stage = retrieveLocal('heartbeat_stage');
+          expect(type).toBeNull();
+          expect(outcome).toBeNull();
+          expect(stage).toBeNull();
+        });
+        beforeEach(() => {
+          unit.purchase(['SKU']);
+          unit.heartbeat();
+          resolvePromise();
+          UnblockPromises();
+        });
+
+      });
+    });
+    describe('when custom abandonment', () => {
+      let resolvePromise = null;
+      let rejectPromise = null;
+      beforeEach(() => {
+        let promise = new Promise(function (resolve, reject) {
+          resolvePromise = resolve;
+          rejectPromise = reject;
+        });
+        heartbeatApi.fetch.and.returnValue(promise);
+        unit.customAbandonment({
+          expires_in_seconds: 600,
+          if_abandoned: {
+            superOutcome: 'Custom',
+            outcome: 'Abandoned',
+            result: 'fail'
+          }
+        });
+      });
+      describe('when called', () => {
+        it('then calls the view heartbeat API', () => {
+          expect(HeartbeatApi).toHaveBeenCalledWith(apiUrl);
+          expect(heartbeatApi.fetch).toHaveBeenCalledWith({
+            data: {
+              id: jasmine.any(String),
+              journey: [
+                {category: 'Feature', action: 'Attempted', name: feature, timestamp: jasmine.any(Number)}
+              ],
+              token: apiKey,
+              tags: [],
+              timestamp: jasmine.any(Number),
+              platform: {},
+              watchdog: {
+                expires_in_seconds: 600,
+                if_abandoned: {superOutcome: 'Custom', outcome: 'Abandoned', result: 'fail'}
+              }
+            }
+          })
+        });
+        beforeEach(() => {
+          unit.heartbeat();
+        });
+        afterEach(() => {
+          unit.reset();
+        })
+      });
+    });
+    describe('when canceling abandonment', () => {
+      let resolvePromise = null;
+      let rejectPromise = null;
+      beforeEach(() => {
+        let promise = new Promise(function (resolve, reject) {
+          resolvePromise = resolve;
+          rejectPromise = reject;
+        });
+        heartbeatApi.fetch.and.returnValue(promise);
+        unit.cancelAbandonment();
+      });
+      describe('when called', () => {
+        it('then calls the view heartbeat API', () => {
+          expect(HeartbeatApi).toHaveBeenCalledWith(apiUrl);
+          expect(heartbeatApi.fetch).toHaveBeenCalledWith({
+            data: {
+              id: jasmine.any(String),
+              journey: [
+                {category: 'Feature', action: 'Attempted', name: feature, timestamp: jasmine.any(Number)}
+              ],
+              token: apiKey,
+              tags: [],
+              timestamp: jasmine.any(Number),
+              platform: {},
+              watchdog: {
+                remove: true
+              }
+            }
+          })
+        });
+        it('then resets heartbeat state', () => {
+          const type = retrieveLocal('heartbeat_type');
+          const outcome = retrieveLocal('heartbeat_outcome');
+          const stage = retrieveLocal('heartbeat_stage');
+          expect(type).toBeNull();
+          expect(outcome).toBeNull();
+          expect(stage).toBeNull();
+        });
+        beforeEach(() => {
+          unit.heartbeat();
+          resolvePromise();
+          UnblockPromises();
+        });
+        afterEach(() => {
+          unit.reset();
+        })
       });
     });
     beforeEach(() => {

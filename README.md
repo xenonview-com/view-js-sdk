@@ -26,6 +26,7 @@ The Xenon View JavaScript SDK is the JavaScript SDK to interact with [XenonView]
         * [Content Interaction](#content-interaction)
     * [Commit Points](#commiting)
     * [Heartbeats](#heartbeat)
+        * [Abandonment](#abandonment)
     * [Platforming](#platforming)
     * [Experiments](#experiments)
     * [Customer Journey Grouping](#deanonymizing-journeys)
@@ -39,6 +40,7 @@ The Xenon View JavaScript SDK is the JavaScript SDK to interact with [XenonView]
 <br/>
 
 ## What's New <a id='whats-new'></a>
+* v0.1.17 - heartbeats + watchdogs for ecom
 * v0.1.16 - purchased -> purchase, purchaseCanceled -> purchaseCancel
 * v0.1.15 - checkedOut -> checkOut
 * v0.1.14.1 - Next.js pages router install issue solution in README
@@ -328,7 +330,7 @@ More are provided for each function.
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <script src="https://cdn.jsdelivr.net/gh/xenonview-com/view-js-sdk@v0.1.16/dist/xenon_view_sdk.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/gh/xenonview-com/view-js-sdk@v0.1.17/dist/xenon_view_sdk.min.js"></script>
   <script>
     Xenon.init('<API KEY>')
   </script>
@@ -386,7 +388,7 @@ export default function Home() {
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <script src="https://cdn.jsdelivr.net/gh/xenonview-com/view-js-sdk@v0.1.16/dist/xenon_view_sdk.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/gh/xenonview-com/view-js-sdk@v0.1.17/dist/xenon_view_sdk.min.js"></script>
   <script>
     Xenon.init('<API KEY>')
   </script>
@@ -3101,7 +3103,6 @@ This call commits a customer journey to Xenon View for analysis.
 
 ### Heartbeats   <a id='heartbeat'></a>
 
-
 Business Outcomes and Customer Journey Milestones are tracked locally in memory until you commit them to the Xenon View system.
 You can use the heartbeat call if you want to commit in batch.
 Additionally, the heartbeat call will update a last-seen metric for customer journeys that have yet to arrive at Business Outcome. The last-seen metric is useful when analyzing stalled Customer Journeys.
@@ -3143,6 +3144,119 @@ export default function Home() {
 
 This call commits any uncommitted journeys to Xenon View for analysis and updates the last accessed time.
 
+<br/>
+
+#### Abandonment <a id='abandonment'></a>
+The heartbeat call can also be used to track site abandonments. You can set up a watchdog and have it serviced upon each heartbeat. 
+Additionally, you can add a timeout period which will create failing outcome when the end user performs no further action.
+
+<br/>
+
+###### Framework example:
+```javascript
+import Xenon from 'xenon-view-sdk';
+
+Xenon.customAbandonment({
+  expires_in_seconds: 600,
+  if_abandoned: {
+    superOutcome: 'Custom',
+    outcome: 'Abandoned',
+    result: 'fail'
+  }
+});
+
+// you can heartbeat to Xenon View
+await Xenon.heartbeat();
+```
+###### Nextjs example:
+```javascript
+import {useXenon} from "xenon-view-sdk/useXenon";
+
+export default function Home() {
+  const Xenon = useXenon('<API KEY>');
+  Xenon.customAbandonment({
+    expires_in_seconds: 600,
+    if_abandoned: {
+      superOutcome: 'Custom',
+      outcome: 'Abandoned',
+      result: 'fail'
+    }
+  });
+  // you can heartbeat to Xenon View
+  await Xenon.heartbeat();
+```
+###### HTML example:
+```html
+<script>
+  const contentType = 'Blog Post'
+  function contentSearchedOccurred() {
+    Xenon.customAbandonment({
+      expires_in_seconds: 600,
+      if_abandoned: {
+        superOutcome: 'Custom',
+        outcome: 'Abandoned',
+        result: 'fail'
+      }
+    });
+    Xenon.contentSearched(contentType)
+    Xenon.heartbeat()
+  }
+</script>
+
+<button onclick="contentSearchedOccurred()">Search</button>
+```
+
+> **:memo: Note:** To cancel a custom abandonment use the cancel call. It will go into effect on the next heartbeat call:
+```javascript
+Xenon.cancelAbandonment()
+```
+
+<br/>
+
+#### Ecom Abandonment
+Abandonment is particularly useful for Ecom sites and as such has a special state machine built in to enable it. 
+When Ecom related outcomes are obtained, the state machine advances appropriately until a purchase is made.
+Ecom Abandonment has a two-step setup: 
+1) when the Xenon object is init'ed call `ecomAbandonment()`
+2) replace all `commit()` calls with `heartbeat()`
+
+  See the following examples:
+
+###### Framework example:
+```javascript
+import Xenon from 'xenon-view-sdk';
+
+// start by initializing Xenon View
+Xenon.init('<API KEY>');
+Xenon.ecomAbandonment();
+
+```
+###### Nextjs example:
+```javascript
+"use client";
+import Image from 'next/image'
+import {useXenon} from "xenon-view-sdk/useXenon";
+
+export default function Home() {
+  const Xenon = useXenon('<API KEY>');
+  Xenon.ecomAbandonment();
+  return (<main className="flex min-h-screen flex-col items-center justify-between p-24"/>);
+}
+```
+###### HTML example:
+```html
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <script src="https://cdn.jsdelivr.net/gh/xenonview-com/view-js-sdk@v0.1.17/dist/xenon_view_sdk.min.js"></script>
+    <script>
+        Xenon.init('<API KEY>')
+        Xenon.ecomAbandonment()
+    </script>
+    <title>Sample</title>
+</head>
+```
 
 <br/>
 
@@ -3219,7 +3333,7 @@ export default function Home() {
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <script src="https://cdn.jsdelivr.net/gh/xenonview-com/view-js-sdk@v0.1.16/dist/xenon_view_sdk.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/gh/xenonview-com/view-js-sdk@v0.1.17/dist/xenon_view_sdk.min.js"></script>
   <script>
     Xenon.init('<API KEY>')
     const softwareVersion = '5.1.5'
@@ -3274,7 +3388,7 @@ export default function Home() {
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <script src="https://cdn.jsdelivr.net/gh/xenonview-com/view-js-sdk@v0.1.16/dist/xenon_view_sdk.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/gh/xenonview-com/view-js-sdk@v0.1.17/dist/xenon_view_sdk.min.js"></script>
   <script>
     Xenon.init('<API KEY>')
     Xenon.variant(['subscription-variant-A'])
