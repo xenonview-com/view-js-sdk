@@ -843,6 +843,25 @@ var Xenon = (function () {
       this.apiKey = apiKey;
     }
 
+    ecomAbandonment() {
+      storeLocal('heartbeat_type', 'ecom');
+      this.heartbeatState(0);
+    }
+
+    customAbandonment(outcome) {
+      storeLocal('heartbeat_type', 'custom');
+      storeLocal('heartbeat_outcome', outcome);
+      this.heartbeatState(0);
+    }
+
+    cancelAbandonment() {
+      storeLocal('heartbeat_type', 'custom');
+      storeLocal('heartbeat_outcome', {
+        remove: true
+      });
+      this.heartbeatState(0);
+    }
+
     platform(softwareVersion, deviceModel, operatingSystemName, operatingSystemVersion) {
       const platform = {
         softwareVersion: softwareVersion,
@@ -1076,7 +1095,7 @@ var Xenon = (function () {
       this.outcomeAdd(content);
     }
 
-    adClicked(provider, id = null, price = null, term = null) {
+    adClicked(provider, id = null, price = null) {
       const content = {
         superOutcome: 'Advertisement',
         outcome: 'Ad Click - ' + provider,
@@ -1137,6 +1156,7 @@ var Xenon = (function () {
         result: 'success'
       };
       this.outcomeAdd(content);
+      this.heartbeatState(1);
     }
 
     productNotAddedToCart(product) {
@@ -1179,6 +1199,7 @@ var Xenon = (function () {
         result: 'success'
       };
       this.outcomeAdd(content);
+      this.heartbeatState(2);
     }
 
     checkoutCanceled() {
@@ -1209,6 +1230,8 @@ var Xenon = (function () {
         content['price'] = price;
       }
       this.outcomeAdd(content);
+
+      this.heartbeatState(3);
     }
 
     purchaseCancel(SKUs = null, price = null) {
@@ -1396,7 +1419,7 @@ var Xenon = (function () {
 
     // API Communication:
 
-    commit(surfaceErrors=false) {
+    commit(surfaceErrors = false) {
       let params = {
         data: {
           id: this.id(),
@@ -1414,7 +1437,57 @@ var Xenon = (function () {
         });
     }
 
-    heartbeat(surfaceErrors=false) {
+    heartbeatState(stage = null) {
+      const previousStage = retrieveLocal('heartbeat_stage');
+      if (stage && stage > previousStage) {
+        storeLocal('heartbeat_stage', stage);
+      }
+      if (!stage && !previousStage) {
+        storeLocal('heartbeat_stage', 0);
+      }
+      return Number(retrieveLocal('heartbeat_stage'));
+    }
+
+    heartbeatMessage(type) {
+      const stage = this.heartbeatState();
+      const messages = {
+        ecom: {
+          0: {
+            expires_in_seconds: 600,
+            if_abandoned: {
+              superOutcome: 'Add Product To Cart',
+              outcome: 'Abandoned',
+              result: 'fail'
+            }
+          },
+          1: {
+            expires_in_seconds: 600,
+            if_abandoned: {
+              superOutcome: 'Customer Checkout',
+              outcome: 'Abandoned',
+              result: 'fail'
+            }
+          },
+          2: {
+            expires_in_seconds: 600,
+            if_abandoned: {
+              superOutcome: 'Customer Purchase',
+              outcome: 'Abandoned',
+              result: 'fail'
+            }
+          },
+          3: {
+            remove: true
+          },
+        }
+      };
+      if (Object.keys(messages).includes(type)) {
+        return messages[type][stage];
+      }
+      return retrieveLocal('heartbeat_outcome')
+    }
+
+    heartbeat(surfaceErrors = false) {
       const platform = retrieveSession('view-platform');
       const tags = retrieveSession('view-tags');
       let params = {
@@ -1427,9 +1500,23 @@ var Xenon = (function () {
           timestamp: (new Date()).getTime() / 1000
         }
       };
+
+      const heartbeatType = retrieveLocal('heartbeat_type');
+      if (heartbeatType) {
+        params.data['watchdog'] = this.heartbeatMessage(heartbeatType);
+      }
+
       this.reset();
       return this.HeartbeatApi(this.apiUrl)
         .fetch(params)
+        .then((value) => {
+          if (heartbeatType && Object.keys(params.data['watchdog']).includes('remove')){
+            resetLocal('heartbeat_stage');
+            resetLocal('heartbeat_type');
+            resetLocal('heartbeat_outcome');
+          }
+          return Promise.resolve(value);
+        })
         .catch((err) => {
           this.restore();
           return (surfaceErrors ? Promise.reject(err) : Promise.resolve());
@@ -1551,6 +1638,20 @@ var Xenon = (function () {
       if (currentJourney && currentJourney.length) restoreJourney = restoreJourney.concat(currentJourney);
       this.storeJourney(restoreJourney);
       this.restoreJourney = [];
+    }
+
+    hasClassInHierarchy(target, className, maxDepth){
+      const searcher = (node, className, maxDepth, currentDepth) => {
+        if (currentDepth >= maxDepth)
+          return false;
+        if (node.className.toString().includes(className))
+          return true;
+        if (!node.parentElement)
+          return false;
+        return searcher(node.parentElement, className, maxDepth, currentDepth+1);
+      };
+
+      return searcher(target, className, maxDepth, 0);
     }
   }
 
