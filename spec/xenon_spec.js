@@ -34,6 +34,11 @@ describe('View SDK', () => {
       expect(unit.id()).not.toBeNull();
       expect(unit.id()).not.toEqual('');
     });
+    it('then has default id when storage cleared', () => {
+      sessionStorage.removeItem('xenon-view');
+      expect(unit.id()).not.toBeNull();
+      expect(unit.id()).not.toEqual('');
+    });
     describe('when id set', () => {
       let testId = '<some random uuid>';
       beforeEach(() => {
