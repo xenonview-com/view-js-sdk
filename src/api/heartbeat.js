@@ -18,11 +18,14 @@ class heartbeatApi extends ApiBase {
   }
   params(data) {
     let params = heartbeatParams(data);
-    const {id, tags, platform, timestamp} = data;
+    const {id, tags, platform, timestamp, watchdog} = data;
     params.uuid = id;
     params.timestamp = timestamp;
     params.tags = tags;
     params.platform = platform;
+    if (watchdog) {
+      params.watchdog = watchdog;
+    }
     return params;
   }
 }
