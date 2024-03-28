@@ -7,11 +7,11 @@ The Xenon View JavaScript SDK is the JavaScript SDK to interact with [XenonView]
 * [Introduction](#intro)
 * [Steps To Get Started](#getting-started)
     * [Identify Business Outcomes](#step-1)
-    * [Identify Customer Journey Milestones](#step-2)
+    * [Identify Customer Experience Milestones](#step-2)
     * [Enumerate Technical Stack](#step-3)
     * [Installation](#step-4)
     * [Instrument Business Outcomes](#step-5)
-    * [Instrument Customer Journey Milestones](#step-6)
+    * [Instrument Customer Experience Milestones](#step-6)
     * [Determine Commit Points](#step-7)
     * [(Optional) Group Customer Journeys](#step-8)
     * [Analysis](#step-9)
@@ -21,18 +21,19 @@ The Xenon View JavaScript SDK is the JavaScript SDK to interact with [XenonView]
     * [Initialization](#instantiation)
     * [Service/Subscription/SaaS Business Outcomes](#saas)
     * [Ecommerce Business Outcomes](#ecom)
-    * [Customer Journey Milestones](#milestones)
+    * [Customer Experience Milestones](#milestones)
         * [Features Usage](#feature-usage)
         * [Content Interaction](#content-interaction)
+        * [Performance](#performance)
     * [Commit Points](#commiting)
     * [Heartbeats](#heartbeat)
         * [Abandonment](#abandonment)
     * [Platforming](#platforming)
     * [Experiments](#experiments)
-    * [Customer Journey Grouping](#deanonymizing-journeys)
+    * [Customer Experience Grouping](#deanonymizing-journeys)
     * [Other Considerations](#other)
         * [(Optional) Error Handling](#errors)
-        * [(Optional) Custom Customer Journey Milestones](#custom)
+        * [(Optional) Custom Customer Experience Milestones](#custom)
         * [(Optional) Journey Identification](#cuuid)
 * [License](#license)
 * [FAQ-Next.Js](#faq)
@@ -40,8 +41,9 @@ The Xenon View JavaScript SDK is the JavaScript SDK to interact with [XenonView]
 <br/>
 
 ## What's New <a id='whats-new'></a>
+* v0.1.20 - Page Load Speed call added
 * v0.1.19 - watchdogs fully enabled
-* v0.1.19 - fix bug where id is deleted mid-stride
+* v0.1.18 - fix bug where id is deleted mid-stride
 * v0.1.17 - heartbeats + watchdogs for ecom
 * v0.1.16 - purchased -> purchase, purchaseCanceled -> purchaseCancel
 * v0.1.15 - checkedOut -> checkOut
@@ -87,7 +89,7 @@ The Xenon View SDK can be used in your application to provide a new level of cus
 Instrumentation will vary based on your use case; are you offering a service/subscription (SaaS) or selling products (Ecom)?
 
 In a nutshell, the steps to get started are as follows:
-1. Identify Business Outcomes and Customer Journey Milestones leading to those Outcomes.
+1. Identify Business Outcomes and Customer Experience Milestones leading to those Outcomes.
 2. Instrument the Outcomes/Milestones.
 3. Analyze the results.
 
@@ -117,7 +119,7 @@ Regardless of your business model, your first step will be identifying your desi
 <br/>
 
 
-### Step 2 - Customer Journey Milestones <a id='step-2'></a>
+### Step 2 - Customer Experience Milestones <a id='step-2'></a>
 
 For each Business Outcome, identify potential customer journey milestones leading up to that business outcome.
 
@@ -208,22 +210,22 @@ As you view the categories, you can quickly identify issues (for example, if the
 
 <br/>
 
-### Step 6 - Instrument Customer Journey Milestones <a id='step-6'></a>
+### Step 6 - Instrument Customer Experience Milestones <a id='step-6'></a>
 
-Next, you will want to instrument your website/application/backend/service for the identified Customer Journey Milestones [Step 2](#step-2).
+Next, you will want to instrument your website/application/backend/service for the identified Customer Experience Milestones [Step 2](#step-2).
 We have provided several SDK calls to shortcut your instrumentation here as well.  
 
 During analysis, each Milestone is chained together with the proceeding and following Milestones.
 That chain terminates with an Outcome (described in [Step 4](#step-4)).
 AI/ML is employed to determine Outcome correlation and predictability for the chains and individual Milestones.
 During the [analysis step](#step-8), you can view the correlation and predictability as well as the Milestone chains
-(called Customer Journeys in this guide).
+(called Customer Experiences in this guide).
 
 Milestones break down into two types (click on a call to see usage):
 
-| Features | Content |
-| --- | --- |
-| [`featureAttempted()`](#feature-started) | [`contentViewed()`](#content-viewed) |
+| Features | Content | Performance           |
+| --- | --- |-----------------------|
+| [`featureAttempted()`](#feature-started) | [`contentViewed()`](#content-viewed) | [`pageLoadTime()`](#page-load-time) |
 | [`featureFailed()`](#feature-failed) | [`contentCreated()`](#content-created) / [`contentEdited()`](#content-edited) |
 | [`featureCompleted()`](#feature-complete) |  [`contentDeleted()`](#content-deleted) / [`contentArchived()`](#content-archived) |
 | | [`contentRequested()`](#content-requested)/[`contentSearched()`](#content-searched)|
@@ -238,7 +240,7 @@ Once instrumented, you'll want to select appropriate [commit points](#commit). C
 <br/>
 <br/>
 
-### Step 8 (Optional) - Group Customer Journeys <a id='step-8'></a>
+### Step 8 (Optional) - Group Customer Experiences <a id='step-8'></a>
 
 All the customer journeys (milestones and outcomes) are anonymous by default.
 For example, if a Customer interacts with your brand in the following way:
@@ -251,7 +253,7 @@ For example, if a Customer interacts with your brand in the following way:
 
 To associate those journeys with each other, you can [deanonymize](#deanonymizing-journeys) the Customer. Deanonymizing will allow for a deeper analysis of a particular user.
 
-Deanonymizing is optional. Basic matching of the customer journey with outcomes is valuable by itself. Deanonymizing will add increased insight as it connects Customer Journeys across devices.
+Deanonymizing is optional. Basic matching of the customer journey with outcomes is valuable by itself. Deanonymizing will add increased insight as it connects Customer Experiences across devices.
 
 <br/>
 
@@ -332,7 +334,7 @@ More are provided for each function.
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <script src="https://cdn.jsdelivr.net/gh/xenonview-com/view-js-sdk@v0.1.19/dist/xenon_view_sdk.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/gh/xenonview-com/view-js-sdk@v0.1.20/dist/xenon_view_sdk.min.js"></script>
   <script>
     Xenon.init('<API KEY>')
   </script>
@@ -390,7 +392,7 @@ export default function Home() {
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <script src="https://cdn.jsdelivr.net/gh/xenonview-com/view-js-sdk@v0.1.19/dist/xenon_view_sdk.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/gh/xenonview-com/view-js-sdk@v0.1.20/dist/xenon_view_sdk.min.js"></script>
   <script>
     Xenon.init('<API KEY>')
   </script>
@@ -2532,15 +2534,16 @@ export default function Home() {
 
 [back to top](#contents)
 
-### Customer Journey Milestones <a id='milestones'></a>
+### Customer Experience Milestones <a id='milestones'></a>
 
 As a customer interacts with your brand (via Advertisements, Marketing Website, Product/Service, etc.), they journey through a hierarchy of interactions.
 At the top level are business outcomes. In between Outcomes, they may achieve other milestones, such as interacting with content and features.
 Proper instrumentation of these milestones can establish correlation and predictability of business outcomes.
 
-As of right now, Customer Journey Milestones break down into two categories:
+As of right now, Customer Experience Milestones break down into three categories:
 1. [Feature Usage](#feature-usage)
 2. [Content Interaction](#content-interaction)
+3. [Performance](#performance)
 
 <br/>
 
@@ -2723,6 +2726,52 @@ export default function Home() {
 
 <button onclick="featureFailedOccurred()">Feature Failed</button>
 ```
+
+<br/>
+
+[back to top](#contents)
+
+#### Performance  <a id='performance'></a>
+Performance is another milestone that can have a dramatic impact on the customer experience. 
+A major contributor is Site/Page load speed. The following details out ways you can measure that.
+
+<br/>
+
+##### ```pageLoadTime()``` <a id='page-load-time'></a>
+Use this function to indicate a view of specific content.
+
+###### HTML example:
+1. Setup - Get Timestamp at load of head section:
+```html
+<head>
+    <script>
+        function timestamp() {
+            return (new Date()).getTime() / 1000
+        }
+        const startTime = timestamp()
+    </script>
+</head>
+```
+
+2. After load completes:
+```html
+<head>
+    <script src="https://cdn.jsdelivr.net/gh/xenonview-com/view-js-sdk@v0.1.20/dist/xenon_view_sdk.min.js"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", function(){
+            const loadTime = timestamp() - startTime
+            Xenon.pageLoadTime(loadTime)
+            Xenon.heartbeat()
+            # -OR-
+            Xenon.commit()        
+        })
+    </script>
+</head>
+```
+
+
+###### Nextjs and Frameworks
+The basic technique above will work, you can just inject it in the header.
 
 <br/>
 
@@ -3060,7 +3109,7 @@ export default function Home() {
 ### Commit Points   <a id='commiting'></a>
 
 
-Business Outcomes and Customer Journey Milestones are tracked locally in memory until you commit them to the Xenon View system.
+Business Outcomes and Customer Experience Milestones are tracked locally in memory until you commit them to the Xenon View system.
 After you have created (by either calling a milestone or outcome) a customer journey, you can commit it to Xenon View for analysis as follows:
 
 <br/>
@@ -3105,9 +3154,9 @@ This call commits a customer journey to Xenon View for analysis.
 
 ### Heartbeats   <a id='heartbeat'></a>
 
-Business Outcomes and Customer Journey Milestones are tracked locally in memory until you commit them to the Xenon View system.
+Business Outcomes and Customer Experience Milestones are tracked locally in memory until you commit them to the Xenon View system.
 You can use the heartbeat call if you want to commit in batch.
-Additionally, the heartbeat call will update a last-seen metric for customer journeys that have yet to arrive at Business Outcome. The last-seen metric is useful when analyzing stalled Customer Journeys.
+Additionally, the heartbeat call will update a last-seen metric for customer journeys that have yet to arrive at Business Outcome. The last-seen metric is useful when analyzing stalled Customer Experiences.
 
 Usage is as follows:
 
@@ -3149,7 +3198,7 @@ This call commits any uncommitted journeys to Xenon View for analysis and update
 <br/>
 
 #### Abandonment <a id='abandonment'></a>
-The heartbeat call can also be used to track site abandonments. You can set up a watchdog and have it serviced upon each heartbeat. 
+The heartbeat call can also be used to track site abandonment's. You can set up a watchdog and have it serviced upon each heartbeat. 
 Additionally, you can add a timeout period which will create failing outcome when the end user performs no further action.
 
 <br/>
@@ -3251,7 +3300,7 @@ export default function Home() {
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <script src="https://cdn.jsdelivr.net/gh/xenonview-com/view-js-sdk@v0.1.19/dist/xenon_view_sdk.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/xenonview-com/view-js-sdk@v0.1.20/dist/xenon_view_sdk.min.js"></script>
     <script>
         Xenon.init('<API KEY>')
         Xenon.ecomAbandonment()
@@ -3335,7 +3384,7 @@ export default function Home() {
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <script src="https://cdn.jsdelivr.net/gh/xenonview-com/view-js-sdk@v0.1.19/dist/xenon_view_sdk.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/gh/xenonview-com/view-js-sdk@v0.1.20/dist/xenon_view_sdk.min.js"></script>
   <script>
     Xenon.init('<API KEY>')
     const softwareVersion = '5.1.5'
@@ -3390,7 +3439,7 @@ export default function Home() {
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <script src="https://cdn.jsdelivr.net/gh/xenonview-com/view-js-sdk@v0.1.19/dist/xenon_view_sdk.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/gh/xenonview-com/view-js-sdk@v0.1.20/dist/xenon_view_sdk.min.js"></script>
   <script>
     Xenon.init('<API KEY>')
     Xenon.variant(['subscription-variant-A'])
@@ -3432,7 +3481,7 @@ export default function Home() {
 
 [back to top](#contents)
 
-### Customer Journey Grouping <a id='deanonymizing-journeys'></a>
+### Customer Experience Grouping <a id='deanonymizing-journeys'></a>
 
 
 Xenon View supports both anonymous and grouped (known) journeys.
@@ -3447,7 +3496,7 @@ For example, if a Customer interacts with your brand in the following way:
 
 To associate those journeys with each other, you can use `deanonymize()`. Deanonymizing will allow for a deeper analysis of a particular user.
 
-Deanonymizing is optional. Basic matching of the customer journey with outcomes is valuable by itself. Deanonymizing will add increased insight as it connects Customer Journeys across devices.
+Deanonymizing is optional. Basic matching of the customer journey with outcomes is valuable by itself. Deanonymizing will add increased insight as it connects Customer Experiences across devices.
 
 Usage is as follows:
 
@@ -3506,7 +3555,7 @@ export default function Home() {
 ```
 This call deanonymizes every journey committed to a particular user.
 
-> **:memo: Note:** With journeys that span multiple platforms (e.g., Website->Android->API backend), you can group the Customer Journeys by deanonymizing each.
+> **:memo: Note:** With journeys that span multiple platforms (e.g., Website->Android->API backend), you can group the Customer Experiences by deanonymizing each.
 
 
 <br/>
@@ -3553,7 +3602,7 @@ export default function Home() {
 
 #### Custom Milestones <a id='custom'></a>
 
-You can add custom milestones if you need more than the current Customer Journey Milestones.
+You can add custom milestones if you need more than the current Customer Experience Milestones.
 
 <br/>
 
@@ -3603,9 +3652,9 @@ This call adds a custom milestone to the customer journey.
 <br/>
 
 #### Journey IDs <a id='cuuid'></a>
-Each Customer Journey has an ID akin to a session.
+Each Customer Experience has an ID akin to a session.
 After committing an Outcome, the ID remains the same to link all the Journeys.
-If you have a previous Customer Journey in progress and would like to append to that, you can get/set the ID.
+If you have a previous Customer Experience in progress and would like to append to that, you can get/set the ID.
 
 >**:memo: Note:** For JavaScript, the Journey ID is a persistent session variable.
 > Therefore, subsequent Outcomes will reuse the Journey ID if the Customer had a previous browser session.
@@ -3613,9 +3662,9 @@ If you have a previous Customer Journey in progress and would like to append to 
 
 After you have initialized the Xenon singleton, you can:
 1. Use the default UUID
-2. Set the Customer Journey (Session) ID
+2. Set the Customer Experience (Session) ID
 3. Regenerate a new UUID
-4. Retrieve the Customer Journey (Session) ID
+4. Retrieve the Customer Experience (Session) ID
 
 <br/>
 

@@ -1405,6 +1405,15 @@ var Xenon = (function () {
       this.journeyAdd(event);
     }
 
+    pageLoadTime(loadTime, url) {
+      const event = {
+        category: 'Performance',
+        action: 'Page Load Time - '+loadTime.toString(),
+        identifier: url,
+      };
+      this.journeyAdd(event);
+    }
+
     // Custom Milestones
 
     milestone(category, operation, name, detail) {

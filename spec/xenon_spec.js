@@ -1243,6 +1243,19 @@ describe('View SDK', () => {
       unit.contentSearched(contentType);
     });
   });
+  describe('when pageLoadTime', () => {
+    const loadTime = 0.31;
+    const url = 'http://example.com';
+    it('then has a milestone', () => {
+      const journey = unit.journey()[0];
+      expect(journey.category).toEqual('Performance');
+      expect(journey.action).toEqual('Page Load Time - 0.31');
+      expect(journey.identifier).toEqual(url);
+    });
+    beforeEach(() => {
+      unit.pageLoadTime(loadTime, url);
+    });
+  });
   // Custom Milestones tests
   describe('when custom milestone', () => {
     let category = 'Function';
