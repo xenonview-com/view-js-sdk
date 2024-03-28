@@ -2760,7 +2760,7 @@ Use this function to indicate a view of specific content.
     <script>
         document.addEventListener("DOMContentLoaded", function(){
             const loadTime = timestamp() - startTime
-            Xenon.pageLoadTime(loadTime)
+            Xenon.pageLoadTime(loadTime, window.location.href)
             Xenon.heartbeat()
             # -OR-
             Xenon.commit()        
