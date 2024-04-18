@@ -10,26 +10,33 @@
 import JourneyApi from "./api/journey";
 import HeartbeatApi from "./api/heartbeat";
 import DeanonApi from "./api/deanonymize";
+import SampleApi from "./api/sample";
 import {resetLocal, resetSession, retrieveLocal, retrieveSession, storeLocal, storeSession} from "./storage/storage";
 
 export class _Xenon {
-  constructor(apiKey, apiUrl = 'https://app.xenonview.com',
-              journeyApi = JourneyApi, deanonApi = DeanonApi, heartbeatApi = HeartbeatApi) {
+  constructor(apiKey = null, apiUrl = 'https://app.xenonview.com',
+              journeyApi = JourneyApi, deanonApi = DeanonApi, heartbeatApi = HeartbeatApi,
+              sampleApi = SampleApi) {
+    this.JourneyApi = journeyApi;
+    this.DeanonApi = deanonApi;
+    this.HeartbeatApi = heartbeatApi;
+    this.SampleApi = sampleApi;
     this.id();
     let journey = this.journey();
     if (!journey) {
       this.storeJourney([]);
     }
     this.restoreJourney = [];
-    this.JourneyApi = journeyApi;
-    this.DeanonApi = deanonApi;
-    this.HeartbeatApi = heartbeatApi;
-    this.init(apiKey, apiUrl);
+    this.apiUrl = apiUrl;
+    if (apiKey) {
+      this.init(apiKey, apiUrl);
+    }
   }
 
   init(apiKey, apiUrl = 'https://app.xenonview.com') {
     this.apiUrl = apiUrl;
     this.apiKey = apiKey;
+    this.sampleDecision()
   }
 
   ecomAbandonment() {
@@ -597,7 +604,7 @@ export class _Xenon {
   pageLoadTime(loadTime, url) {
     const event = {
       category: 'Performance',
-      action: 'Page Load Time - '+loadTime.toString(),
+      action: 'Page Load Time - ' + loadTime.toString(),
       identifier: url,
     };
     this.journeyAdd(event);
@@ -618,6 +625,9 @@ export class _Xenon {
   // API Communication:
 
   commit(surfaceErrors = false) {
+    if (!this.sampleDecision()) {
+      return new Promise.resolve();
+    }
     let params = {
       data: {
         id: this.id(),
@@ -704,11 +714,15 @@ export class _Xenon {
       params.data['watchdog'] = this.heartbeatMessage(heartbeatType);
     }
 
+    if (!this.sampleDecision()) {
+      return new Promise.resolve();
+    }
+
     this.reset();
     return this.HeartbeatApi(this.apiUrl)
       .fetch(params)
       .then((value) => {
-        if (heartbeatType && Object.keys(params.data['watchdog']).includes('remove')){
+        if (heartbeatType && Object.keys(params.data['watchdog']).includes('remove')) {
           resetLocal('heartbeat_stage');
           resetLocal('heartbeat_type');
           resetLocal('heartbeat_outcome');
@@ -722,6 +736,10 @@ export class _Xenon {
   }
 
   deanonymize(person) {
+    if (!this.sampleDecision()) {
+      return new Promise.resolve();
+    }
+
     let params = {
       data: {
         id: this.id(),
@@ -750,6 +768,23 @@ export class _Xenon {
   newId() {
     storeSession('xenon-view', crypto.randomUUID());
     return retrieveSession('xenon-view');
+  }
+
+  sampleDecision(decision = null) {
+    if (decision !== null) {
+      storeSession('xenon-will-sample', decision)
+    }
+    decision = retrieveSession('xenon-will-sample');
+    if (decision === null || decision === '') {
+      let params = {data: {id: this.id(), token: this.apiKey}};
+      this.SampleApi(this.apiUrl).fetch(params).then((json) => {
+        decision = this.sampleDecision(json['sample']);
+      }).catch((_) => {
+        decision = this.sampleDecision(true);
+      });
+    }
+    decision = (decision !== null) ? Boolean(decision) : null;
+    return decision;
   }
 
   outcomeAdd(content) {
@@ -843,7 +878,7 @@ export class _Xenon {
     this.restoreJourney = [];
   }
 
-  hasClassInHierarchy(target, className, maxDepth){
+  hasClassInHierarchy(target, className, maxDepth) {
     const searcher = (node, className, maxDepth, currentDepth) => {
       if (currentDepth >= maxDepth)
         return false;
@@ -851,7 +886,7 @@ export class _Xenon {
         return true;
       if (!node.parentElement)
         return false;
-      return searcher(node.parentElement, className, maxDepth, currentDepth+1);
+      return searcher(node.parentElement, className, maxDepth, currentDepth + 1);
     };
 
     return searcher(target, className, maxDepth, 0);

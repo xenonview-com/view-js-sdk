@@ -793,6 +793,27 @@ var Xenon = (function () {
     return new deanonApi(apiUrl);
   }
 
+  class sampleApi extends ApiBase {
+    constructor(apiUrl) {
+      let props = {
+        name: 'ApiSample',
+        url: 'sample',
+        apiUrl: apiUrl,
+        authenticated: true
+      };
+      super(props);
+    }
+    params(data) {
+      const {id} = data;
+      let params = {};
+      params.uuid = id;
+      return params;
+    }
+  }
+  function SampleApi(apiUrl){
+    return new sampleApi(apiUrl);
+  }
+
   function storeLocal(name, objectToStore) {
     localStorage.setItem(name, JSON.stringify(objectToStore));
   }
@@ -824,23 +845,29 @@ var Xenon = (function () {
    */
 
   class _Xenon {
-    constructor(apiKey, apiUrl = 'https://app.xenonview.com',
-                journeyApi = JourneyApi, deanonApi = DeanonApi, heartbeatApi = HeartbeatApi) {
+    constructor(apiKey = null, apiUrl = 'https://app.xenonview.com',
+                journeyApi = JourneyApi, deanonApi = DeanonApi, heartbeatApi = HeartbeatApi,
+                sampleApi = SampleApi) {
+      this.JourneyApi = journeyApi;
+      this.DeanonApi = deanonApi;
+      this.HeartbeatApi = heartbeatApi;
+      this.SampleApi = sampleApi;
       this.id();
       let journey = this.journey();
       if (!journey) {
         this.storeJourney([]);
       }
       this.restoreJourney = [];
-      this.JourneyApi = journeyApi;
-      this.DeanonApi = deanonApi;
-      this.HeartbeatApi = heartbeatApi;
-      this.init(apiKey, apiUrl);
+      this.apiUrl = apiUrl;
+      if (apiKey) {
+        this.init(apiKey, apiUrl);
+      }
     }
 
     init(apiKey, apiUrl = 'https://app.xenonview.com') {
       this.apiUrl = apiUrl;
       this.apiKey = apiKey;
+      this.sampleDecision();
     }
 
     ecomAbandonment() {
@@ -1408,7 +1435,7 @@ var Xenon = (function () {
     pageLoadTime(loadTime, url) {
       const event = {
         category: 'Performance',
-        action: 'Page Load Time - '+loadTime.toString(),
+        action: 'Page Load Time - ' + loadTime.toString(),
         identifier: url,
       };
       this.journeyAdd(event);
@@ -1429,6 +1456,9 @@ var Xenon = (function () {
     // API Communication:
 
     commit(surfaceErrors = false) {
+      if (!this.sampleDecision()) {
+        return new Promise.resolve();
+      }
       let params = {
         data: {
           id: this.id(),
@@ -1515,11 +1545,15 @@ var Xenon = (function () {
         params.data['watchdog'] = this.heartbeatMessage(heartbeatType);
       }
 
+      if (!this.sampleDecision()) {
+        return new Promise.resolve();
+      }
+
       this.reset();
       return this.HeartbeatApi(this.apiUrl)
         .fetch(params)
         .then((value) => {
-          if (heartbeatType && Object.keys(params.data['watchdog']).includes('remove')){
+          if (heartbeatType && Object.keys(params.data['watchdog']).includes('remove')) {
             resetLocal('heartbeat_stage');
             resetLocal('heartbeat_type');
             resetLocal('heartbeat_outcome');
@@ -1533,6 +1567,10 @@ var Xenon = (function () {
     }
 
     deanonymize(person) {
+      if (!this.sampleDecision()) {
+        return new Promise.resolve();
+      }
+
       let params = {
         data: {
           id: this.id(),
@@ -1561,6 +1599,23 @@ var Xenon = (function () {
     newId() {
       storeSession('xenon-view', crypto.randomUUID());
       return retrieveSession('xenon-view');
+    }
+
+    sampleDecision(decision = null) {
+      if (decision !== null) {
+        storeSession('xenon-will-sample', decision);
+      }
+      decision = retrieveSession('xenon-will-sample');
+      if (decision === null || decision === '') {
+        let params = {data: {id: this.id(), token: this.apiKey}};
+        this.SampleApi(this.apiUrl).fetch(params).then((json) => {
+          decision = this.sampleDecision(json['sample']);
+        }).catch((_) => {
+          decision = this.sampleDecision(true);
+        });
+      }
+      decision = (decision !== null) ? Boolean(decision) : null;
+      return decision;
     }
 
     outcomeAdd(content) {
@@ -1654,7 +1709,7 @@ var Xenon = (function () {
       this.restoreJourney = [];
     }
 
-    hasClassInHierarchy(target, className, maxDepth){
+    hasClassInHierarchy(target, className, maxDepth) {
       const searcher = (node, className, maxDepth, currentDepth) => {
         if (currentDepth >= maxDepth)
           return false;
@@ -1662,7 +1717,7 @@ var Xenon = (function () {
           return true;
         if (!node.parentElement)
           return false;
-        return searcher(node.parentElement, className, maxDepth, currentDepth+1);
+        return searcher(node.parentElement, className, maxDepth, currentDepth + 1);
       };
 
       return searcher(target, className, maxDepth, 0);
