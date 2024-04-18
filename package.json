@@ -22,7 +22,7 @@
     "karma-coverage-istanbul-reporter": "^3.0.3",
     "karma-jasmine": "^4.0.1",
     "mock-promises": "github:lwoydziak/mock-promises",
-    "np": "^7.5.0",
+    "np": "^7.7.0",
     "rollup": "^3.7.5",
     "rollup-plugin-node-builtins": "^2.1.2",
     "rollup-plugin-node-globals": "^1.4.0",
