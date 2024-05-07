@@ -641,7 +641,7 @@ export class _Xenon {
       .fetch(params)
       .catch((err) => {
         this.restore();
-        return (surfaceErrors ? Promise.reject(err) : Promise.resolve());
+        return (surfaceErrors ? new Promise.reject(err) : new Promise.resolve());
       });
   }
 
@@ -727,11 +727,11 @@ export class _Xenon {
           resetLocal('heartbeat_type');
           resetLocal('heartbeat_outcome');
         }
-        return Promise.resolve(value);
+        return new Promise.resolve(value);
       })
       .catch((err) => {
         this.restore();
-        return (surfaceErrors ? Promise.reject(err) : Promise.resolve());
+        return (surfaceErrors ? new Promise.reject(err) : new Promise.resolve());
       });
   }
 
