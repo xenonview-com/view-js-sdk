@@ -41,6 +41,7 @@ The Xenon View JavaScript SDK is the JavaScript SDK to interact with [XenonView]
 <br/>
 
 ## What's New <a id='whats-new'></a>
+* v0.1.25 - Fix promise crash post api call
 * v0.1.24 - Fix shopify window undefined issue
 * v0.1.23 - Support shopify sandbox session/local storage
 * v0.1.22 - Align typescript definitions correctly and fix Promise fault.
