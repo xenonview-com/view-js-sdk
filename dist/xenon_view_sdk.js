@@ -1481,7 +1481,7 @@ var Xenon = (function () {
 
     commit(surfaceErrors = false) {
       if (!this.sampleDecision()) {
-        return new Promise.resolve(true);
+        return Promise.resolve(true);
       }
       let params = {
         data: {
@@ -1496,7 +1496,7 @@ var Xenon = (function () {
         .fetch(params)
         .catch((err) => {
           this.restore();
-          return (surfaceErrors ? new Promise.reject(err) : new Promise.resolve(true));
+          return (surfaceErrors ? Promise.reject(err) : Promise.resolve(true));
         });
     }
 
@@ -1570,7 +1570,7 @@ var Xenon = (function () {
       }
 
       if (!this.sampleDecision()) {
-        return new Promise.resolve(true);
+        return Promise.resolve(true);
       }
 
       this.reset();
@@ -1582,17 +1582,17 @@ var Xenon = (function () {
             resetLocal('heartbeat_type');
             resetLocal('heartbeat_outcome');
           }
-          return new Promise.resolve(value);
+          return Promise.resolve(value);
         })
         .catch((err) => {
           this.restore();
-          return (surfaceErrors ? new Promise.reject(err) : new Promise.resolve(true));
+          return (surfaceErrors ? Promise.reject(err) : Promise.resolve(true));
         });
     }
 
     deanonymize(person) {
       if (!this.sampleDecision()) {
-        return new Promise.resolve(true);
+        return Promise.resolve(true);
       }
 
       let params = {
