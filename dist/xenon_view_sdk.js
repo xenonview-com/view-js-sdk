@@ -828,13 +828,13 @@ var Xenon = (function () {
     removeItem: (key) => delete _defaultLocalStorage[key],
   };
   function getLocalStorage(){
-    if (typeof window !== undefined && window !== undefined && window && window.localStorage) return window.localStorage;
-    if (typeof browser !== undefined && browser !== undefined && browser && browser.localStorage) return browser.localStorage;
+    if (typeof window != undefined && window !== undefined && window && window.localStorage) return window.localStorage;
+    if (typeof browser != undefined && browser !== undefined && browser && browser.localStorage) return browser.localStorage;
     return _localStorage;
   }
   function getSessionStorage(){
-    if (typeof window !== undefined && window !== undefined && window && window.sessionStorage) return window.sessionStorage;
-    if (typeof browser !== undefined && browser !== undefined && browser && browser.sessionStorage) return browser.sessionStorage;
+    if (typeof window != undefined && window !== undefined && window && window.sessionStorage) return window.sessionStorage;
+    if (typeof browser != undefined && browser !== undefined && browser && browser.sessionStorage) return browser.sessionStorage;
     return _sessionStorage;
   }
 
