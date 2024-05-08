@@ -626,7 +626,7 @@ export class _Xenon {
 
   commit(surfaceErrors = false) {
     if (!this.sampleDecision()) {
-      return new Promise.resolve();
+      return new Promise.resolve(true);
     }
     let params = {
       data: {
@@ -641,7 +641,7 @@ export class _Xenon {
       .fetch(params)
       .catch((err) => {
         this.restore();
-        return (surfaceErrors ? new Promise.reject(err) : new Promise.resolve());
+        return (surfaceErrors ? new Promise.reject(err) : new Promise.resolve(true));
       });
   }
 
@@ -715,7 +715,7 @@ export class _Xenon {
     }
 
     if (!this.sampleDecision()) {
-      return new Promise.resolve();
+      return new Promise.resolve(true);
     }
 
     this.reset();
@@ -731,13 +731,13 @@ export class _Xenon {
       })
       .catch((err) => {
         this.restore();
-        return (surfaceErrors ? new Promise.reject(err) : new Promise.resolve());
+        return (surfaceErrors ? new Promise.reject(err) : new Promise.resolve(true));
       });
   }
 
   deanonymize(person) {
     if (!this.sampleDecision()) {
-      return new Promise.resolve();
+      return new Promise.resolve(true);
     }
 
     let params = {

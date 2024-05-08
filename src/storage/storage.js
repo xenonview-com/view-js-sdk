@@ -1,25 +1,49 @@
+const _defaultSessionStorage = {};
+const _sessionStorage = {
+  setItem: (key, value) => _defaultSessionStorage[key] = value,
+  getItem: (key) => _defaultSessionStorage[key],
+  removeItem: (key) => delete _defaultSessionStorage[key],
+};
+
+const _defaultLocalStorage = {};
+const _localStorage = {
+  setItem: (key, value) => _defaultLocalStorage[key] = value,
+  getItem: (key) => _defaultLocalStorage[key],
+  removeItem: (key) => delete _defaultLocalStorage[key],
+};
+function getLocalStorage(){
+  if (window && window.localStorage) return window.localStorage;
+  if (browser && browser.localStorage) return browser.localStorage;
+  return _localStorage;
+}
+function getSessionStorage(){
+  if (window && window.sessionStorage) return window.sessionStorage;
+  if (browser && browser.sessionStorage) return browser.sessionStorage;
+  return _sessionStorage;
+}
+
 export function storeLocal(name, objectToStore) {
-  localStorage.setItem(name, JSON.stringify(objectToStore));
+  getLocalStorage().setItem(name, JSON.stringify(objectToStore));
 }
 
 export function retrieveLocal(name) {
-  let objectToRetrieve = JSON.parse(localStorage.getItem(name));
-  return objectToRetrieve;
+  const value = getLocalStorage().getItem(name);
+  return (value) ? JSON.parse(value) : null;
 }
 
 export function resetLocal(name) {
-  localStorage.removeItem(name);
+  getLocalStorage().removeItem(name);
 }
 
 export function storeSession(name, objectToStore) {
-  sessionStorage.setItem(name, JSON.stringify(objectToStore));
+  getSessionStorage().setItem(name, JSON.stringify(objectToStore));
 }
 
 export function retrieveSession(name) {
-  let objectToRetrieve = JSON.parse(sessionStorage.getItem(name));
-  return objectToRetrieve;
+  const value = getSessionStorage().getItem(name);
+  return (value) ? JSON.parse(value) : null;
 }
 
 export function resetSession(name) {
-  sessionStorage.removeItem(name);
+  getSessionStorage().removeItem(name);
 }

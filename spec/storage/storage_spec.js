@@ -131,13 +131,84 @@ describe('resetSession', () => {
   });
   describe('when existing value', () => {
     beforeEach(() => {
-      sessionStorage.clear()
+      sessionStorage.clear();
       storeSession('testString', 'test');
       resetSession('testString');
     });
     it('then gets null', () => {
       expect(retrieveSession('testString')).toBeNull();
     })
+  });
+});
+describe('when non browser style session/local storage', () => {
+  let session_;
+  let local_;
+  beforeEach(() => {
+    sessionStorage.clear();
+    localStorage.clear();
+    session_ = global.sessionStorage;
+    local_ = global.localStorage;
+    Object.defineProperty(window, 'localStorage', {
+      value: null
+    });
+    Object.defineProperty(window, 'sessionStorage', {
+      value: null
+    });
+  });
+  describe('when shopify style', () => {
+    beforeEach(() => {
+      global.browser = {
+        sessionStorage: session_,
+        localStorage: local_
+      };
+      storeLocal('testing', 'helloWorld');
+      storeSession('testing', 'helloWorld');
+    });
+    it('then sets and gets', () => {
+      expect(retrieveLocal('testing')).toEqual('helloWorld');
+      expect(retrieveSession('testing')).toEqual('helloWorld');
+    });
+    describe('when cleared', () => {
+      beforeEach(() => {
+        resetSession('testing');
+        resetLocal('testing');
+      });
+      it('then cannot get', () => {
+        expect(retrieveLocal('testing')).toBeNull();
+        expect(retrieveSession('testing')).toBeNull();
+      });
+    });
+    afterEach(() => {
+      global.browser = null;
+    });
+  });
+  describe('when default node style', () => {
+    beforeEach(() => {
+      storeLocal('testing', 'helloWorld');
+      storeSession('testing', 'helloWorld');
+    });
+    it('then sets and gets', () => {
+      expect(retrieveLocal('testing')).toEqual('helloWorld');
+      expect(retrieveSession('testing')).toEqual('helloWorld');
+    });
+    describe('when cleared', () => {
+      beforeEach(() => {
+        resetSession('testing');
+        resetLocal('testing');
+      });
+      it('then cannot get', () => {
+        expect(retrieveLocal('testing')).toBeNull();
+        expect(retrieveSession('testing')).toBeNull();
+      });
+    });
+  });
+  afterEach(() => {
+    Object.defineProperty(window, 'localStorage', {
+      value: local_
+    });
+    Object.defineProperty(window, 'sessionStorage', {
+      value: session_
+    });
   });
 });
 
