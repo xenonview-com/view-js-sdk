@@ -12,13 +12,13 @@ const _localStorage = {
   removeItem: (key) => delete _defaultLocalStorage[key],
 };
 function getLocalStorage(){
-  if (window && window.localStorage) return window.localStorage;
-  if (browser && browser.localStorage) return browser.localStorage;
+  if (typeof window !== undefined && window !== undefined && window && window.localStorage) return window.localStorage;
+  if (typeof browser !== undefined && browser !== undefined && browser && browser.localStorage) return browser.localStorage;
   return _localStorage;
 }
 function getSessionStorage(){
-  if (window && window.sessionStorage) return window.sessionStorage;
-  if (browser && browser.sessionStorage) return browser.sessionStorage;
+  if (typeof window !== undefined && window !== undefined && window && window.sessionStorage) return window.sessionStorage;
+  if (typeof browser !== undefined && browser !== undefined && browser && browser.sessionStorage) return browser.sessionStorage;
   return _sessionStorage;
 }
 
