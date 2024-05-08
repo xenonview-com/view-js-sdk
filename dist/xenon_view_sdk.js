@@ -814,30 +814,54 @@ var Xenon = (function () {
     return new sampleApi(apiUrl);
   }
 
+  const _defaultSessionStorage = {};
+  const _sessionStorage = {
+    setItem: (key, value) => _defaultSessionStorage[key] = value,
+    getItem: (key) => _defaultSessionStorage[key],
+    removeItem: (key) => delete _defaultSessionStorage[key],
+  };
+
+  const _defaultLocalStorage = {};
+  const _localStorage = {
+    setItem: (key, value) => _defaultLocalStorage[key] = value,
+    getItem: (key) => _defaultLocalStorage[key],
+    removeItem: (key) => delete _defaultLocalStorage[key],
+  };
+  function getLocalStorage(){
+    if (window && window.localStorage) return window.localStorage;
+    if (browser && browser.localStorage) return browser.localStorage;
+    return _localStorage;
+  }
+  function getSessionStorage(){
+    if (window && window.sessionStorage) return window.sessionStorage;
+    if (browser && browser.sessionStorage) return browser.sessionStorage;
+    return _sessionStorage;
+  }
+
   function storeLocal(name, objectToStore) {
-    localStorage.setItem(name, JSON.stringify(objectToStore));
+    getLocalStorage().setItem(name, JSON.stringify(objectToStore));
   }
 
   function retrieveLocal(name) {
-    let objectToRetrieve = JSON.parse(localStorage.getItem(name));
-    return objectToRetrieve;
+    const value = getLocalStorage().getItem(name);
+    return (value) ? JSON.parse(value) : null;
   }
 
   function resetLocal(name) {
-    localStorage.removeItem(name);
+    getLocalStorage().removeItem(name);
   }
 
   function storeSession(name, objectToStore) {
-    sessionStorage.setItem(name, JSON.stringify(objectToStore));
+    getSessionStorage().setItem(name, JSON.stringify(objectToStore));
   }
 
   function retrieveSession(name) {
-    let objectToRetrieve = JSON.parse(sessionStorage.getItem(name));
-    return objectToRetrieve;
+    const value = getSessionStorage().getItem(name);
+    return (value) ? JSON.parse(value) : null;
   }
 
   function resetSession(name) {
-    sessionStorage.removeItem(name);
+    getSessionStorage().removeItem(name);
   }
 
   /**
@@ -1457,7 +1481,7 @@ var Xenon = (function () {
 
     commit(surfaceErrors = false) {
       if (!this.sampleDecision()) {
-        return new Promise.resolve();
+        return new Promise.resolve(true);
       }
       let params = {
         data: {
@@ -1472,7 +1496,7 @@ var Xenon = (function () {
         .fetch(params)
         .catch((err) => {
           this.restore();
-          return (surfaceErrors ? new Promise.reject(err) : new Promise.resolve());
+          return (surfaceErrors ? new Promise.reject(err) : new Promise.resolve(true));
         });
     }
 
@@ -1546,7 +1570,7 @@ var Xenon = (function () {
       }
 
       if (!this.sampleDecision()) {
-        return new Promise.resolve();
+        return new Promise.resolve(true);
       }
 
       this.reset();
@@ -1562,13 +1586,13 @@ var Xenon = (function () {
         })
         .catch((err) => {
           this.restore();
-          return (surfaceErrors ? new Promise.reject(err) : new Promise.resolve());
+          return (surfaceErrors ? new Promise.reject(err) : new Promise.resolve(true));
         });
     }
 
     deanonymize(person) {
       if (!this.sampleDecision()) {
-        return new Promise.resolve();
+        return new Promise.resolve(true);
       }
 
       let params = {
