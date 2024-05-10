@@ -52,6 +52,7 @@ describe('fetchJson', () => {
       it('rejects the promise', () => {
         const error = new Error('unauthorized');
         expect(failSpy).toHaveBeenCalledWith(error);
+        expect(failSpy.calls.mostRecent().args[0].authIssue).toBeTrue();
       });
     });
     describe('when the request generally errors', () => {

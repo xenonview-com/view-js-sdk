@@ -9,6 +9,7 @@ async function checkStatus(response) {
     const error = new Error(details.error_message);
     error.response = response;
     error.details = details;
+    error.authIssue = true;
     return Promise.reject(error);
   }
   const error = new Error(response.statusText);

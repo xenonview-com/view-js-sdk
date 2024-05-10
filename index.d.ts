@@ -1,6 +1,6 @@
 declare module 'xenon-view-sdk' {
     export interface XenonInterface {
-        init: (apiKey: string, apiUrl?: string) => void;
+        init: (apiKey: string, apiUrl?: string, onApiKeyFailure?: Function) => void;
         ecomAbandonment: () => void;
         customAbandonment: (outcome: Map<string,object>) => void;
         cancelAbandonment: () => void;

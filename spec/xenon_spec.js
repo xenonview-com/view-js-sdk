@@ -9,7 +9,7 @@
  */
 import {_Xenon} from '../src/xenon';
 import './helper/api_helper';
-import {UnblockPromises} from './helper/api_helper';
+import {UnblockPromises, ImmediatelyResolvePromise} from './helper/api_helper';
 import {retrieveLocal, storeSession} from '../src/storage/storage';
 
 
@@ -2173,12 +2173,35 @@ describe('View SDK', () => {
       });
     });
     describe('when api errors', () => {
-      it('then has a positive sample decision', () => {
-        expect(unit.sampleDecision()).toBeTrue();
+      describe('when generic error', () => {
+        it('then has a positive sample decision', () => {
+          localStorage.clear();
+          sessionStorage.clear();
+          ImmediatelyResolvePromise(2);
+          expect(unit.sampleDecision()).toBeTrue();
+        });
+        beforeEach(() => {
+          sampleRejectPromise(new Error('{"result": "failed"}'));
+          UnblockPromises();
+        });
       });
-      beforeEach(() => {
-        sampleRejectPromise(new Error('{"result": "failed"}'));
-        UnblockPromises();
+      describe('when authentication error', () => {
+        it('then has a positive sample decision', () => {
+          let called = false;
+          localStorage.clear();
+          sessionStorage.clear();
+          unit.sampleDecision(null,  (_) => {
+            called = true;
+          });
+          UnblockPromises();
+          expect( called ).toBeTrue();
+        });
+        beforeEach(() => {
+          const error = new Error('{"result": "no-auth"}');
+          error.authIssue = true;
+          sampleRejectPromise(error);
+          UnblockPromises();
+        });
       });
     });
     beforeEach(() => {

@@ -33,10 +33,10 @@ export class _Xenon {
     }
   }
 
-  init(apiKey, apiUrl = 'https://app.xenonview.com') {
+  init(apiKey, apiUrl = 'https://app.xenonview.com', onApiKeyFailure=null) {
     this.apiUrl = apiUrl;
     this.apiKey = apiKey;
-    this.sampleDecision()
+    this.sampleDecision(null, onApiKeyFailure)
   }
 
   ecomAbandonment() {
@@ -770,7 +770,7 @@ export class _Xenon {
     return retrieveSession('xenon-view');
   }
 
-  sampleDecision(decision = null) {
+  sampleDecision(decision = null, onApiKeyFailure=null) {
     if (decision !== null) {
       storeSession('xenon-will-sample', decision)
     }
@@ -778,9 +778,13 @@ export class _Xenon {
     if (decision === null || decision === '') {
       let params = {data: {id: this.id(), token: this.apiKey}};
       this.SampleApi(this.apiUrl).fetch(params).then((json) => {
-        decision = this.sampleDecision(json['sample']);
-      }).catch((_) => {
-        decision = this.sampleDecision(true);
+        decision = this.sampleDecision(json['sample'], onApiKeyFailure);
+      }).catch((error) => {
+        if (error.authIssue && onApiKeyFailure) {
+          onApiKeyFailure(error);
+          return;
+        }
+        decision = this.sampleDecision(true, onApiKeyFailure);
       });
     }
     decision = (decision !== null) ? Boolean(decision) : null;

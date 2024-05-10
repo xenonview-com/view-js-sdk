@@ -12,6 +12,10 @@ export function UnblockPromises() {
   jasmine.clock().tick(1);
   MockPromises.tickAllTheWay();
 }
+export function ImmediatelyResolvePromise(number) {
+  jasmine.clock().tick(1);
+  MockPromises.immediateResolve(number);
+}
 
 beforeAll(() => {
   MockFetch.install();
