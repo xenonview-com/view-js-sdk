@@ -408,8 +408,14 @@ export default function Home() {
 Of course, you'll have to make the following modifications to the above code:
 - Replace `<API KEY>` with your [api key](https://xenonview.com/api-get)
 
-> :memo: Note: If the API Key is invalid the init call will return false.
+> :memo: Note: If the API Key is invalid the init call will optionally call a provided callback.
+###### Framework example:
+```javascript
+import Xenon from 'xenon-view-sdk';
 
+// start by initializing Xenon View
+Xenon.init('<API KEY>', 'https://app.xenonview.com', (error) => console.log(error));
+```
 <br/>
 
 [back to top](#contents)
