@@ -1798,6 +1798,59 @@ var Xenon = (function () {
 
                 return searcher(target, className, maxDepth, 0);
               }
+
+              decipherParamsPerLibrary(params) {
+                if (params.has('xenonSrc')) {
+                  return [params.get('xenonSrc'), params.get('xenonId')];
+                }
+                if (params.has('cr_campaignid')) {
+                  return ['Cerebro', params.get('cr_campaignid')];
+                }
+                if (params.has('utm_source') && params.get('utm_source').toLowerCase() === 'klaviyo'){
+                  const source = 'Klaviyo' + (params.has('utm_medium') ? ' - ' + params.get('utm_medium') : '');
+                  return [source, params.get('utm_campaign')];
+                }
+                if (params.has('g_campaignid')){
+                  return ['Google Ad', params.get('g_campaignid')]
+                }
+                if (params.has('utm_source') && params.get('utm_source').toLowerCase() === 'shareasale'){
+                  return ['Share-a-sale', params.get('sscid')]
+                }
+                if (params.has('g_adtype') && params.get('g_adtype') === 'none'){
+                  return ['Google Organic', params.get('g_campaign')]
+                }
+                if (params.has('g_adtype') && params.get('g_adtype') === 'search'){
+                  return ['Google Paid Search', params.get('g_campaign')]
+                }
+                if (params.has('utm_source') && params.get('utm_source') === 'facebook'){
+                  return ['Facebook Ad', params.get('utm_campaign')]
+                }
+                if (params.has('utm_source') && params.get('utm_source').toLowerCase() === 'email-broadcast'){
+                  return ['Email', params.get('utm_campaign')]
+                }
+                if (params.has('utm_source') && params.get('utm_source').toLowerCase() === 'youtube'){
+                  return ['YouTube', params.get('utm_campaign')]
+                }
+                return [params.get('utm_source'), params.get('utm_campaign')]
+              }
+              autodiscoverLeadFrom(queryFromUrl) {
+                if (queryFromUrl && queryFromUrl !== '' && queryFromUrl !== '?') {
+                  const params = new URLSearchParams(queryFromUrl);
+                  const [source, identifier] = this.decipherParamsPerLibrary(params);
+                  if (source) {
+                    this.variant([source, identifier]);
+                    this.leadAttributed(source, identifier);
+                  }
+                  params.delete('xenonId');
+                  params.delete('xenonSrc');
+                  let query = "";
+                  if (params.size) {
+                    query = "?"+params.toString();
+                  }
+                  return query;
+                }
+                return null;
+              }
             }
 
             const Xenon = new _Xenon();
