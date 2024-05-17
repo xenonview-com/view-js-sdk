@@ -1559,6 +1559,278 @@ describe('View SDK', () => {
           expect(unit.hasClassInHierarchy(classAtSecondLevel, 'other', 1)).toBeFalse()
         });
       });
+      describe('autodiscoverLeadFrom', () => {
+        describe('when custom xenon attribution', () => {
+          let filteredQuery = '';
+          it('then has an outcome', () => {
+            const journey = unit.journey()[0];
+            expect(journey.superOutcome).toEqual('Lead Attributed');
+            expect(journey.outcome).toEqual('email');
+            expect(journey.result).toEqual('success');
+            expect(journey.id).toEqual('2024');
+          });
+          it('then has tags', () => {
+            const tags = sessionStorage.getItem('view-tags');
+            expect(tags).toContain("email");
+            expect(tags).toContain("2024");
+          });
+          it('then filters appropriately', () => {
+            expect(filteredQuery).toEqual("");
+          });
+          beforeEach(() => {
+            filteredQuery = unit.autodiscoverLeadFrom('?xenonSrc=email&xenonId=2024');
+          });
+        });
+        describe('when Cerebro attribution', () => {
+          let filteredQuery = '';
+          it('then has an outcome', () => {
+            const journey = unit.journey()[0];
+            expect(journey.superOutcome).toEqual('Lead Attributed');
+            expect(journey.outcome).toEqual('Cerebro');
+            expect(journey.result).toEqual('success');
+            expect(journey.id).toEqual('2024');
+          });
+          it('then has tags', () => {
+            const tags = sessionStorage.getItem('view-tags');
+            expect(tags).toContain("Cerebro");
+            expect(tags).toContain("2024");
+          });
+          it('then filters appropriately', () => {
+            expect(filteredQuery).toEqual("?cr_campaignid=2024");
+          });
+          beforeEach(() => {
+            filteredQuery = unit.autodiscoverLeadFrom('?cr_campaignid=2024');
+          });
+        });
+        describe('when Klaviyo attribution', () => {
+          let filteredQuery = '';
+          it('then has an outcome', () => {
+            const journey = unit.journey()[0];
+            expect(journey.superOutcome).toEqual('Lead Attributed');
+            expect(journey.outcome).toEqual('Klaviyo');
+            expect(journey.result).toEqual('success');
+            expect(journey.id).toEqual('2024');
+          });
+          it('then has tags', () => {
+            const tags = sessionStorage.getItem('view-tags');
+            expect(tags).toContain("Klaviyo");
+            expect(tags).toContain("2024");
+          });
+          it('then filters appropriately', () => {
+            expect(filteredQuery).toEqual("?utm_source=klaviyo&utm_campaign=2024");
+          });
+          beforeEach(() => {
+            filteredQuery = unit.autodiscoverLeadFrom('?utm_source=klaviyo&utm_campaign=2024');
+          });
+        });
+        describe('when Klaviyo with medium attribution', () => {
+          let filteredQuery = '';
+          it('then has an outcome', () => {
+            const journey = unit.journey()[0];
+            expect(journey.superOutcome).toEqual('Lead Attributed');
+            expect(journey.outcome).toEqual('Klaviyo - email');
+            expect(journey.result).toEqual('success');
+            expect(journey.id).toEqual('2024');
+          });
+          it('then has tags', () => {
+            const tags = sessionStorage.getItem('view-tags');
+            expect(tags).toContain("Klaviyo - email");
+            expect(tags).toContain("2024");
+          });
+          it('then filters appropriately', () => {
+            expect(filteredQuery).toEqual("?utm_source=klaviyo&utm_campaign=2024&utm_medium=email");
+          });
+          beforeEach(() => {
+            filteredQuery = unit.autodiscoverLeadFrom('?utm_source=klaviyo&utm_campaign=2024&utm_medium=email');
+          });
+        });
+        describe('when Google Ad', () => {
+          let filteredQuery = '';
+          it('then has an outcome', () => {
+            const journey = unit.journey()[0];
+            expect(journey.superOutcome).toEqual('Lead Attributed');
+            expect(journey.outcome).toEqual('Google Ad');
+            expect(journey.result).toEqual('success');
+            expect(journey.id).toEqual('2024');
+          });
+          it('then has tags', () => {
+            const tags = sessionStorage.getItem('view-tags');
+            expect(tags).toContain("Google Ad");
+            expect(tags).toContain("2024");
+          });
+          it('then filters appropriately', () => {
+            expect(filteredQuery).toEqual("?g_campaignid=2024");
+          });
+          beforeEach(() => {
+            filteredQuery = unit.autodiscoverLeadFrom('?g_campaignid=2024');
+          });
+        });
+        describe('when Share-a-sale ads', () => {
+          let filteredQuery = '';
+          it('then has an outcome', () => {
+            const journey = unit.journey()[0];
+            expect(journey.superOutcome).toEqual('Lead Attributed');
+            expect(journey.outcome).toEqual('Share-a-sale');
+            expect(journey.result).toEqual('success');
+            expect(journey.id).toEqual('2024');
+          });
+          it('then has tags', () => {
+            const tags = sessionStorage.getItem('view-tags');
+            expect(tags).toContain("Share-a-sale");
+            expect(tags).toContain("2024");
+          });
+          it('then filters appropriately', () => {
+            expect(filteredQuery).toEqual("?utm_source=shareasale&sscid=2024");
+          });
+          beforeEach(() => {
+            filteredQuery = unit.autodiscoverLeadFrom('?utm_source=shareasale&sscid=2024');
+          });
+        });
+        describe('when Google Organic', () => {
+          let filteredQuery = '';
+          it('then has an outcome', () => {
+            const journey = unit.journey()[0];
+            expect(journey.superOutcome).toEqual('Lead Attributed');
+            expect(journey.outcome).toEqual('Google Organic');
+            expect(journey.result).toEqual('success');
+            expect(journey.id).toEqual('2024');
+          });
+          it('then has tags', () => {
+            const tags = sessionStorage.getItem('view-tags');
+            expect(tags).toContain("Google Organic");
+            expect(tags).toContain("2024");
+          });
+          it('then filters appropriately', () => {
+            expect(filteredQuery).toEqual("?g_adtype=none&g_campaign=2024");
+          });
+          beforeEach(() => {
+            filteredQuery = unit.autodiscoverLeadFrom('?g_adtype=none&g_campaign=2024');
+          });
+        });
+        describe('when Google Paid Search', () => {
+          let filteredQuery = '';
+          it('then has an outcome', () => {
+            const journey = unit.journey()[0];
+            expect(journey.superOutcome).toEqual('Lead Attributed');
+            expect(journey.outcome).toEqual('Google Paid Search');
+            expect(journey.result).toEqual('success');
+            expect(journey.id).toEqual('2024');
+          });
+          it('then has tags', () => {
+            const tags = sessionStorage.getItem('view-tags');
+            expect(tags).toContain("Google Paid Search");
+            expect(tags).toContain("2024");
+          });
+          it('then filters appropriately', () => {
+            expect(filteredQuery).toEqual("?g_adtype=search&g_campaign=2024");
+          });
+          beforeEach(() => {
+            filteredQuery = unit.autodiscoverLeadFrom('?g_adtype=search&g_campaign=2024');
+          });
+        });
+        describe('when Facebook Ad', () => {
+          let filteredQuery = '';
+          it('then has an outcome', () => {
+            const journey = unit.journey()[0];
+            expect(journey.superOutcome).toEqual('Lead Attributed');
+            expect(journey.outcome).toEqual('Facebook Ad');
+            expect(journey.result).toEqual('success');
+            expect(journey.id).toEqual('2024');
+          });
+          it('then has tags', () => {
+            const tags = sessionStorage.getItem('view-tags');
+            expect(tags).toContain("Facebook Ad");
+            expect(tags).toContain("2024");
+          });
+          it('then filters appropriately', () => {
+            expect(filteredQuery).toEqual("?utm_source=facebook&utm_campaign=2024");
+          });
+          beforeEach(() => {
+            filteredQuery = unit.autodiscoverLeadFrom('?utm_source=facebook&utm_campaign=2024');
+          });
+        });
+        describe('when Email', () => {
+          let filteredQuery = '';
+          it('then has an outcome', () => {
+            const journey = unit.journey()[0];
+            expect(journey.superOutcome).toEqual('Lead Attributed');
+            expect(journey.outcome).toEqual('Email');
+            expect(journey.result).toEqual('success');
+            expect(journey.id).toEqual('2024');
+          });
+          it('then has tags', () => {
+            const tags = sessionStorage.getItem('view-tags');
+            expect(tags).toContain("Email");
+            expect(tags).toContain("2024");
+          });
+          it('then filters appropriately', () => {
+            expect(filteredQuery).toEqual("?utm_source=email-broadcast&utm_campaign=2024");
+          });
+          beforeEach(() => {
+            filteredQuery = unit.autodiscoverLeadFrom('?utm_source=email-broadcast&utm_campaign=2024');
+          });
+        });
+        describe('when YouTube', () => {
+          let filteredQuery = '';
+          it('then has an outcome', () => {
+            const journey = unit.journey()[0];
+            expect(journey.superOutcome).toEqual('Lead Attributed');
+            expect(journey.outcome).toEqual('YouTube');
+            expect(journey.result).toEqual('success');
+            expect(journey.id).toEqual('2024');
+          });
+          it('then has tags', () => {
+            const tags = sessionStorage.getItem('view-tags');
+            expect(tags).toContain("YouTube");
+            expect(tags).toContain("2024");
+          });
+          it('then filters appropriately', () => {
+            expect(filteredQuery).toEqual("?utm_source=youtube&utm_campaign=2024");
+          });
+          beforeEach(() => {
+            filteredQuery = unit.autodiscoverLeadFrom('?utm_source=youtube&utm_campaign=2024');
+          });
+        });
+        describe('when Other', () => {
+          let filteredQuery = '';
+          it('then has an outcome', () => {
+            const journey = unit.journey()[0];
+            expect(journey.superOutcome).toEqual('Lead Attributed');
+            expect(journey.outcome).toEqual('instagram');
+            expect(journey.result).toEqual('success');
+            expect(journey.id).toEqual('2024');
+          });
+          it('then has tags', () => {
+            const tags = sessionStorage.getItem('view-tags');
+            expect(tags).toContain("instagram");
+            expect(tags).toContain("2024");
+          });
+          it('then filters appropriately', () => {
+            expect(filteredQuery).toEqual("?utm_source=instagram&utm_campaign=2024");
+          });
+          beforeEach(() => {
+            filteredQuery = unit.autodiscoverLeadFrom('?utm_source=instagram&utm_campaign=2024');
+          });
+        });
+        describe('when None', () => {
+          let filteredQuery = '';
+          it('then filters appropriately', () => {
+            expect(filteredQuery).toBeNull();
+          });
+          beforeEach(() => {
+            filteredQuery = unit.autodiscoverLeadFrom('');
+          });
+        });
+        describe('when no Query', () => {
+          let filteredQuery = '';
+          it('then filters appropriately', () => {
+            expect(filteredQuery).toEqual('?hello=world');
+          });
+          beforeEach(() => {
+            filteredQuery = unit.autodiscoverLeadFrom('?hello=world');
+          });
+        });
+      });
       // API Communication tests
       describe('when committing a journey', () => {
         const feature = 'committing';

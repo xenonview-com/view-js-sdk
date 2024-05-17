@@ -35,12 +35,15 @@ The Xenon View JavaScript SDK is the JavaScript SDK to interact with [XenonView]
         * [(Optional) Error Handling](#errors)
         * [(Optional) Custom Customer Experience Milestones](#custom)
         * [(Optional) Journey Identification](#cuuid)
+        * [(Optional) Lead Attribution Autodiscovery](#lead-auto-discovery)
+        * [(Utility) DOM Hierarchy Searching](#dom-hierarchy)
 * [License](#license)
 * [FAQ-Next.Js](#faq)
 
 <br/>
 
 ## What's New <a id='whats-new'></a>
+* v0.1.27 - auto attribution discovery
 * v0.1.26 - init calls failure callback when API Key invalid
 * v0.1.25 - Fix promise crash post api call
 * v0.1.24 - Fix shopify window undefined issue
@@ -340,7 +343,7 @@ More are provided for each function.
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <script src="https://cdn.jsdelivr.net/gh/xenonview-com/view-js-sdk@v0.1.26/dist/xenon_view_sdk.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/gh/xenonview-com/view-js-sdk@v0.1.27/dist/xenon_view_sdk.min.js"></script>
   <script>
     Xenon.init('<API KEY>')
   </script>
@@ -398,7 +401,7 @@ export default function Home() {
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <script src="https://cdn.jsdelivr.net/gh/xenonview-com/view-js-sdk@v0.1.26/dist/xenon_view_sdk.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/gh/xenonview-com/view-js-sdk@v0.1.27/dist/xenon_view_sdk.min.js"></script>
   <script>
     Xenon.init('<API KEY>')
   </script>
@@ -2770,7 +2773,7 @@ Use this function to indicate a view of specific content.
 2. After load completes:
 ```html
 <head>
-    <script src="https://cdn.jsdelivr.net/gh/xenonview-com/view-js-sdk@v0.1.26/dist/xenon_view_sdk.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/xenonview-com/view-js-sdk@v0.1.27/dist/xenon_view_sdk.min.js"></script>
     <script>
         document.addEventListener("DOMContentLoaded", function(){
             const loadTime = timestamp() - startTime
@@ -3314,7 +3317,7 @@ export default function Home() {
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <script src="https://cdn.jsdelivr.net/gh/xenonview-com/view-js-sdk@v0.1.26/dist/xenon_view_sdk.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/xenonview-com/view-js-sdk@v0.1.27/dist/xenon_view_sdk.min.js"></script>
     <script>
         Xenon.init('<API KEY>')
         Xenon.ecomAbandonment()
@@ -3398,7 +3401,7 @@ export default function Home() {
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <script src="https://cdn.jsdelivr.net/gh/xenonview-com/view-js-sdk@v0.1.26/dist/xenon_view_sdk.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/gh/xenonview-com/view-js-sdk@v0.1.27/dist/xenon_view_sdk.min.js"></script>
   <script>
     Xenon.init('<API KEY>')
     const softwareVersion = '5.1.5'
@@ -3453,7 +3456,7 @@ export default function Home() {
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <script src="https://cdn.jsdelivr.net/gh/xenonview-com/view-js-sdk@v0.1.26/dist/xenon_view_sdk.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/gh/xenonview-com/view-js-sdk@v0.1.27/dist/xenon_view_sdk.min.js"></script>
   <script>
     Xenon.init('<API KEY>')
     Xenon.variant(['subscription-variant-A'])
@@ -3723,8 +3726,80 @@ export default function Home() {
 
 
 <br/>
-
 [back to top](#contents)
+<br/>
+
+#### Lead Auto Discovery <a id='lead-auto-discovery'></a>
+
+Often you will have various traffic sources for your site. We maintain a library for autodiscovery of 
+UTM query parameters. This function will autodiscovery and add a lead attributed outcome as well as creating
+a variant journey to associate outcomes to the lead sources.
+
+<br/>
+
+##### `autodiscoverLeadFrom()`
+###### Framework example:
+```javascript
+import Xenon from 'xenon-view-sdk';
+
+// you can auto attribute lead sources
+Xenon.autodiscoverLeadFrom('?utm_source=email-broadcast&utm_medium=email&utm_campaign=2024');
+Xenon.commit(); // or Xenon.heartbeat()
+```
+###### HTML example:
+```html
+<script>
+  function captureAd() {
+      // you can auto attribute lead sources
+      const query = window.location.search
+      const filteredQuery = Xenon.autodiscoverLeadFrom(query)
+      Xenon.commit() // or Xenon.heartbeat()
+      window.history.replaceState({} , document.title, window.location.origin+window.location.pathname+filteredQuery)
+  }
+</script>
+
+<button onclick="captureAd()">Attribute Lead</button>
+```
+This call adds a leadAttributed outcome to the customer journey.
+
+<br/>
+[back to top](#contents)
+<br/>
+
+#### Search DOM hierarchy for a class name <a id='dom-hierarchy'></a>
+
+With generic DOM event capturing, it is often necessary to look up the chain for a class name. This 
+function facilitates that.
+
+<br/>
+
+##### `hasClassInHierarchy()`
+###### HTML example:
+```html
+<script>
+    function trackButton(e) {
+        const hierarchy = e.target
+        const classToLookFor = "klaviyo-spinner"
+        const maxDepth = 10
+        if (hasClassInHierarchy(hierarchy, classToLookFor, maxDepth)){
+            Xenon.milestone('Selection', 'Accepted', 'Klaviyo Free Shipping')
+            Xenon.heartbeat()
+        }
+    }
+    let observer = new MutationObserver(()=>{
+        if (!document.body) return
+        document.body.addEventListener('click', trackButton)
+        observer.disconnect()
+    })
+    observer.observe(document.documentElement, {childList: true})
+</script>
+
+
+```
+
+<br/>
+[back to top](#contents)
+<br/>
 
 ## License  <a name='license'></a>
 
