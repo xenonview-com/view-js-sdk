@@ -924,6 +924,7 @@ var Xenon = (function () {
                 this.DeanonApi = deanonApi;
                 this.HeartbeatApi = heartbeatApi;
                 this.SampleApi = sampleApi;
+                this.pageURL_ = null;
                 this.id();
                 let journey = this.journey();
                 if (!journey) {
@@ -1705,6 +1706,9 @@ var Xenon = (function () {
               journeyAdd(content) {
                 let journey = this.journey();
                 content.timestamp = (new Date()).getTime() / 1000;
+                if(this.pageURL_) {
+                  content.url = this.pageURL_;
+                }
                 if (journey && journey.length) {
                   let last = journey[journey.length - 1];
                   if (this.isDuplicate(last, content)) {
@@ -1850,6 +1854,10 @@ var Xenon = (function () {
                   return query;
                 }
                 return null;
+              }
+
+              pageURL(url) {
+                this.pageURL_ = url;
               }
             }
 
