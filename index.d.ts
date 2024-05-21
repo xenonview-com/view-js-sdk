@@ -64,6 +64,7 @@ declare module 'xenon-view-sdk' {
         newId: () => void;
         hasClassInHierarchy: (target: string, className: string, maxDepth: number) => boolean
         autodiscoverLeadFrom: (queryFromUrl: string) => string
+        pageURL: (url: string) => void
     }
     let Xenon: XenonInterface;
     export default Xenon;

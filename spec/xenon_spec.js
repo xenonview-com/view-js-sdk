@@ -1294,15 +1294,32 @@ describe('View SDK', () => {
         let operation = 'Called';
         let name = 'Query Database';
         let detail = 'User Lookup';
-        it('then has a milestone', () => {
-          const journey = unit.journey()[0];
-          expect(journey.category).toEqual(category);
-          expect(journey.action).toEqual(operation);
-          expect(journey.name).toEqual(name);
-          expect(journey.details).toEqual(detail);
+        describe('when stock', () => {
+          it('then has a milestone', () => {
+            const journey = unit.journey()[0];
+            expect(journey.category).toEqual(category);
+            expect(journey.action).toEqual(operation);
+            expect(journey.name).toEqual(name);
+            expect(journey.details).toEqual(detail);
+          });
+          beforeEach(() => {
+            unit.milestone(category, operation, name, detail);
+          });
         });
-        beforeEach(() => {
-          unit.milestone(category, operation, name, detail);
+        describe('when stock with url', () => {
+          const url = "https://www.example.com";
+          it('then has a milestone', () => {
+            const journey = unit.journey()[0];
+            expect(journey.category).toEqual(category);
+            expect(journey.action).toEqual(operation);
+            expect(journey.name).toEqual(name);
+            expect(journey.details).toEqual(detail);
+            expect(journey.url).toEqual(url)
+          });
+          beforeEach(() => {
+            unit.pageURL(url);
+            unit.milestone(category, operation, name, detail);
+          });
         });
       });
       // Internals

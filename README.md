@@ -36,6 +36,7 @@ The Xenon View JavaScript SDK is the JavaScript SDK to interact with [XenonView]
         * [(Optional) Custom Customer Experience Milestones](#custom)
         * [(Optional) Journey Identification](#cuuid)
         * [(Optional) Lead Attribution Autodiscovery](#lead-auto-discovery)
+        * [(Optional) Augment Calls with URL](#augment-calls)
         * [(Utility) DOM Hierarchy Searching](#dom-hierarchy)
 * [License](#license)
 * [FAQ-Next.Js](#faq)
@@ -43,6 +44,7 @@ The Xenon View JavaScript SDK is the JavaScript SDK to interact with [XenonView]
 <br/>
 
 ## What's New <a id='whats-new'></a>
+* v0.1.28 - method for adding url to every event
 * v0.1.27 - auto attribution discovery
 * v0.1.26 - init calls failure callback when API Key invalid
 * v0.1.25 - Fix promise crash post api call
@@ -3761,6 +3763,38 @@ Xenon.commit(); // or Xenon.heartbeat()
 <button onclick="captureAd()">Attribute Lead</button>
 ```
 This call adds a leadAttributed outcome to the customer journey.
+
+<br/>
+[back to top](#contents)
+<br/>
+
+#### Augment Calls with URL <a id='augment-calls'></a>
+
+To track where milestones and outcomes occur, you can augment every call with a URL. 
+Call this function to set the URL of the page. Each call afterward will have the URL
+attached.
+
+<br/>
+
+##### `pageURL()`
+###### Framework example:
+```javascript
+import Xenon from 'xenon-view-sdk';
+
+// you can augment future calls with the page URL
+const url = 'https://example.com'
+Xenon.pageURL(url);
+```
+###### HTML example:
+```html
+<script>
+  function pageView() {
+      // you can augment future calls with the page URL
+      Xenon.pageURL(window.location.href)
+  }
+  pageView()
+</script>
+```
 
 <br/>
 [back to top](#contents)

@@ -21,6 +21,7 @@ export class _Xenon {
     this.DeanonApi = deanonApi;
     this.HeartbeatApi = heartbeatApi;
     this.SampleApi = sampleApi;
+    this.pageURL_ = null;
     this.id();
     let journey = this.journey();
     if (!journey) {
@@ -802,6 +803,9 @@ export class _Xenon {
   journeyAdd(content) {
     let journey = this.journey();
     content.timestamp = (new Date()).getTime() / 1000;
+    if(this.pageURL_) {
+      content.url = this.pageURL_;
+    }
     if (journey && journey.length) {
       let last = journey[journey.length - 1];
       if (this.isDuplicate(last, content)) {
@@ -947,6 +951,10 @@ export class _Xenon {
       return query;
     }
     return null;
+  }
+
+  pageURL(url) {
+    this.pageURL_ = url;
   }
 }
 
