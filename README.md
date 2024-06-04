@@ -3728,7 +3728,9 @@ export default function Home() {
 
 
 <br/>
+
 [back to top](#contents)
+
 <br/>
 
 #### Lead Auto Discovery <a id='lead-auto-discovery'></a>
@@ -3765,7 +3767,9 @@ Xenon.commit(); // or Xenon.heartbeat()
 This call adds a leadAttributed outcome to the customer journey.
 
 <br/>
+
 [back to top](#contents)
+
 <br/>
 
 #### Augment Calls with URL <a id='augment-calls'></a>
@@ -3797,7 +3801,9 @@ Xenon.pageURL(url);
 ```
 
 <br/>
+
 [back to top](#contents)
+
 <br/>
 
 #### Search DOM hierarchy for a class name <a id='dom-hierarchy'></a>
@@ -3832,7 +3838,9 @@ function facilitates that.
 ```
 
 <br/>
+
 [back to top](#contents)
+
 <br/>
 
 ## License  <a name='license'></a>
