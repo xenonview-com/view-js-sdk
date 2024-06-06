@@ -10,7 +10,7 @@
 import {_Xenon} from '../src/xenon';
 import './helper/api_helper';
 import {UnblockPromises, ImmediatelyResolvePromise} from './helper/api_helper';
-import {retrieveLocal, storeSession} from '../src/storage/storage';
+import {retrieveSession, storeSession, retrieveLocal} from '../src/storage/storage';
 
 
 describe('View SDK', () => {
@@ -1577,6 +1577,10 @@ describe('View SDK', () => {
         });
       });
       describe('autodiscoverLeadFrom', () => {
+        beforeEach(() => {
+          localStorage.clear();
+          sessionStorage.clear();
+        });
         describe('when custom xenon attribution', () => {
           let filteredQuery = '';
           it('then has an outcome', () => {
@@ -1598,6 +1602,26 @@ describe('View SDK', () => {
             filteredQuery = unit.autodiscoverLeadFrom('?xenonSrc=email&xenonId=2024');
           });
         });
+        describe('when custom xenon attribution with only source', () => {
+          let filteredQuery = '';
+          it('then has an outcome', () => {
+            const journey = unit.journey()[0];
+            expect(journey.superOutcome).toEqual('Lead Attributed');
+            expect(journey.outcome).toEqual('email');
+            expect(journey.result).toEqual('success');
+            expect(journey.id).toBeUndefined()
+          });
+          it('then has tags', () => {
+            const tags = sessionStorage.getItem('view-tags');
+            expect(tags).toContain("email");
+          });
+          it('then filters appropriately', () => {
+            expect(filteredQuery).toEqual("");
+          });
+          beforeEach(() => {
+            filteredQuery = unit.autodiscoverLeadFrom('?xenonSrc=email');
+          });
+        });
         describe('when Cerebro attribution', () => {
           let filteredQuery = '';
           it('then has an outcome', () => {
@@ -1617,6 +1641,27 @@ describe('View SDK', () => {
           });
           beforeEach(() => {
             filteredQuery = unit.autodiscoverLeadFrom('?cr_campaignid=2024');
+          });
+          describe('when duplicate added', () => {
+            it('then has an outcome', () => {
+              const journey = unit.journey()[0];
+              expect(journey.superOutcome).toEqual('Lead Attributed');
+              expect(journey.outcome).toEqual('Cerebro');
+              expect(journey.result).toEqual('success');
+              expect(journey.id).toEqual('2024');
+              expect(unit.journey().length).toEqual(1)
+            });
+            it('then has tags', () => {
+              const tags = retrieveSession('view-tags');
+              expect(tags).toContain("Cerebro");
+              expect(tags).toContain("2024");
+            });
+            it('then filters appropriately', () => {
+              expect(filteredQuery).toEqual("?cr_campaignid=2024");
+            });
+            beforeEach(() => {
+              filteredQuery = unit.autodiscoverLeadFrom('?cr_campaignid=2024');
+            });
           });
         });
         describe('when Klaviyo attribution', () => {
@@ -1846,6 +1891,10 @@ describe('View SDK', () => {
           beforeEach(() => {
             filteredQuery = unit.autodiscoverLeadFrom('?hello=world');
           });
+        });
+        afterEach(() => {
+          localStorage.clear();
+          sessionStorage.clear();
         });
       });
       // API Communication tests

@@ -937,7 +937,7 @@ var Xenon = (function () {
                 }
               }
 
-              init(apiKey, apiUrl = 'https://app.xenonview.com', onApiKeyFailure=null) {
+              init(apiKey, apiUrl = 'https://app.xenonview.com', onApiKeyFailure = null) {
                 this.apiUrl = apiUrl;
                 this.apiKey = apiKey;
                 this.sampleDecision(null, onApiKeyFailure);
@@ -1674,7 +1674,7 @@ var Xenon = (function () {
                 return retrieveSession('xenon-view');
               }
 
-              sampleDecision(decision = null, onApiKeyFailure=null) {
+              sampleDecision(decision = null, onApiKeyFailure = null) {
                 if (decision !== null) {
                   storeSession('xenon-will-sample', decision);
                 }
@@ -1706,7 +1706,7 @@ var Xenon = (function () {
               journeyAdd(content) {
                 let journey = this.journey();
                 content.timestamp = (new Date()).getTime() / 1000;
-                if(this.pageURL_) {
+                if (this.pageURL_) {
                   content.url = this.pageURL_;
                 }
                 if (journey && journey.length) {
@@ -1810,38 +1810,40 @@ var Xenon = (function () {
                 if (params.has('cr_campaignid')) {
                   return ['Cerebro', params.get('cr_campaignid')];
                 }
-                if (params.has('utm_source') && params.get('utm_source').toLowerCase() === 'klaviyo'){
+                if (params.has('utm_source') && params.get('utm_source').toLowerCase() === 'klaviyo') {
                   const source = 'Klaviyo' + (params.has('utm_medium') ? ' - ' + params.get('utm_medium') : '');
                   return [source, params.get('utm_campaign')];
                 }
-                if (params.has('g_campaignid')){
+                if (params.has('g_campaignid')) {
                   return ['Google Ad', params.get('g_campaignid')]
                 }
-                if (params.has('utm_source') && params.get('utm_source').toLowerCase() === 'shareasale'){
+                if (params.has('utm_source') && params.get('utm_source').toLowerCase() === 'shareasale') {
                   return ['Share-a-sale', params.get('sscid')]
                 }
-                if (params.has('g_adtype') && params.get('g_adtype') === 'none'){
+                if (params.has('g_adtype') && params.get('g_adtype') === 'none') {
                   return ['Google Organic', params.get('g_campaign')]
                 }
-                if (params.has('g_adtype') && params.get('g_adtype') === 'search'){
+                if (params.has('g_adtype') && params.get('g_adtype') === 'search') {
                   return ['Google Paid Search', params.get('g_campaign')]
                 }
-                if (params.has('utm_source') && params.get('utm_source') === 'facebook'){
+                if (params.has('utm_source') && params.get('utm_source') === 'facebook') {
                   return ['Facebook Ad', params.get('utm_campaign')]
                 }
-                if (params.has('utm_source') && params.get('utm_source').toLowerCase() === 'email-broadcast'){
+                if (params.has('utm_source') && params.get('utm_source').toLowerCase() === 'email-broadcast') {
                   return ['Email', params.get('utm_campaign')]
                 }
-                if (params.has('utm_source') && params.get('utm_source').toLowerCase() === 'youtube'){
+                if (params.has('utm_source') && params.get('utm_source').toLowerCase() === 'youtube') {
                   return ['YouTube', params.get('utm_campaign')]
                 }
                 return [params.get('utm_source'), params.get('utm_campaign')]
               }
+
               autodiscoverLeadFrom(queryFromUrl) {
                 if (queryFromUrl && queryFromUrl !== '' && queryFromUrl !== '?') {
                   const params = new URLSearchParams(queryFromUrl);
                   const [source, identifier] = this.decipherParamsPerLibrary(params);
-                  if (source) {
+                  const variantNames = retrieveSession('view-tags');
+                  if (source && (!variantNames || !variantNames.includes(source))) {
                     this.variant([source, identifier]);
                     this.leadAttributed(source, identifier);
                   }
@@ -1849,7 +1851,7 @@ var Xenon = (function () {
                   params.delete('xenonSrc');
                   let query = "";
                   if (params.size) {
-                    query = "?"+params.toString();
+                    query = "?" + params.toString();
                   }
                   return query;
                 }
