@@ -10,6 +10,7 @@ declare module 'xenon-view-sdk' {
         resetVariants: () => void;
         // Stock Business Outcomes:
         leadAttributed: (source: string, identifier: string) => void;
+        leadUnattributed: () => void;
         leadCaptured: (specifier: string) => void;
         leadCaptureDeclined: (specifier: string) => void;
         accountSignup: (specifier: string) => void;

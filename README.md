@@ -44,6 +44,7 @@ The Xenon View JavaScript SDK is the JavaScript SDK to interact with [XenonView]
 <br/>
 
 ## What's New <a id='whats-new'></a>
+* v0.1.30 - add lead unattributed and auto attribution for that
 * v0.1.29 - stop double counting attribution
 * v0.1.28 - method for adding url to every event
 * v0.1.27 - auto attribution discovery
@@ -194,7 +195,7 @@ As you view the categories, you can quickly identify issues (for example, if the
 
 | Category                 | Success                                               | Decline                                                                                                                    |
 |--------------------------|-------------------------------------------------------|----------------------------------------------------------------------------------------------------------------------------|
-| Lead Attribution         | [`leadAttribution()`](#saas-lead-attribution)         |                                                                                                                            |
+| Lead Attribution         | [`leadAttributed()`](#saas-lead-attributed)           | [`leadUnattributed()`](#saas-lead-unattributed)                                                                            |
 | Lead Capture             | [`leadCaptured()`](#saas-lead-capture)                | [`leadCaptureDeclined()`](#saas-lead-capture-fail)                                                                         |
 | Account Signup           | [`accountSignup()`](#saas-account-signup)             | [`accountSignupDeclined()`](#saas-account-signup-fail)                                                                     |
 | Application Installation | [`applicationInstalled()`](#saas-application-install) | [`applicationNotInstalled()`](#saas-application-install-fail)                                                              |
@@ -209,13 +210,13 @@ As you view the categories, you can quickly identify issues (for example, if the
 
 | Category            | Success                                           | Decline                                                                                   |
 |---------------------|---------------------------------------------------|-------------------------------------------------------------------------------------------|
-| Lead Attribution    | [`leadAttribution()`](#ecom-lead-attribution)     |                                                                                           |
+| Lead Attribution    | [`leadAttributed()`](#ecom-lead-attributed)       | leadUnattributed()`](#ecom-lead-unattributed)                                             |
 | Lead Capture        | [`leadCaptured()`](#ecom-lead-capture)            | [`leadCaptureDeclined()`](#ecom-lead-capture-fail)                                        | 
 | Account Signup      | [`accountSignup()`](#ecom-account-signup)         | [`accountSignupDeclined()`](#ecom-account-signup-fail)                                    | 
 | Add To Cart         | [`productAddedToCart()`](#ecom-product-to-cart)   | [`productNotAddedToCart()`](#ecom-product-to-cart-fail)                                   |
 | Product Upsell      | [`upsold()`](#ecom-upsell)                        | [`upsellDismissed()`](#ecom-upsell-fail)                                                  | 
-| Checkout            | [`checkOut()`](#ecom-checkout)                  | [`checkoutCanceled()`](#ecom-checkout-fail) / [`productRemoved()`](#ecom-checkout-remove) | 
-| Purchase            | [`purchase()`](#ecom-purchase)                   | [`purchaseCancel()`](#ecom-purchase-fail)                                               | 
+| Checkout            | [`checkOut()`](#ecom-checkout)                    | [`checkoutCanceled()`](#ecom-checkout-fail) / [`productRemoved()`](#ecom-checkout-remove) | 
+| Purchase            | [`purchase()`](#ecom-purchase)                    | [`purchaseCancel()`](#ecom-purchase-fail)                                                 | 
 | Promise Fulfillment | [`promiseFulfilled()`](#ecom-promise-fulfillment) | [`promiseUnfulfilled()`](#ecom-promise-fulfillment-fail)                                  | 
 | Product Disposition | [`productKept()`](#ecom-product-outcome)          | [`productReturned()`](#ecom-product-outcome-fail)                                         |
 | Referral            | [`referral()`](#ecom-referral)                    | [`referralDeclined()`](#ecom-referral-fail)                                               |
@@ -479,6 +480,44 @@ export default function Home() {
 </script>
 
 <button onclick="leadAttributedOccurred()">Lead Attributed</button>
+```
+
+<br/>
+
+#### Lead Unattributed  <a id='saas-lead-unattributed'></a>
+Use this call to track Lead Attribution when unknown.
+
+<br/>
+
+##### ```leadUnattributed()```
+
+###### Framework example:
+```javascript
+import Xenon from 'xenon-view-sdk';
+// Lead Unattributed
+Xenon.leadUnattributed();
+```
+
+###### Nextjs example:
+```javascript
+import {useXenon} from "xenon-view-sdk/useXenon";
+
+export default function Home() {
+  const Xenon = useXenon('<API KEY>');
+  // Lead Unattributed
+  Xenon.leadUnattributed();
+```
+
+###### HTML example:
+```html
+<script>
+  function leadUnattributedOccurred() {
+    Xenon.leadUnattributed()
+    Xenon.commit()
+  }
+</script>
+
+<button onclick="leadUnattributedOccurred()">Lead Unattributed</button>
 ```
 
 <br/>

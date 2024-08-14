@@ -201,6 +201,17 @@ describe('View SDK', () => {
           });
         });
       });
+      describe('when leadUnattributed', () => {
+        it('then creates journey with outcome', () => {
+          const journey = unit.journey()[0];
+          expect(journey.superOutcome).toEqual('Lead Attributed');
+          expect(journey.outcome).toEqual('unattributed');
+          expect(journey.result).toEqual('fail');
+        });
+        beforeEach(() => {
+          unit.leadUnattributed()
+        });
+      });
       describe('when leadCaptured', () => {
         const phone = 'Phone Number';
         it('then creates journey with outcome', () => {
@@ -1876,15 +1887,36 @@ describe('View SDK', () => {
         });
         describe('when None', () => {
           let filteredQuery = '';
+          it('then has an outcome', () => {
+            const journey = unit.journey()[0];
+            expect(journey.superOutcome).toEqual('Lead Attributed');
+            expect(journey.outcome).toEqual('unattributed');
+            expect(journey.result).toEqual('fail');
+          });
+          it('then has tags', () => {
+            const tags = sessionStorage.getItem('view-tags');
+            expect(tags).toContain("unattributed");
+          });
           it('then filters appropriately', () => {
             expect(filteredQuery).toBeNull();
           });
           beforeEach(() => {
+            unit.autodiscoverLeadFrom('');
             filteredQuery = unit.autodiscoverLeadFrom('');
           });
         });
         describe('when no Query', () => {
           let filteredQuery = '';
+          it('then has an outcome', () => {
+            const journey = unit.journey()[0];
+            expect(journey.superOutcome).toEqual('Lead Attributed');
+            expect(journey.outcome).toEqual('unattributed');
+            expect(journey.result).toEqual('fail');
+          });
+          it('then has tags', () => {
+            const tags = sessionStorage.getItem('view-tags');
+            expect(tags).toContain("unattributed");
+          });
           it('then filters appropriately', () => {
             expect(filteredQuery).toEqual('?hello=world');
           });

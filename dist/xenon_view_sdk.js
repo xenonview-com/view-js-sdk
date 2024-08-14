@@ -997,6 +997,15 @@ var Xenon = (function () {
                 this.outcomeAdd(content);
               }
 
+              leadUnattributed() {
+                const content = {
+                  superOutcome: 'Lead Attributed',
+                  outcome: 'unattributed',
+                  result: 'fail'
+                };
+                this.outcomeAdd(content);
+              }
+
               leadCaptured(specifier) {
                 const content = {
                   superOutcome: 'Lead Capture',
@@ -1835,7 +1844,10 @@ var Xenon = (function () {
                 if (params.has('utm_source') && params.get('utm_source').toLowerCase() === 'youtube') {
                   return ['YouTube', params.get('utm_campaign')]
                 }
-                return [params.get('utm_source'), params.get('utm_campaign')]
+                if (params.has('utm_source')){
+                  return [params.get('utm_source'), params.get('utm_campaign')]
+                }
+                return ['unattributed']
               }
 
               autodiscoverLeadFrom(queryFromUrl) {
@@ -1844,8 +1856,11 @@ var Xenon = (function () {
                   const [source, identifier] = this.decipherParamsPerLibrary(params);
                   const variantNames = retrieveSession('view-tags');
                   if (source && (!variantNames || !variantNames.includes(source))) {
+
                     this.variant([source, identifier]);
-                    this.leadAttributed(source, identifier);
+                    (source === 'unattributed') ?
+                      this.leadUnattributed() :
+                      this.leadAttributed(source, identifier);
                   }
                   params.delete('xenonId');
                   params.delete('xenonSrc');
@@ -1854,6 +1869,13 @@ var Xenon = (function () {
                     query = "?" + params.toString();
                   }
                   return query;
+                } else {
+                  const variantNames = retrieveSession('view-tags');
+                  const source = 'unattributed';
+                  if (!variantNames || !variantNames.includes(source)) {
+                    this.variant([source]);
+                    this.leadUnattributed();
+                  }
                 }
                 return null;
               }
