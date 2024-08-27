@@ -44,6 +44,7 @@ The Xenon View JavaScript SDK is the JavaScript SDK to interact with [XenonView]
 <br/>
 
 ## What's New <a id='whats-new'></a>
+* v0.1.32 - send data even if page recently was closed
 * v0.1.31 - add lead unattributed and auto attribution for that
 * v0.1.29 - stop double counting attribution
 * v0.1.28 - method for adding url to every event

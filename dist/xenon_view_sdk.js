@@ -675,7 +675,8 @@ var Xenon = (function () {
             function fetchJson(url, {accessToken, headers, ...options} = {}) {
               const acceptHeaders = {accept: 'application/json'};
               const authorizationHeaders = accessToken ? {authorization: `Bearer ${accessToken}`} : {};
-              options = {credentials: 'same-origin', headers: {...acceptHeaders, ...authorizationHeaders, ...headers}, ...options};
+              options = {credentials: 'same-origin', keepalive: true, headers:
+                    {...acceptHeaders, ...authorizationHeaders, ...headers}, ...options};
               return fetch(url, options)
                 .then(checkStatus)
                 .then((response) => {
