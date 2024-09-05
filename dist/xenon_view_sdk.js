@@ -1855,10 +1855,15 @@ var Xenon = (function () {
                 if (queryFromUrl && queryFromUrl !== '' && queryFromUrl !== '?') {
                   const params = new URLSearchParams(queryFromUrl);
                   const [source, identifier] = this.decipherParamsPerLibrary(params);
-                  const variantNames = retrieveSession('view-tags');
+                  let variantNames = retrieveSession('view-tags');
                   if (source && (!variantNames || !variantNames.includes(source))) {
-
-                    this.variant([source, identifier]);
+                    if (variantNames) {
+                      variantNames.push(source);
+                      variantNames.push(identifier);
+                    } else {
+                      variantNames = [source, identifier];
+                    }
+                    this.variant(variantNames);
                     (source === 'unattributed') ?
                       this.leadUnattributed() :
                       this.leadAttributed(source, identifier);
@@ -1871,10 +1876,11 @@ var Xenon = (function () {
                   }
                   return query;
                 } else {
-                  const variantNames = retrieveSession('view-tags');
+                  let variantNames = retrieveSession('view-tags');
                   const source = 'unattributed';
                   if (!variantNames || !variantNames.includes(source)) {
-                    this.variant([source]);
+                    (variantNames) ? variantNames.push(source) : variantNames = [source];
+                    this.variant(variantNames);
                     this.leadUnattributed();
                   }
                 }
