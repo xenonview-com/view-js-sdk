@@ -1864,6 +1864,18 @@ describe('View SDK', () => {
             filteredQuery = unit.autodiscoverLeadFrom('?utm_source=youtube&utm_campaign=2024');
           });
         });
+        describe('when YouTube with previous variant', () => {
+          it('then has tags', () => {
+            const tags = sessionStorage.getItem('view-tags');
+            expect(tags).toContain("YouTube");
+            expect(tags).toContain("2024");
+            expect(tags).toContain("test");
+          });
+          beforeEach(() => {
+            unit.variant(['test'])
+            unit.autodiscoverLeadFrom('?utm_source=youtube&utm_campaign=2024');
+          });
+        });
         describe('when Other', () => {
           let filteredQuery = '';
           it('then has an outcome', () => {
@@ -1922,6 +1934,16 @@ describe('View SDK', () => {
           });
           beforeEach(() => {
             filteredQuery = unit.autodiscoverLeadFrom('?hello=world');
+          });
+        });
+        describe('when None previous variant', () => {
+          it('then has tags', () => {
+            const tags = sessionStorage.getItem('view-tags');
+            expect(tags).toContain('test', "unattributed");
+          });
+          beforeEach(() => {
+            unit.variant(['test'])
+            unit.autodiscoverLeadFrom('');
           });
         });
         afterEach(() => {
