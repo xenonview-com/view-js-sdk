@@ -985,6 +985,10 @@ var Xenon = (function () {
                 resetSession('view-tags');
               }
 
+              getVariants() {
+                return retrieveSession('view-tags');
+              }
+
               // Stock Business Outcomes:
               leadAttributed(source, identifier) {
                 const content = {
@@ -1859,9 +1863,14 @@ var Xenon = (function () {
                   if (source && (!variantNames || !variantNames.includes(source))) {
                     if (variantNames) {
                       variantNames.push(source);
-                      variantNames.push(identifier);
+                      if (identifier) {
+                        variantNames.push(identifier);
+                      }
                     } else {
-                      variantNames = [source, identifier];
+                      variantNames = [source];
+                      if (identifier) {
+                        variantNames.push(identifier);
+                      }
                     }
                     this.variant(variantNames);
                     (source === 'unattributed') ?

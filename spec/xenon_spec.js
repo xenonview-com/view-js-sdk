@@ -1946,6 +1946,19 @@ describe('View SDK', () => {
             unit.autodiscoverLeadFrom('');
           });
         });
+        describe('when other query and previous variant', () => {
+          it('then has tags', () => {
+            const tags = sessionStorage.getItem('view-tags');
+            console.log(tags)
+            console.log(unit.getVariants())
+            expect(tags).toContain('test', "unattributed");
+            expect(tags).not.toContain(null);
+          });
+          beforeEach(() => {
+            unit.variant(['test'])
+            unit.autodiscoverLeadFrom('?abc=123');
+          });
+        });
         afterEach(() => {
           localStorage.clear();
           sessionStorage.clear();
