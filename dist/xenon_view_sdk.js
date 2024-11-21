@@ -985,8 +985,12 @@ var Xenon = (function () {
                 resetSession('view-tags');
               }
 
-              getVariants() {
-                return retrieveSession('view-tags');
+              addVariant(variantName) {
+                let variantNames = retrieveSession('view-tags');
+                if (!variantNames || !variantNames.includes(variantName)) {
+                  (variantNames) ? variantNames.push(variantName) : variantNames = [variantName];
+                  this.variant(variantNames);
+                }
               }
 
               // Stock Business Outcomes:
@@ -1849,7 +1853,7 @@ var Xenon = (function () {
                 if (params.has('utm_source') && params.get('utm_source').toLowerCase() === 'youtube') {
                   return ['YouTube', params.get('utm_campaign')]
                 }
-                if (params.has('utm_source')){
+                if (params.has('utm_source')) {
                   return [params.get('utm_source'), params.get('utm_campaign')]
                 }
                 return ['unattributed']

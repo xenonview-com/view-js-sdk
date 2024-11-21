@@ -147,6 +147,53 @@ describe('View SDK', () => {
           unit.applicationInstalled()
         });
       });
+      describe('when appending tag', () => {
+        describe('without previous duplicate', () => {
+          beforeEach(() => {
+            unit.resetVariants()
+            unit.addVariant('test')
+          });
+          it('should have variant', () => {
+            const tags = sessionStorage.getItem('view-tags');
+            expect(tags).toContain("test");
+          });
+          afterEach(() => {
+            unit.resetVariants()
+          });
+        });
+        describe('with previous duplicate', () => {
+          beforeEach(() => {
+            unit.resetVariants()
+            unit.variant(['test'])
+            unit.addVariant('test')
+          });
+          it('should have variant', () => {
+            const tagsString = sessionStorage.getItem('view-tags');
+            const tags = JSON.parse(tagsString)
+            expect(tags).toContain("test");
+            expect(tags.length).toEqual(1);
+          });
+          afterEach(() => {
+            unit.resetVariants()
+          });
+        });
+        describe('with previous not duplicate', () => {
+          beforeEach(() => {
+            unit.resetVariants()
+            unit.variant(['test1'])
+            unit.addVariant('test')
+          });
+          it('should have variant', () => {
+            const tagsString = sessionStorage.getItem('view-tags');
+            const tags = JSON.parse(tagsString)
+            expect(tags).toContain("test1");
+            expect(tags.length).toEqual(2);
+          });
+          afterEach(() => {
+            unit.resetVariants()
+          });
+        });
+      })
       describe('when adding outcome after tags reset', () => {
         it('then journey doesn\'t contain tags', () => {
           const journey = unit.journey()[0];
@@ -1949,8 +1996,6 @@ describe('View SDK', () => {
         describe('when other query and previous variant', () => {
           it('then has tags', () => {
             const tags = sessionStorage.getItem('view-tags');
-            console.log(tags)
-            console.log(unit.getVariants())
             expect(tags).toContain('test', "unattributed");
             expect(tags).not.toContain(null);
           });
@@ -2595,11 +2640,11 @@ describe('View SDK', () => {
           let called = false;
           localStorage.clear();
           sessionStorage.clear();
-          unit.sampleDecision(null,  (_) => {
+          unit.sampleDecision(null, (_) => {
             called = true;
           });
           UnblockPromises();
-          expect( called ).toBeTrue();
+          expect(called).toBeTrue();
         });
         beforeEach(() => {
           const error = new Error('{"result": "no-auth"}');
