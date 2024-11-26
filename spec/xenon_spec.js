@@ -147,6 +147,53 @@ describe('View SDK', () => {
           unit.applicationInstalled()
         });
       });
+      describe('when restart tags', () => {
+        describe('without previous duplicate', () => {
+          beforeEach(() => {
+            unit.resetVariants()
+            unit.startVariant('test')
+          });
+          it('should have variant', () => {
+            const tags = sessionStorage.getItem('view-tags');
+            expect(tags).toContain("test");
+          });
+          afterEach(() => {
+            unit.resetVariants()
+          });
+        });
+        describe('with previous duplicate', () => {
+          beforeEach(() => {
+            unit.resetVariants()
+            unit.variant(['test'])
+            unit.startVariant('test')
+          });
+          it('should have variant', () => {
+            const tagsString = sessionStorage.getItem('view-tags');
+            const tags = JSON.parse(tagsString)
+            expect(tags).toContain("test");
+            expect(tags.length).toEqual(1);
+          });
+          afterEach(() => {
+            unit.resetVariants()
+          });
+        });
+        describe('with previous not duplicate', () => {
+          beforeEach(() => {
+            unit.resetVariants()
+            unit.variant(['test1'])
+            unit.startVariant('test')
+          });
+          it('should only have variant', () => {
+            const tagsString = sessionStorage.getItem('view-tags');
+            const tags = JSON.parse(tagsString)
+            expect(tags).toContain("test");
+            expect(tags.length).toEqual(1);
+          });
+          afterEach(() => {
+            unit.resetVariants()
+          });
+        });
+      })
       describe('when appending tag', () => {
         describe('without previous duplicate', () => {
           beforeEach(() => {

@@ -985,6 +985,14 @@ var Xenon = (function () {
                 resetSession('view-tags');
               }
 
+              startVariant(variantName) {
+                let variantNames = retrieveSession('view-tags');
+                if (!variantNames || !variantNames.includes(variantName)) {
+                  this.resetVariants();
+                  this.variant([variantName]);
+                }
+              }
+
               addVariant(variantName) {
                 let variantNames = retrieveSession('view-tags');
                 if (!variantNames || !variantNames.includes(variantName)) {
