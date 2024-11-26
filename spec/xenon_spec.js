@@ -1574,7 +1574,7 @@ describe('View SDK', () => {
           it('then has a journey with added event', () => {
             expect(unit.journey().length).toEqual(1);
             const journey = unit.journey()[0];
-            expect(journey.name).toEqual(feature);
+            expect(journey.name).toEqual(feature + " 1st");
           });
         });
         describe('when restoring after another event was added', () => {
@@ -1589,8 +1589,28 @@ describe('View SDK', () => {
             unit.restore();
           });
         });
+        describe('when restoring out of order', () => {
+          beforeEach(() => {
+            unit.restore()
+            const saveFirst = unit.reset();
+            const timestamp1 = saveFirst[0].timestamp;
+            unit.storeJourney([{category: 'Feature', action: 'Attempted', name: feature + " 2nd", timestamp: timestamp1 + 0.001}]);
+            const saveSecond = unit.reset();
+            unit.storeJourney([{category: 'Feature', action: 'Attempted', name: feature + " 3rd", timestamp: timestamp1 + 0.002}]);
+            const saveThird = unit.reset();
+            unit.restore(saveThird)
+            unit.restore(saveFirst)
+            unit.restore(saveSecond)
+          });
+          it('should restore inorder', () => {
+            expect(unit.journey().length).toEqual(3);
+            console.log(unit.journey())
+            // const journey = unit.journey()[1];
+            // expect(journey.name).toEqual(anotherFeature);
+          });
+        })
         beforeEach(() => {
-          unit.featureAttempted(feature);
+          unit.featureAttempted(feature + " 1st");
           unit.reset();
         });
       });

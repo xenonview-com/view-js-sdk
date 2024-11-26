@@ -662,11 +662,11 @@ export class _Xenon {
         timestamp: (new Date()).getTime() / 1000
       }
     };
-    this.reset();
+    const saved = this.reset();
     return this.JourneyApi(this.apiUrl)
       .fetch(params)
       .catch((err) => {
-        this.restore();
+        this.restore(saved);
         return (surfaceErrors ? Promise.reject(err) : Promise.resolve(true));
       });
   }
@@ -744,7 +744,7 @@ export class _Xenon {
       return Promise.resolve(true);
     }
 
-    this.reset();
+    const saved = this.reset();
     return this.HeartbeatApi(this.apiUrl)
       .fetch(params)
       .then((value) => {
@@ -756,7 +756,7 @@ export class _Xenon {
         return Promise.resolve(value);
       })
       .catch((err) => {
-        this.restore();
+        this.restore(saved);
         return (surfaceErrors ? Promise.reject(err) : Promise.resolve(true));
       });
   }
@@ -901,12 +901,26 @@ export class _Xenon {
     this.restoreJourney = this.journey();
     resetLocal('view-journey');
     this.storeJourney([]);
+    return this.restoreJourney
   }
 
-  restore() {
+  restore(journey = null) {
     let currentJourney = this.journey();
-    let restoreJourney = this.restoreJourney;
-    if (currentJourney && currentJourney.length) restoreJourney = restoreJourney.concat(currentJourney);
+    let restoreJourney = journey ? journey : this.restoreJourney;
+    if (currentJourney !== null && currentJourney.length) {
+      restoreJourney = restoreJourney.concat(currentJourney);
+    }
+
+    function compare( a, b ) {
+      if ( a.timestamp < b.timestamp ){
+        return -1;
+      }
+      if ( a.timestamp > b.timestamp ){
+        return 1;
+      }
+      return 0;
+    }
+    restoreJourney.sort( compare );
     this.storeJourney(restoreJourney);
     this.restoreJourney = [];
   }
