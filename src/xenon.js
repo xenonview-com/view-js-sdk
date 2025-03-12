@@ -11,16 +11,19 @@ import JourneyApi from "./api/journey";
 import HeartbeatApi from "./api/heartbeat";
 import DeanonApi from "./api/deanonymize";
 import SampleApi from "./api/sample";
+import CountApi from "./api/count";
 import {resetLocal, resetSession, retrieveLocal, retrieveSession, storeLocal, storeSession} from "./storage/storage";
 
 export class _Xenon {
   constructor(apiKey = null, apiUrl = 'https://app.xenonview.com',
+              countApiUrl = 'https://counts.xenonlab.ai',
               journeyApi = JourneyApi, deanonApi = DeanonApi, heartbeatApi = HeartbeatApi,
-              sampleApi = SampleApi) {
+              sampleApi = SampleApi, countApi = CountApi) {
     this.JourneyApi = journeyApi;
     this.DeanonApi = deanonApi;
     this.HeartbeatApi = heartbeatApi;
     this.SampleApi = sampleApi;
+    this.CountApi = countApi;
     this.pageURL_ = null;
     this.id();
     let journey = this.journey();
@@ -28,7 +31,9 @@ export class _Xenon {
       this.storeJourney([]);
     }
     this.restoreJourney = [];
+    this.apiCallPending = false;
     this.apiUrl = apiUrl;
+    this.countApiUrl = countApiUrl;
     if (apiKey) {
       this.init(apiKey, apiUrl);
     }
@@ -38,6 +43,7 @@ export class _Xenon {
     this.apiUrl = apiUrl;
     this.apiKey = apiKey;
     this.sampleDecision(null, onApiKeyFailure)
+    this.apiCallPending = false;
   }
 
   ecomAbandonment() {
@@ -108,6 +114,7 @@ export class _Xenon {
       content['id'] = identifier;
     }
     this.outcomeAdd(content);
+    //this.count("Attribution");
   }
 
   leadUnattributed() {
@@ -117,6 +124,7 @@ export class _Xenon {
       result: 'fail'
     };
     this.outcomeAdd(content);
+    // this.count("Attribution");
   }
 
   leadCaptured(specifier) {
@@ -650,10 +658,30 @@ export class _Xenon {
 
   // API Communication:
 
+  count(outcome, surfaceErrors = false) {
+    const attribution = retrieveSession('view-attribution');
+    if (!attribution) return Promise.resolve(true);
+    let params = {
+      data: {
+        uid: this.id(),
+        token: this.apiKey,
+        timestamp: (new Date()).getTime() / 1000,
+        outcome: outcome,
+        content: attribution
+      }
+    };
+    return this.CountApi(this.countApiUrl)
+      .fetch(params)
+      .catch((err) => {
+        return (surfaceErrors ? Promise.reject(err) : Promise.resolve(true));
+      });
+  }
+
   commit(surfaceErrors = false) {
-    if (!this.sampleDecision()) {
+    if (!this.sampleDecision() || this.apiCallPending) {
       return Promise.resolve(true);
     }
+    this.apiCallPending = true;
     let params = {
       data: {
         id: this.id(),
@@ -665,8 +693,14 @@ export class _Xenon {
     const saved = this.reset();
     return this.JourneyApi(this.apiUrl)
       .fetch(params)
+      .then((value) => {
+        this.apiCallPending = false;
+        return Promise.resolve(value);
+      })
       .catch((err) => {
         this.restore(saved);
+        this.apiCallPending = false;
+        this.apiCallPending = false
         return (surfaceErrors ? Promise.reject(err) : Promise.resolve(true));
       });
   }
@@ -740,9 +774,10 @@ export class _Xenon {
       params.data['watchdog'] = this.heartbeatMessage(heartbeatType);
     }
 
-    if (!this.sampleDecision()) {
+    if (!this.sampleDecision() || this.apiCallPending) {
       return Promise.resolve(true);
     }
+    this.apiCallPending = true;
 
     const saved = this.reset();
     return this.HeartbeatApi(this.apiUrl)
@@ -753,10 +788,12 @@ export class _Xenon {
           resetLocal('heartbeat_type');
           resetLocal('heartbeat_outcome');
         }
+        this.apiCallPending = false;
         return Promise.resolve(value);
       })
       .catch((err) => {
         this.restore(saved);
+        this.apiCallPending = false;
         return (surfaceErrors ? Promise.reject(err) : Promise.resolve(true));
       });
   }
@@ -974,13 +1011,20 @@ export class _Xenon {
     if (params.has('utm_source')) {
       return [params.get('utm_source'), params.get('utm_campaign')]
     }
-    return ['unattributed']
+    return ['Unattributed']
   }
 
   autodiscoverLeadFrom(queryFromUrl) {
     if (queryFromUrl && queryFromUrl !== '' && queryFromUrl !== '?') {
       const params = new URLSearchParams(queryFromUrl);
       const [source, identifier] = this.decipherParamsPerLibrary(params);
+      let attribution = retrieveSession('view-attribution');
+      if (attribution) return queryFromUrl;
+      storeSession('view-attribution', {
+        leadSource: source,
+        leadCampaign: identifier,
+        leadGuid: null
+      })
       let variantNames = retrieveSession('view-tags');
       if (source && (!variantNames || !variantNames.includes(source))) {
         if (variantNames) {
@@ -995,7 +1039,7 @@ export class _Xenon {
           }
         }
         this.variant(variantNames);
-        (source === 'unattributed') ?
+        (source === 'Unattributed') ?
           this.leadUnattributed() :
           this.leadAttributed(source, identifier);
       }
@@ -1008,7 +1052,7 @@ export class _Xenon {
       return query;
     } else {
       let variantNames = retrieveSession('view-tags');
-      const source = 'unattributed';
+      const source = 'Unattributed';
       if (!variantNames || !variantNames.includes(source)) {
         (variantNames) ? variantNames.push(source) : variantNames = [source];
         this.variant(variantNames);

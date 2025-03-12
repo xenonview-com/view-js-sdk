@@ -919,6 +919,7 @@ var Xenon = (function () {
 
             class _Xenon {
               constructor(apiKey = null, apiUrl = 'https://app.xenonview.com',
+                          countApiUrl = 'https://counts.xenonlab.ai',
                           journeyApi = JourneyApi, deanonApi = DeanonApi, heartbeatApi = HeartbeatApi,
                           sampleApi = SampleApi) {
                 this.JourneyApi = journeyApi;
@@ -932,7 +933,9 @@ var Xenon = (function () {
                   this.storeJourney([]);
                 }
                 this.restoreJourney = [];
+                this.apiCallPending = false;
                 this.apiUrl = apiUrl;
+                this.countApiUrl = countApiUrl;
                 if (apiKey) {
                   this.init(apiKey, apiUrl);
                 }
@@ -1012,6 +1015,7 @@ var Xenon = (function () {
                   content['id'] = identifier;
                 }
                 this.outcomeAdd(content);
+                //this.count("Attributed");
               }
 
               leadUnattributed() {
@@ -1021,6 +1025,7 @@ var Xenon = (function () {
                   result: 'fail'
                 };
                 this.outcomeAdd(content);
+                // this.count("Unattributed");
               }
 
               leadCaptured(specifier) {
@@ -1554,10 +1559,30 @@ var Xenon = (function () {
 
               // API Communication:
 
+              // count(outcome, surfaceErrors = false) {
+              //   const attribution = retrieveSession('view-attribution');
+              //   if (!attribution) return;
+              //   let params = {
+              //     data: {
+              //       uuid: this.id(),
+              //       token: this.apiKey,
+              //       timestamp: (new Date()).getTime() / 1000,
+              //       outcome: outcome,
+              //       content: attribution
+              //     }
+              //   };
+              //   return this.CountApi(this.countApiUrl)
+              //     .fetch(params)
+              //     .catch((err) => {
+              //       return (surfaceErrors ? Promise.reject(err) : Promise.resolve(true));
+              //     });
+              // }
+
               commit(surfaceErrors = false) {
-                if (!this.sampleDecision()) {
+                if (!this.sampleDecision() || this.apiCallPending) {
                   return Promise.resolve(true);
                 }
+                this.apiCallPending = true;
                 let params = {
                   data: {
                     id: this.id(),
@@ -1571,8 +1596,9 @@ var Xenon = (function () {
                   .fetch(params)
                   .catch((err) => {
                     this.restore(saved);
+                    this.apiCallPending = false;
                     return (surfaceErrors ? Promise.reject(err) : Promise.resolve(true));
-                  });
+                  }).finally(()=>this.apiCallPending = false);
               }
 
               heartbeatState(stage = null) {
@@ -1644,9 +1670,10 @@ var Xenon = (function () {
                   params.data['watchdog'] = this.heartbeatMessage(heartbeatType);
                 }
 
-                if (!this.sampleDecision()) {
+                if (!this.sampleDecision() || this.apiCallPending) {
                   return Promise.resolve(true);
                 }
+                this.apiCallPending = true;
 
                 const saved = this.reset();
                 return this.HeartbeatApi(this.apiUrl)
@@ -1662,7 +1689,7 @@ var Xenon = (function () {
                   .catch((err) => {
                     this.restore(saved);
                     return (surfaceErrors ? Promise.reject(err) : Promise.resolve(true));
-                  });
+                  }).finally(()=>this.apiCallPending = false);
               }
 
               deanonymize(person) {
@@ -1885,6 +1912,13 @@ var Xenon = (function () {
                 if (queryFromUrl && queryFromUrl !== '' && queryFromUrl !== '?') {
                   const params = new URLSearchParams(queryFromUrl);
                   const [source, identifier] = this.decipherParamsPerLibrary(params);
+                  let attribution = retrieveSession('view-attribution');
+                  if (attribution) return null;
+                  storeSession('view-attribution', {
+                    leadSource: source,
+                    leadCampaign: identifier,
+                    leadGuid: null
+                  });
                   let variantNames = retrieveSession('view-tags');
                   if (source && (!variantNames || !variantNames.includes(source))) {
                     if (variantNames) {

@@ -11,6 +11,7 @@ import {_Xenon} from '../src/xenon';
 import './helper/api_helper';
 import {UnblockPromises, ImmediatelyResolvePromise} from './helper/api_helper';
 import {retrieveSession, storeSession, retrieveLocal} from '../src/storage/storage';
+import count from "../src/api/count";
 
 
 describe('View SDK', () => {
@@ -28,8 +29,12 @@ describe('View SDK', () => {
   let sampleApi = jasmine.createSpyObj('MySampleApi', ['fetch']);
   let SampleApi = jasmine.createSpy('constructor');
   SampleApi.and.returnValue(sampleApi);
+  let countApi = jasmine.createSpyObj('MyCountApi', ['fetch']);
+  let CountApi = jasmine.createSpy('constructor');
+  CountApi.and.returnValue(countApi);
   let apiKey = '<token>';
   let apiUrl = 'https://localhost';
+  let countApiUrl = 'https://localhost2';
   let sampleResolvePromise = null;
   let sampleRejectPromise = null;
 
@@ -42,6 +47,8 @@ describe('View SDK', () => {
     journeyApi.fetch.calls.reset();
     SampleApi.calls.reset();
     sampleApi.fetch.calls.reset();
+    CountApi.calls.reset();
+    countApi.fetch.calls.reset();
   }
 
   describe('when no decision previously', () => {
@@ -1577,6 +1584,16 @@ describe('View SDK', () => {
             expect(journey.name).toEqual(feature + " 1st");
           });
         });
+        describe('when restoring dulicates', () => {
+          beforeEach(() => {
+            unit.restore([{name: 'a', timestamp: 1}, {name: 'b', timestamp: 1}]);
+          });
+          it('then has a journey with added event', () => {
+            expect(unit.journey().length).toEqual(2);
+            const journey = unit.journey()[0];
+            expect(journey.name).toEqual("a");
+          });
+        });
         describe('when restoring after another event was added', () => {
           const anotherFeature = 'resetting2';
           it('then adds new event at end of previous journey', () => {
@@ -1604,7 +1621,7 @@ describe('View SDK', () => {
           });
           it('should restore inorder', () => {
             expect(unit.journey().length).toEqual(3);
-            console.log(unit.journey())
+            //console.log(unit.journey())
             // const journey = unit.journey()[1];
             // expect(journey.name).toEqual(anotherFeature);
           });
@@ -1722,6 +1739,21 @@ describe('View SDK', () => {
           });
           it('then filters appropriately', () => {
             expect(filteredQuery).toEqual("");
+          });
+          describe('when repeated', () => {
+            it('then has same tags', () => {
+              const tags = sessionStorage.getItem('view-tags');
+              expect(tags).toContain("email");
+              expect(tags).toContain("2024");
+            });
+            it('then has attribution', () => {
+              const attribution = retrieveSession('view-attribution');
+              expect(attribution).toEqual({ leadSource: 'email', leadCampaign: '2024', leadGuid: null });
+            })
+            beforeEach(() => {
+              sessionStorage.removeItem('view-attribution')
+              unit.autodiscoverLeadFrom('?xenonSrc=email&xenonId=2024');
+            });
           });
           beforeEach(() => {
             filteredQuery = unit.autodiscoverLeadFrom('?xenonSrc=email&xenonId=2024');
@@ -2021,7 +2053,7 @@ describe('View SDK', () => {
           });
           it('then has tags', () => {
             const tags = sessionStorage.getItem('view-tags');
-            expect(tags).toContain("unattributed");
+            expect(tags).toContain("Unattributed");
           });
           it('then filters appropriately', () => {
             expect(filteredQuery).toBeNull();
@@ -2041,7 +2073,7 @@ describe('View SDK', () => {
           });
           it('then has tags', () => {
             const tags = sessionStorage.getItem('view-tags');
-            expect(tags).toContain("unattributed");
+            expect(tags).toContain("Unattributed");
           });
           it('then filters appropriately', () => {
             expect(filteredQuery).toEqual('?hello=world');
@@ -2083,6 +2115,7 @@ describe('View SDK', () => {
           let resolvePromise = null;
           let rejectPromise = null;
           let caughtError = null;
+          let capturedValue = null;
           describe('when normal', () => {
             it('then calls the view journey API', () => {
               expect(JourneyApi).toHaveBeenCalledWith(apiUrl);
@@ -2130,13 +2163,22 @@ describe('View SDK', () => {
                 UnblockPromises();
               });
             });
+            describe('when API succeeds', () => {
+              it('then gets success', () => {
+                expect(capturedValue.toString()).toEqual('success');
+              });
+              beforeEach(() => {
+                resolvePromise("success");
+                UnblockPromises();
+              });
+            });
             beforeEach(() => {
               let promise = new Promise(function (resolve, reject) {
                 resolvePromise = resolve;
                 rejectPromise = reject;
               });
               journeyApi.fetch.and.returnValue(promise);
-              unit.commit(true).catch((err) => caughtError = err);
+              unit.commit(true).then((value)=>capturedValue = value).catch((err) => caughtError = err);
             });
           });
         });
@@ -2228,7 +2270,9 @@ describe('View SDK', () => {
                 rejectPromise = reject;
               });
               heartbeatApi.fetch.and.returnValue(promise);
-              unit.heartbeat(true).catch((err) => caughtError = err);
+              unit.heartbeat(true).catch((err) => {
+                  caughtError = err
+              })
             });
           });
         });
@@ -2583,6 +2627,84 @@ describe('View SDK', () => {
           });
         });
       });
+      describe('when counting', () => {
+        let resolvePromise = null;
+        let rejectPromise = null;
+        let capturedError = null;
+        let capturedValue = null;
+        describe('when capturing', () => {
+          it('then calls the view count API', () => {
+            expect(CountApi).toHaveBeenCalledWith(countApiUrl);
+            expect(countApi.fetch).toHaveBeenCalledWith({
+              data: {
+                uid: jasmine.any(String),
+                token: apiKey,
+                timestamp: jasmine.any(Number),
+                outcome: '<outcome>',
+                content: { leadSource: 'Unattributed', leadGuid: null}
+              }
+            });
+          });
+          describe('it fails', () => {
+            it('should surface error', () => {
+              expect(capturedError.toString()).toEqual('Error: failure');
+            });
+            beforeEach(() => {
+              rejectPromise(new Error('failure'));
+              UnblockPromises();
+            });
+          });
+          beforeEach(() => {
+            let promise = new Promise(function (resolve, reject) {
+              resolvePromise = resolve;
+              rejectPromise = reject;
+            });
+            countApi.fetch.and.returnValue(promise);
+            unit.autodiscoverLeadFrom("?hello=world");
+            unit.count("<outcome>", true).catch((err)=>capturedError = err);
+          });
+        });
+        describe('when not capturing', () => {
+          describe('it fails', () => {
+            it('should not surface error', () => {
+              expect(capturedError).toBeNull();
+            });
+            beforeEach(() => {
+              rejectPromise(new Error('failure'));
+              UnblockPromises();
+            });
+          });
+          beforeEach(() => {
+            let promise = new Promise(function (resolve, reject) {
+              resolvePromise = resolve;
+              rejectPromise = reject;
+            });
+            countApi.fetch.and.returnValue(promise);
+            unit.autodiscoverLeadFrom("?hello=world");
+            unit.count("<outcome>").catch((err)=>capturedError = err);
+          });
+        });
+        describe('when not capturing and no previous attribution', () => {
+          it('should not have values', () => {
+            expect(capturedError).toBeNull();
+            expect(capturedValue).toBeNull();
+          });
+          beforeEach(() => {
+            let promise = new Promise(function (resolve, reject) {
+              resolvePromise = resolve;
+              rejectPromise = reject;
+            });
+            countApi.fetch.and.returnValue(promise);
+            unit.count("<outcome>").then((value)=>capturedValue = value).catch((err)=>capturedError = err);
+          });
+        });
+        beforeEach(() => {
+          resolvePromise = null;
+          rejectPromise = null;
+          capturedError = null;
+          capturedValue = null;
+        });
+      });
       beforeEach(() => {
         sampleResolvePromise({sample: true});
         UnblockPromises();
@@ -2729,8 +2851,8 @@ describe('View SDK', () => {
         sampleRejectPromise = reject;
       });
       sampleApi.fetch.and.returnValue(promise);
-      unit = new _Xenon(apiKey, apiUrl, JourneyApi, DeanonApi, HeartbeatApi, SampleApi);
-      unit2 = new _Xenon(apiKey, apiUrl, JourneyApi, DeanonApi, HeartbeatApi, SampleApi);
+      unit = new _Xenon(apiKey, apiUrl, countApiUrl, JourneyApi, DeanonApi, HeartbeatApi, SampleApi, CountApi);
+      unit2 = new _Xenon(apiKey, apiUrl, countApiUrl, JourneyApi, DeanonApi, HeartbeatApi, SampleApi, CountApi);
     });
     afterEach(() => {
       unit = null;
@@ -2753,7 +2875,7 @@ describe('View SDK', () => {
       });
       sampleApi.fetch.and.returnValue(promise);
       storeSession('xenon-will-sample', false);
-      unit3 = new _Xenon(apiKey, apiUrl, JourneyApi, DeanonApi, HeartbeatApi, SampleApi);
+      unit3 = new _Xenon(apiKey, apiUrl, countApiUrl, JourneyApi, DeanonApi, HeartbeatApi, SampleApi, CountApi);
     });
     afterEach(() => {
       localStorage.clear();
@@ -2761,5 +2883,4 @@ describe('View SDK', () => {
       resetCalls();
     });
   });
-})
-;
+});
