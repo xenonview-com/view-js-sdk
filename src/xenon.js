@@ -105,26 +105,11 @@ export class _Xenon {
 
   // Stock Business Outcomes:
   leadAttributed(source, identifier) {
-    const content = {
-      superOutcome: 'Lead Attributed',
-      outcome: source,
-      result: 'success'
-    };
-    if (identifier) {
-      content['id'] = identifier;
-    }
-    this.outcomeAdd(content);
-    //this.count("Attribution");
+    this.count("Attribution");
   }
 
   leadUnattributed() {
-    const content = {
-      superOutcome: 'Lead Attributed',
-      outcome: 'unattributed',
-      result: 'fail'
-    };
-    this.outcomeAdd(content);
-    // this.count("Attribution");
+    this.count("Attribution");
   }
 
   leadCaptured(specifier) {
@@ -387,6 +372,7 @@ export class _Xenon {
     };
     this.outcomeAdd(content);
     this.heartbeatState(1);
+    this.count("Add To Cart");
   }
 
   productNotAddedToCart(product) {
@@ -430,6 +416,7 @@ export class _Xenon {
     };
     this.outcomeAdd(content);
     this.heartbeatState(2);
+    this.count("Checkout");
   }
 
   checkoutCanceled() {
@@ -462,6 +449,7 @@ export class _Xenon {
     this.outcomeAdd(content);
 
     this.heartbeatState(3);
+    this.count("Purchase");
   }
 
   purchaseCancel(SKUs = null, price = null) {
