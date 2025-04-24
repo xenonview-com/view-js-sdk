@@ -11,7 +11,7 @@ class countApi extends ApiBase {
     super(props);
   }
   params(data) {
-    const {uid, timestamp, outcome, content} = data;
+    const {uid, timestamp, outcome, content, value} = data;
     const {leadSource, leadCampaign, leadGuid} = content;
     let params = {};
     params.uid = uid;
@@ -20,6 +20,7 @@ class countApi extends ApiBase {
     params.leadSource = leadSource;
     params.leadCampaign = leadCampaign;
     params.leadGuid = leadGuid;
+    params.value = value
     return params;
   }
 }

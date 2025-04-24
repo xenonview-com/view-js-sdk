@@ -11,9 +11,8 @@ import {_Xenon} from '../src/xenon';
 import './helper/api_helper';
 import {UnblockPromises, ImmediatelyResolvePromise} from './helper/api_helper';
 import {retrieveSession, storeSession, retrieveLocal} from '../src/storage/storage';
-import count from "../src/api/count";
 
-
+``
 describe('View SDK', () => {
   let unit = null;
   let unit2 = null;
@@ -37,6 +36,8 @@ describe('View SDK', () => {
   let countApiUrl = 'https://localhost2';
   let sampleResolvePromise = null;
   let sampleRejectPromise = null;
+  let countResolvePromise = null;
+  let countRejectPromise = null;
 
   function resetCalls() {
     DeanonApi.calls.reset();
@@ -64,6 +65,9 @@ describe('View SDK', () => {
             token: apiKey
           }
         });
+      });
+      it('then has a version', () => {
+        expect(unit.version()).toEqual(jasmine.any(String));
       });
       describe('when initialized', () => {
         it('then has default journey', () => {
@@ -281,10 +285,9 @@ describe('View SDK', () => {
         describe('when has id', () => {
           it('then creates journey with outcome', () => {
             const journey = unit.journey()[0];
-            expect(journey.superOutcome).toEqual('Lead Attributed');
-            expect(journey.outcome).toEqual(source);
-            expect(journey.id).toEqual(identifier);
-            expect(journey.result).toEqual('success');
+            expect(journey.category).toEqual('Attribution');
+            expect(journey.source).toEqual(source);
+            expect(journey.campaign).toEqual(identifier);
           });
           beforeEach(() => {
             unit.leadAttributed(source, identifier)
@@ -293,9 +296,9 @@ describe('View SDK', () => {
         describe('when no id', () => {
           it('then creates journey with outcome', () => {
             const journey = unit.journey()[0];
-            expect(journey.superOutcome).toEqual('Lead Attributed');
-            expect(journey.outcome).toEqual(source);
-            expect(journey.result).toEqual('success');
+            expect(journey.category).toEqual('Attribution');
+            expect(journey.source).toEqual(source);
+            expect(journey.campaign).toBeUndefined();
           });
           beforeEach(() => {
             unit.leadAttributed(source)
@@ -305,9 +308,8 @@ describe('View SDK', () => {
       describe('when leadUnattributed', () => {
         it('then creates journey with outcome', () => {
           const journey = unit.journey()[0];
-          expect(journey.superOutcome).toEqual('Lead Attributed');
-          expect(journey.outcome).toEqual('unattributed');
-          expect(journey.result).toEqual('fail');
+          expect(journey.category).toEqual('Attribution');
+          expect(journey.source).toEqual('Unattributed');
         });
         beforeEach(() => {
           unit.leadUnattributed()
@@ -883,14 +885,66 @@ describe('View SDK', () => {
       // Ecommerce Related Outcomes tests
       describe('when productAddedToCart', () => {
         const laptop = 'Dell XPS';
-        it('then creates journey with outcome', () => {
-          const journey = unit.journey()[0];
-          expect(journey.superOutcome).toEqual('Add Product To Cart');
-          expect(journey.outcome).toEqual('Add - ' + laptop);
-          expect(journey.result).toEqual('success');
+        const price = 1234.56;
+        describe('when only product', () => {
+          it('then creates journey with outcome', () => {
+            const journey = unit.journey()[0];
+            expect(journey.superOutcome).toEqual('Add Product To Cart');
+            expect(journey.outcome).toEqual('Add - ' + laptop);
+            expect(journey.result).toEqual('success');
+          });
+          it('then counts', () => {
+            expect(countApi.fetch).toHaveBeenCalledWith({
+              data: {
+                uid: jasmine.any(String),
+                token: '<token>',
+                timestamp: jasmine.any(Number),
+                outcome: 'Add To Cart',
+                content: {leadSource: null, leadCampaign: null, leadGuid: null},
+                value: 0
+              }
+            });
+          });
+          beforeEach(() => {
+            storeSession('view-attribution', {
+              leadSource: null,
+              leadCampaign: null,
+              leadGuid: null
+            })
+            unit.productAddedToCart(laptop);
+          });
+        });
+        describe('when product and price', () => {
+          it('then creates journey with outcome', () => {
+            const journey = unit.journey()[0];
+            expect(journey.superOutcome).toEqual('Add Product To Cart');
+            expect(journey.outcome).toEqual('Add - ' + laptop);
+            expect(journey.result).toEqual('success');
+            expect(journey.price).toEqual(price);
+          });
+          it('then counts', () => {
+            expect(countApi.fetch).toHaveBeenCalledWith({
+              data: {
+                uid: jasmine.any(String),
+                token: '<token>',
+                timestamp: jasmine.any(Number),
+                outcome: 'Add To Cart',
+                content: {leadSource: null, leadCampaign: null, leadGuid: null},
+                value: price
+              }
+            });
+          });
+          beforeEach(() => {
+            storeSession('view-attribution', {
+              leadSource: null,
+              leadCampaign: null,
+              leadGuid: null
+            })
+            unit.productAddedToCart(laptop, price);
+          });
         });
         beforeEach(() => {
-          unit.productAddedToCart(laptop)
+          resetCalls();
         });
       });
       describe('when productNotAddedToCart', () => {
@@ -907,7 +961,7 @@ describe('View SDK', () => {
       });
       describe('when upsold', () => {
         const laptop = 'Dell XPS';
-        const price = '$25'; // optional
+        const price = 25; // optional
 
         describe('when has price', () => {
           it('then creates journey with outcome', () => {
@@ -917,7 +971,24 @@ describe('View SDK', () => {
             expect(journey.result).toEqual('success');
             expect(journey.price).toEqual(price);
           });
+          it('then counts', () => {
+            expect(countApi.fetch).toHaveBeenCalledWith({
+              data: {
+                uid: jasmine.any(String),
+                token: '<token>',
+                timestamp: jasmine.any(Number),
+                outcome: 'Upsell',
+                content: {leadSource: null, leadCampaign: null, leadGuid: null},
+                value: 25
+              }
+            });
+          });
           beforeEach(() => {
+            storeSession('view-attribution', {
+              leadSource: null,
+              leadCampaign: null,
+              leadGuid: null
+            })
             unit.upsold(laptop, price)
           });
         });
@@ -928,7 +999,24 @@ describe('View SDK', () => {
             expect(journey.outcome).toEqual('Upsold - ' + laptop);
             expect(journey.result).toEqual('success');
           });
+          it('then counts', () => {
+            expect(countApi.fetch).toHaveBeenCalledWith({
+              data: {
+                uid: jasmine.any(String),
+                token: '<token>',
+                timestamp: jasmine.any(Number),
+                outcome: 'Upsell',
+                content: {leadSource: null, leadCampaign: null, leadGuid: null},
+                value: 0
+              }
+            });
+          });
           beforeEach(() => {
+            storeSession('view-attribution', {
+              leadSource: null,
+              leadCampaign: null,
+              leadGuid: null
+            })
             unit.upsold(laptop)
           });
         });
@@ -962,14 +1050,58 @@ describe('View SDK', () => {
         });
       });
       describe('when checkOut', () => {
-        it('then creates journey with outcome', () => {
-          const journey = unit.journey()[0];
-          expect(journey.superOutcome).toEqual('Customer Checkout');
-          expect(journey.outcome).toEqual('Check Out');
-          expect(journey.result).toEqual('success');
+        describe('when no member', () => {
+          it('then creates journey with outcome', () => {
+            const journey = unit.journey()[0];
+            expect(journey.superOutcome).toEqual('Customer Checkout');
+            expect(journey.outcome).toEqual('Check Out');
+            expect(journey.result).toEqual('success');
+          });
+          it('then counts', () => {
+            expect(countApi.fetch).toHaveBeenCalledWith({
+              data: {
+                uid: jasmine.any(String),
+                token: '<token>',
+                timestamp: jasmine.any(Number),
+                outcome: 'Check Out',
+                content: {leadSource: null, leadCampaign: null, leadGuid: null},
+                value: 0
+              }
+            });
+          });
+          beforeEach(() => {
+            unit.checkOut()
+          });
+        });
+        describe('when member', () => {
+          it('then creates journey with outcome', () => {
+            const journey = unit.journey()[0];
+            expect(journey.superOutcome).toEqual('Customer Checkout');
+            expect(journey.outcome).toEqual('Check Out - Guest');
+            expect(journey.result).toEqual('success');
+          });
+          it('then counts', () => {
+            expect(countApi.fetch).toHaveBeenCalledWith({
+              data: {
+                uid: jasmine.any(String),
+                token: '<token>',
+                timestamp: jasmine.any(Number),
+                outcome: 'Checkout:Guest',
+                content: {leadSource: null, leadCampaign: null, leadGuid: null},
+                value: 0
+              }
+            });
+          });
+          beforeEach(() => {
+            unit.checkOut("Guest")
+          });
         });
         beforeEach(() => {
-          unit.checkOut()
+          storeSession('view-attribution', {
+            leadSource: null,
+            leadCampaign: null,
+            leadGuid: null
+          })
         });
       });
       describe('when checkoutCanceled', () => {
@@ -997,29 +1129,161 @@ describe('View SDK', () => {
       });
       describe('when purchased', () => {
         const SKUs = '12345, 6789-b';
-        const price = '$25'; // optional
+        const price = 25; // optional
+        const shipping = 3; // optional
+        const discount = 15; // optional
         describe('when price', () => {
           it('then creates journey with outcome', () => {
             const journey = unit.journey()[0];
             expect(journey.superOutcome).toEqual('Customer Purchase');
-            expect(journey.outcome).toEqual('Purchase - ' + SKUs);
+            expect(journey.outcome).toEqual('Purchase');
+            expect(journey.skus).toEqual(SKUs);
             expect(journey.result).toEqual('success');
             expect(journey.price).toEqual(price);
           });
+          it('then counts', () => {
+            expect(countApi.fetch).toHaveBeenCalledWith({
+              data: {
+                uid: jasmine.any(String),
+                token: '<token>',
+                timestamp: jasmine.any(Number),
+                outcome: 'Purchase',
+                content: {leadSource: null, leadCampaign: null, leadGuid: null},
+                value: price
+              }
+            });
+          });
           beforeEach(() => {
+            storeSession('view-attribution', {
+              leadSource: null,
+              leadCampaign: null,
+              leadGuid: null
+            })
             unit.purchase(SKUs, price)
+          });
+        });
+        describe('when price plus shipping', () => {
+          it('then creates journey with outcome', () => {
+            const journey = unit.journey()[0];
+            expect(journey.superOutcome).toEqual('Customer Purchase');
+            expect(journey.outcome).toEqual('Purchase');
+            expect(journey.skus).toEqual(SKUs);
+            expect(journey.result).toEqual('success');
+            expect(journey.price).toEqual(price);
+            expect(journey.shipping).toEqual(shipping);
+          });
+          it('then counts', () => {
+            expect(countApi.fetch).toHaveBeenCalledWith({
+              data: {
+                uid: jasmine.any(String),
+                token: '<token>',
+                timestamp: jasmine.any(Number),
+                outcome: 'Purchase',
+                content: {leadSource: null, leadCampaign: null, leadGuid: null},
+                value: price
+              }
+            });
+          });
+          beforeEach(() => {
+            storeSession('view-attribution', {
+              leadSource: null,
+              leadCampaign: null,
+              leadGuid: null
+            })
+            unit.purchase(SKUs, price, null, shipping)
+          });
+        });
+        describe('when price plus member', () => {
+          it('then creates journey with outcome', () => {
+            const journey = unit.journey()[0];
+            expect(journey.superOutcome).toEqual('Customer Purchase');
+            expect(journey.outcome).toEqual('Purchase - Guest');
+            expect(journey.skus).toEqual(SKUs);
+            expect(journey.result).toEqual('success');
+          });
+          it('then counts', () => {
+            expect(countApi.fetch).toHaveBeenCalledWith({
+              data: {
+                uid: jasmine.any(String),
+                token: '<token>',
+                timestamp: jasmine.any(Number),
+                outcome: 'Purchase:Guest',
+                content: {leadSource: null, leadCampaign: null, leadGuid: null},
+                value: price
+              }
+            });
+          });
+          beforeEach(() => {
+            storeSession('view-attribution', {
+              leadSource: null,
+              leadCampaign: null,
+              leadGuid: null
+            })
+            unit.purchase(SKUs, price, null, null, "Guest")
+          });
+        });
+        describe('when price plus discount', () => {
+          it('then creates journey with outcome', () => {
+            const journey = unit.journey()[0];
+            expect(journey.superOutcome).toEqual('Customer Purchase');
+            expect(journey.outcome).toEqual('Purchase');
+            expect(journey.skus).toEqual(SKUs);
+            expect(journey.result).toEqual('success');
+            expect(journey.price).toEqual(price);
+            expect(journey.discount).toEqual(discount);
+          });
+          it('then counts', () => {
+            expect(countApi.fetch).toHaveBeenCalledWith({
+              data: {
+                uid: jasmine.any(String),
+                token: '<token>',
+                timestamp: jasmine.any(Number),
+                outcome: 'Purchase',
+                content: {leadSource: null, leadCampaign: null, leadGuid: null},
+                value: price
+              }
+            });
+          });
+          beforeEach(() => {
+            storeSession('view-attribution', {
+              leadSource: null,
+              leadCampaign: null,
+              leadGuid: null
+            })
+            unit.purchase(SKUs, price, discount)
           });
         });
         describe('when no price', () => {
           it('then creates journey with outcome', () => {
             const journey = unit.journey()[0];
             expect(journey.superOutcome).toEqual('Customer Purchase');
-            expect(journey.outcome).toEqual('Purchase - ' + SKUs);
+            expect(journey.outcome).toEqual('Purchase');
+            expect(journey.skus).toEqual(SKUs);
             expect(journey.result).toEqual('success');
           });
+          it('then counts', () => {
+            expect(countApi.fetch).toHaveBeenCalledWith({
+              data: {
+                uid: jasmine.any(String),
+                token: '<token>',
+                timestamp: jasmine.any(Number),
+                outcome: 'Purchase',
+                content: {leadSource: null, leadCampaign: null, leadGuid: null},
+                value: 0
+              }
+            });
+          });
           beforeEach(() => {
+            storeSession('view-attribution', {
+              leadSource: null,
+              leadCampaign: null,
+              leadGuid: null
+            })
             unit.purchase(SKUs)
           });
+        });
+        beforeEach(() => {
+          resetCalls();
         });
       });
       describe('when purchaseCanceled', () => {
@@ -1392,8 +1656,8 @@ describe('View SDK', () => {
         const url = 'http://example.com';
         it('then has a milestone', () => {
           const journey = unit.journey()[0];
-          expect(journey.category).toEqual('Performance');
-          expect(journey.action).toEqual('Page Load Time - 0.31');
+          expect(journey.category).toEqual('Webpage Load Time');
+          expect(journey.time).toEqual('0.31');
           expect(journey.identifier).toEqual(url);
         });
         beforeEach(() => {
@@ -1564,7 +1828,6 @@ describe('View SDK', () => {
         const name = 'Query Database';
         const detail = 'User Lookup';
         it('then has a journey with a single event', () => {
-          const journey = unit.journey()[0];
           expect(unit.journey().length).toEqual(2);
         });
         beforeEach(() => {
@@ -1611,9 +1874,19 @@ describe('View SDK', () => {
             unit.restore()
             const saveFirst = unit.reset();
             const timestamp1 = saveFirst[0].timestamp;
-            unit.storeJourney([{category: 'Feature', action: 'Attempted', name: feature + " 2nd", timestamp: timestamp1 + 0.001}]);
+            unit.storeJourney([{
+              category: 'Feature',
+              action: 'Attempted',
+              name: feature + " 2nd",
+              timestamp: timestamp1 + 0.001
+            }]);
             const saveSecond = unit.reset();
-            unit.storeJourney([{category: 'Feature', action: 'Attempted', name: feature + " 3rd", timestamp: timestamp1 + 0.002}]);
+            unit.storeJourney([{
+              category: 'Feature',
+              action: 'Attempted',
+              name: feature + " 3rd",
+              timestamp: timestamp1 + 0.002
+            }]);
             const saveThird = unit.reset();
             unit.restore(saveThird)
             unit.restore(saveFirst)
@@ -1722,15 +1995,15 @@ describe('View SDK', () => {
         beforeEach(() => {
           localStorage.clear();
           sessionStorage.clear();
+          resetCalls();
         });
         describe('when custom xenon attribution', () => {
           let filteredQuery = '';
           it('then has an outcome', () => {
             const journey = unit.journey()[0];
-            expect(journey.superOutcome).toEqual('Lead Attributed');
-            expect(journey.outcome).toEqual('email');
-            expect(journey.result).toEqual('success');
-            expect(journey.id).toEqual('2024');
+            expect(journey.category).toEqual('Attribution');
+            expect(journey.source).toEqual('email');
+            expect(journey.campaign).toEqual('2024');
           });
           it('then has tags', () => {
             const tags = sessionStorage.getItem('view-tags');
@@ -1748,7 +2021,7 @@ describe('View SDK', () => {
             });
             it('then has attribution', () => {
               const attribution = retrieveSession('view-attribution');
-              expect(attribution).toEqual({ leadSource: 'email', leadCampaign: '2024', leadGuid: null });
+              expect(attribution).toEqual({leadSource: 'email', leadCampaign: '2024', leadGuid: null});
             })
             beforeEach(() => {
               sessionStorage.removeItem('view-attribution')
@@ -1763,10 +2036,9 @@ describe('View SDK', () => {
           let filteredQuery = '';
           it('then has an outcome', () => {
             const journey = unit.journey()[0];
-            expect(journey.superOutcome).toEqual('Lead Attributed');
-            expect(journey.outcome).toEqual('email');
-            expect(journey.result).toEqual('success');
-            expect(journey.id).toBeUndefined()
+            expect(journey.category).toEqual('Attribution');
+            expect(journey.source).toEqual('email');
+            expect(journey.campaign).toBeUndefined()
           });
           it('then has tags', () => {
             const tags = sessionStorage.getItem('view-tags');
@@ -1783,10 +2055,9 @@ describe('View SDK', () => {
           let filteredQuery = '';
           it('then has an outcome', () => {
             const journey = unit.journey()[0];
-            expect(journey.superOutcome).toEqual('Lead Attributed');
-            expect(journey.outcome).toEqual('Cerebro');
-            expect(journey.result).toEqual('success');
-            expect(journey.id).toEqual('2024');
+            expect(journey.category).toEqual('Attribution');
+            expect(journey.source).toEqual('Cerebro');
+            expect(journey.campaign).toEqual('2024');
           });
           it('then has tags', () => {
             const tags = sessionStorage.getItem('view-tags');
@@ -1802,10 +2073,9 @@ describe('View SDK', () => {
           describe('when duplicate added', () => {
             it('then has an outcome', () => {
               const journey = unit.journey()[0];
-              expect(journey.superOutcome).toEqual('Lead Attributed');
-              expect(journey.outcome).toEqual('Cerebro');
-              expect(journey.result).toEqual('success');
-              expect(journey.id).toEqual('2024');
+              expect(journey.category).toEqual('Attribution');
+              expect(journey.source).toEqual('Cerebro');
+              expect(journey.campaign).toEqual('2024');
               expect(unit.journey().length).toEqual(1)
             });
             it('then has tags', () => {
@@ -1825,10 +2095,9 @@ describe('View SDK', () => {
           let filteredQuery = '';
           it('then has an outcome', () => {
             const journey = unit.journey()[0];
-            expect(journey.superOutcome).toEqual('Lead Attributed');
-            expect(journey.outcome).toEqual('Klaviyo');
-            expect(journey.result).toEqual('success');
-            expect(journey.id).toEqual('2024');
+            expect(journey.category).toEqual('Attribution');
+            expect(journey.source).toEqual('Klaviyo');
+            expect(journey.campaign).toEqual('2024');
           });
           it('then has tags', () => {
             const tags = sessionStorage.getItem('view-tags');
@@ -1846,10 +2115,9 @@ describe('View SDK', () => {
           let filteredQuery = '';
           it('then has an outcome', () => {
             const journey = unit.journey()[0];
-            expect(journey.superOutcome).toEqual('Lead Attributed');
-            expect(journey.outcome).toEqual('Klaviyo - email');
-            expect(journey.result).toEqual('success');
-            expect(journey.id).toEqual('2024');
+            expect(journey.category).toEqual('Attribution');
+            expect(journey.source).toEqual('Klaviyo - email');
+            expect(journey.campaign).toEqual('2024');
           });
           it('then has tags', () => {
             const tags = sessionStorage.getItem('view-tags');
@@ -1867,10 +2135,9 @@ describe('View SDK', () => {
           let filteredQuery = '';
           it('then has an outcome', () => {
             const journey = unit.journey()[0];
-            expect(journey.superOutcome).toEqual('Lead Attributed');
-            expect(journey.outcome).toEqual('Google Ad');
-            expect(journey.result).toEqual('success');
-            expect(journey.id).toEqual('2024');
+            expect(journey.category).toEqual('Attribution');
+            expect(journey.source).toEqual('Google Ad');
+            expect(journey.campaign).toEqual('2024');
           });
           it('then has tags', () => {
             const tags = sessionStorage.getItem('view-tags');
@@ -1888,10 +2155,9 @@ describe('View SDK', () => {
           let filteredQuery = '';
           it('then has an outcome', () => {
             const journey = unit.journey()[0];
-            expect(journey.superOutcome).toEqual('Lead Attributed');
-            expect(journey.outcome).toEqual('Share-a-sale');
-            expect(journey.result).toEqual('success');
-            expect(journey.id).toEqual('2024');
+            expect(journey.category).toEqual('Attribution');
+            expect(journey.source).toEqual('Share-a-sale');
+            expect(journey.campaign).toEqual('2024');
           });
           it('then has tags', () => {
             const tags = sessionStorage.getItem('view-tags');
@@ -1909,10 +2175,9 @@ describe('View SDK', () => {
           let filteredQuery = '';
           it('then has an outcome', () => {
             const journey = unit.journey()[0];
-            expect(journey.superOutcome).toEqual('Lead Attributed');
-            expect(journey.outcome).toEqual('Google Organic');
-            expect(journey.result).toEqual('success');
-            expect(journey.id).toEqual('2024');
+            expect(journey.category).toEqual('Attribution');
+            expect(journey.source).toEqual('Google Organic');
+            expect(journey.campaign).toEqual('2024');
           });
           it('then has tags', () => {
             const tags = sessionStorage.getItem('view-tags');
@@ -1930,10 +2195,9 @@ describe('View SDK', () => {
           let filteredQuery = '';
           it('then has an outcome', () => {
             const journey = unit.journey()[0];
-            expect(journey.superOutcome).toEqual('Lead Attributed');
-            expect(journey.outcome).toEqual('Google Paid Search');
-            expect(journey.result).toEqual('success');
-            expect(journey.id).toEqual('2024');
+            expect(journey.category).toEqual('Attribution');
+            expect(journey.source).toEqual('Google Paid Search');
+            expect(journey.campaign).toEqual('2024');
           });
           it('then has tags', () => {
             const tags = sessionStorage.getItem('view-tags');
@@ -1951,10 +2215,9 @@ describe('View SDK', () => {
           let filteredQuery = '';
           it('then has an outcome', () => {
             const journey = unit.journey()[0];
-            expect(journey.superOutcome).toEqual('Lead Attributed');
-            expect(journey.outcome).toEqual('Facebook Ad');
-            expect(journey.result).toEqual('success');
-            expect(journey.id).toEqual('2024');
+            expect(journey.category).toEqual('Attribution');
+            expect(journey.source).toEqual('Facebook Ad');
+            expect(journey.campaign).toEqual('2024');
           });
           it('then has tags', () => {
             const tags = sessionStorage.getItem('view-tags');
@@ -1972,10 +2235,9 @@ describe('View SDK', () => {
           let filteredQuery = '';
           it('then has an outcome', () => {
             const journey = unit.journey()[0];
-            expect(journey.superOutcome).toEqual('Lead Attributed');
-            expect(journey.outcome).toEqual('Email');
-            expect(journey.result).toEqual('success');
-            expect(journey.id).toEqual('2024');
+            expect(journey.category).toEqual('Attribution');
+            expect(journey.source).toEqual('Email');
+            expect(journey.campaign).toEqual('2024');
           });
           it('then has tags', () => {
             const tags = sessionStorage.getItem('view-tags');
@@ -1993,10 +2255,9 @@ describe('View SDK', () => {
           let filteredQuery = '';
           it('then has an outcome', () => {
             const journey = unit.journey()[0];
-            expect(journey.superOutcome).toEqual('Lead Attributed');
-            expect(journey.outcome).toEqual('YouTube');
-            expect(journey.result).toEqual('success');
-            expect(journey.id).toEqual('2024');
+            expect(journey.category).toEqual('Attribution');
+            expect(journey.source).toEqual('YouTube');
+            expect(journey.campaign).toEqual('2024');
           });
           it('then has tags', () => {
             const tags = sessionStorage.getItem('view-tags');
@@ -2026,10 +2287,9 @@ describe('View SDK', () => {
           let filteredQuery = '';
           it('then has an outcome', () => {
             const journey = unit.journey()[0];
-            expect(journey.superOutcome).toEqual('Lead Attributed');
-            expect(journey.outcome).toEqual('instagram');
-            expect(journey.result).toEqual('success');
-            expect(journey.id).toEqual('2024');
+            expect(journey.category).toEqual('Attribution');
+            expect(journey.source).toEqual('instagram');
+            expect(journey.campaign).toEqual('2024');
           });
           it('then has tags', () => {
             const tags = sessionStorage.getItem('view-tags');
@@ -2047,19 +2307,32 @@ describe('View SDK', () => {
           let filteredQuery = '';
           it('then has an outcome', () => {
             const journey = unit.journey()[0];
-            expect(journey.superOutcome).toEqual('Lead Attributed');
-            expect(journey.outcome).toEqual('unattributed');
-            expect(journey.result).toEqual('fail');
+            expect(journey.category).toEqual('Attribution');
+            expect(journey.source).toEqual('Unattributed');
           });
           it('then has tags', () => {
             const tags = sessionStorage.getItem('view-tags');
             expect(tags).toContain("Unattributed");
           });
           it('then filters appropriately', () => {
-            expect(filteredQuery).toBeNull();
+            expect(filteredQuery).toEqual('');
+          });
+          it('then counts', () => {
+            expect(countApi.fetch).toHaveBeenCalledWith({
+              data: {
+                uid: jasmine.any(String),
+                token: '<token>',
+                timestamp: jasmine.any(Number),
+                outcome: 'Attribution',
+                content: {leadSource: 'Unattributed', leadCampaign: null, leadGuid: null},
+                value: 0
+              }
+            });
           });
           beforeEach(() => {
             unit.autodiscoverLeadFrom('');
+            unit.autodiscoverLeadFrom('');
+            sessionStorage.removeItem('view-attribution')
             filteredQuery = unit.autodiscoverLeadFrom('');
           });
         });
@@ -2067,9 +2340,8 @@ describe('View SDK', () => {
           let filteredQuery = '';
           it('then has an outcome', () => {
             const journey = unit.journey()[0];
-            expect(journey.superOutcome).toEqual('Lead Attributed');
-            expect(journey.outcome).toEqual('unattributed');
-            expect(journey.result).toEqual('fail');
+            expect(journey.category).toEqual('Attribution');
+            expect(journey.source).toEqual('Unattributed');
           });
           it('then has tags', () => {
             const tags = sessionStorage.getItem('view-tags');
@@ -2178,7 +2450,7 @@ describe('View SDK', () => {
                 rejectPromise = reject;
               });
               journeyApi.fetch.and.returnValue(promise);
-              unit.commit(true).then((value)=>capturedValue = value).catch((err) => caughtError = err);
+              unit.commit(true).then((value) => capturedValue = value).catch((err) => caughtError = err);
             });
           });
         });
@@ -2200,8 +2472,11 @@ describe('View SDK', () => {
             let promise = new Promise(function (resolve, reject) {
             });
             journeyApi.fetch.and.returnValue(promise);
-            unit.init(apiKey = customKey);
+            unit.init(customKey);
             unit.commit();
+          });
+          afterEach(() => {
+            unit.init(apiKey);
           });
         });
         beforeEach(() => {
@@ -2271,7 +2546,7 @@ describe('View SDK', () => {
               });
               heartbeatApi.fetch.and.returnValue(promise);
               unit.heartbeat(true).catch((err) => {
-                  caughtError = err
+                caughtError = err
               })
             });
           });
@@ -2455,7 +2730,8 @@ describe('View SDK', () => {
                     {category: 'Feature', action: 'Attempted', name: feature, timestamp: jasmine.any(Number)},
                     {
                       superOutcome: 'Customer Purchase',
-                      outcome: 'Purchase - SKU',
+                      outcome: 'Purchase',
+                      skus: ['SKU'],
                       result: 'success',
                       timestamp: jasmine.any(Number)
                     }
@@ -2622,14 +2898,15 @@ describe('View SDK', () => {
             let promise = new Promise(function (resolve, reject) {
             });
             deanonApi.fetch.and.returnValue(promise);
-            unit.init(apiKey = customKey);
+            unit.init(customKey);
             unit.deanonymize(person);
+          });
+          afterEach(() => {
+            unit.init(apiKey);
           });
         });
       });
       describe('when counting', () => {
-        let resolvePromise = null;
-        let rejectPromise = null;
         let capturedError = null;
         let capturedValue = null;
         describe('when capturing', () => {
@@ -2641,7 +2918,8 @@ describe('View SDK', () => {
                 token: apiKey,
                 timestamp: jasmine.any(Number),
                 outcome: '<outcome>',
-                content: { leadSource: 'Unattributed', leadGuid: null}
+                content: {leadSource: 'Unattributed', leadGuid: null},
+                value: 0.0
               }
             });
           });
@@ -2649,19 +2927,45 @@ describe('View SDK', () => {
             it('should surface error', () => {
               expect(capturedError.toString()).toEqual('Error: failure');
             });
+            it('should capture a replay', () => {
+              const replay = retrieveSession('view-count-replay');
+              expect(replay).toEqual([{
+                data: {
+                  uid: jasmine.any(String),
+                  token: '<token>',
+                  timestamp: jasmine.any(Number),
+                  outcome: 'Attribution',
+                  content: {leadSource: 'Unattributed', leadGuid: null},
+                  value: 0
+                }
+              }, {
+                data: {
+                  uid: jasmine.any(String),
+                  token: '<token>',
+                  timestamp: jasmine.any(Number),
+                  outcome: '<outcome>',
+                  content: {leadSource: 'Unattributed', leadGuid: null},
+                  value: 0
+                }
+              }]);
+            });
+            describe('it is called after failure', () => {
+              it('should make calls with replays', () => {
+                expect(countApi.fetch).toHaveBeenCalledTimes(3);
+              })
+              beforeEach(() => {
+                resetCalls();
+                unit.count("<outcome2>", 0.0, false);
+              });
+            });
             beforeEach(() => {
-              rejectPromise(new Error('failure'));
+              countRejectPromise(new Error('failure'));
               UnblockPromises();
             });
           });
           beforeEach(() => {
-            let promise = new Promise(function (resolve, reject) {
-              resolvePromise = resolve;
-              rejectPromise = reject;
-            });
-            countApi.fetch.and.returnValue(promise);
             unit.autodiscoverLeadFrom("?hello=world");
-            unit.count("<outcome>", true).catch((err)=>capturedError = err);
+            unit.count("<outcome>", 0.0, true).catch((err) => capturedError = err);
           });
         });
         describe('when not capturing', () => {
@@ -2670,18 +2974,13 @@ describe('View SDK', () => {
               expect(capturedError).toBeNull();
             });
             beforeEach(() => {
-              rejectPromise(new Error('failure'));
+              countRejectPromise(new Error('failure'));
               UnblockPromises();
             });
           });
           beforeEach(() => {
-            let promise = new Promise(function (resolve, reject) {
-              resolvePromise = resolve;
-              rejectPromise = reject;
-            });
-            countApi.fetch.and.returnValue(promise);
             unit.autodiscoverLeadFrom("?hello=world");
-            unit.count("<outcome>").catch((err)=>capturedError = err);
+            unit.count("<outcome>").catch((err) => capturedError = err);
           });
         });
         describe('when not capturing and no previous attribution', () => {
@@ -2690,17 +2989,10 @@ describe('View SDK', () => {
             expect(capturedValue).toBeNull();
           });
           beforeEach(() => {
-            let promise = new Promise(function (resolve, reject) {
-              resolvePromise = resolve;
-              rejectPromise = reject;
-            });
-            countApi.fetch.and.returnValue(promise);
-            unit.count("<outcome>").then((value)=>capturedValue = value).catch((err)=>capturedError = err);
+            unit.count("<outcome>").then((value) => capturedValue = value).catch((err) => capturedError = err);
           });
         });
         beforeEach(() => {
-          resolvePromise = null;
-          rejectPromise = null;
           capturedError = null;
           capturedValue = null;
         });
@@ -2851,6 +3143,11 @@ describe('View SDK', () => {
         sampleRejectPromise = reject;
       });
       sampleApi.fetch.and.returnValue(promise);
+      let promise2 = new Promise(function (resolve, reject) {
+        countResolvePromise = resolve;
+        countRejectPromise = reject;
+      });
+      countApi.fetch.and.returnValue(promise2);
       unit = new _Xenon(apiKey, apiUrl, countApiUrl, JourneyApi, DeanonApi, HeartbeatApi, SampleApi, CountApi);
       unit2 = new _Xenon(apiKey, apiUrl, countApiUrl, JourneyApi, DeanonApi, HeartbeatApi, SampleApi, CountApi);
     });
@@ -2859,6 +3156,7 @@ describe('View SDK', () => {
       unit2 = null;
       localStorage.clear();
       sessionStorage.clear();
+      resetCalls();
     });
   });
   describe('when decision previously and unable to sample', () => {

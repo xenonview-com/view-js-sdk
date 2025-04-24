@@ -857,6 +857,34 @@ var Xenon = (function () {
               return new sampleApi(apiUrl);
             }
 
+            class countApi extends ApiBase {
+              constructor(apiUrl) {
+                let props = {
+                  name: 'ApiIncrementCount',
+                  url: 'increment_count',
+                  apiUrl: apiUrl,
+                  authenticated: true
+                };
+                super(props);
+              }
+              params(data) {
+                const {uid, timestamp, outcome, content, value} = data;
+                const {leadSource, leadCampaign, leadGuid} = content;
+                let params = {};
+                params.uid = uid;
+                params.timestamp = timestamp;
+                params.outcome = outcome;
+                params.leadSource = leadSource;
+                params.leadCampaign = leadCampaign;
+                params.leadGuid = leadGuid;
+                params.value = value;
+                return params;
+              }
+            }
+            function CountApi(apiUrl){
+              return new countApi(apiUrl);
+            }
+
             const _defaultSessionStorage = {};
             const _sessionStorage = {
               setItem: (key, value) => _defaultSessionStorage[key] = value,
@@ -921,11 +949,12 @@ var Xenon = (function () {
               constructor(apiKey = null, apiUrl = 'https://app.xenonview.com',
                           countApiUrl = 'https://counts.xenonlab.ai',
                           journeyApi = JourneyApi, deanonApi = DeanonApi, heartbeatApi = HeartbeatApi,
-                          sampleApi = SampleApi) {
+                          sampleApi = SampleApi, countApi = CountApi) {
                 this.JourneyApi = journeyApi;
                 this.DeanonApi = deanonApi;
                 this.HeartbeatApi = heartbeatApi;
                 this.SampleApi = sampleApi;
+                this.CountApi = countApi;
                 this.pageURL_ = null;
                 this.id();
                 let journey = this.journey();
@@ -941,10 +970,15 @@ var Xenon = (function () {
                 }
               }
 
+              version() {
+                return 'v0.1.38.10';
+              }
+
               init(apiKey, apiUrl = 'https://app.xenonview.com', onApiKeyFailure = null) {
                 this.apiUrl = apiUrl;
                 this.apiKey = apiKey;
                 this.sampleDecision(null, onApiKeyFailure);
+                this.apiCallPending = false;
               }
 
               ecomAbandonment() {
@@ -1005,27 +1039,25 @@ var Xenon = (function () {
               }
 
               // Stock Business Outcomes:
-              leadAttributed(source, identifier) {
-                const content = {
-                  superOutcome: 'Lead Attributed',
-                  outcome: source,
-                  result: 'success'
+              leadAttributed(source, identifier=null) {
+                const event = {
+                  category: 'Attribution',
+                  source: source
                 };
                 if (identifier) {
-                  content['id'] = identifier;
+                  event['campaign'] = identifier;
                 }
-                this.outcomeAdd(content);
-                //this.count("Attributed");
+                this.journeyAdd(event);
+                this.count("Attribution");
               }
 
               leadUnattributed() {
-                const content = {
-                  superOutcome: 'Lead Attributed',
-                  outcome: 'unattributed',
-                  result: 'fail'
+                const event = {
+                  category: 'Attribution',
+                  source: 'Unattributed'
                 };
-                this.outcomeAdd(content);
-                // this.count("Unattributed");
+                this.journeyAdd(event);
+                this.count("Attribution");
               }
 
               leadCaptured(specifier) {
@@ -1280,14 +1312,20 @@ var Xenon = (function () {
                 this.outcomeAdd(content);
               }
 
-              productAddedToCart(product) {
+              productAddedToCart(product, price = null) {
                 const content = {
                   superOutcome: 'Add Product To Cart',
                   outcome: 'Add - ' + product,
                   result: 'success'
                 };
+                if (price) {
+                  content['price'] = price;
+                } else {
+                  price = 0.0;
+                }
                 this.outcomeAdd(content);
                 this.heartbeatState(1);
+                this.count("Add To Cart", price);
               }
 
               productNotAddedToCart(product) {
@@ -1307,8 +1345,11 @@ var Xenon = (function () {
                 };
                 if (price) {
                   content['price'] = price;
+                } else {
+                  price = 0.0;
                 }
                 this.outcomeAdd(content);
+                this.count("Upsell", price);
               }
 
               upsellDismissed(product, price = null) {
@@ -1323,14 +1364,23 @@ var Xenon = (function () {
                 this.outcomeAdd(content);
               }
 
-              checkOut() {
+              checkOut(member=null) {
+                let outcome = "Check Out";
+                let countSting = "Check Out";
+
+                if (member != null) {
+                  outcome = "Check Out - " + member;
+                  countSting = "Checkout:" + member;
+                }
+
                 const content = {
                   superOutcome: 'Customer Checkout',
-                  outcome: 'Check Out',
+                  outcome: outcome,
                   result: 'success'
                 };
                 this.outcomeAdd(content);
                 this.heartbeatState(2);
+                this.count(countSting);
               }
 
               checkoutCanceled() {
@@ -1351,18 +1401,37 @@ var Xenon = (function () {
                 this.outcomeAdd(content);
               }
 
-              purchase(SKUs, price = null) {
+              purchase(SKUs, price = null, discount=null, shipping=null, member=null) {
+                let outcome = "Purchase";
+                let purchaseSting = "Purchase";
+
+                if (member != null) {
+                  outcome = "Purchase - " + member;
+                  purchaseSting = "Purchase:"+member;
+                }
+
                 const content = {
                   superOutcome: 'Customer Purchase',
-                  outcome: 'Purchase - ' + SKUs,
+                  outcome: outcome,
+                  skus: SKUs,
                   result: 'success'
                 };
                 if (price) {
                   content['price'] = price;
+                } else {
+                  price = 0.0;
                 }
+                if (discount) {
+                  content['discount'] = discount;
+                }
+                if (shipping) {
+                  content['shipping'] = shipping;
+                }
+
                 this.outcomeAdd(content);
 
                 this.heartbeatState(3);
+                this.count(purchaseSting, price);
               }
 
               purchaseCancel(SKUs = null, price = null) {
@@ -1538,8 +1607,8 @@ var Xenon = (function () {
 
               pageLoadTime(loadTime, url) {
                 const event = {
-                  category: 'Performance',
-                  action: 'Page Load Time - ' + loadTime.toString(),
+                  category: 'Webpage Load Time',
+                  time: loadTime.toString(),
                   identifier: url,
                 };
                 this.journeyAdd(event);
@@ -1559,24 +1628,42 @@ var Xenon = (function () {
 
               // API Communication:
 
-              // count(outcome, surfaceErrors = false) {
-              //   const attribution = retrieveSession('view-attribution');
-              //   if (!attribution) return;
-              //   let params = {
-              //     data: {
-              //       uuid: this.id(),
-              //       token: this.apiKey,
-              //       timestamp: (new Date()).getTime() / 1000,
-              //       outcome: outcome,
-              //       content: attribution
-              //     }
-              //   };
-              //   return this.CountApi(this.countApiUrl)
-              //     .fetch(params)
-              //     .catch((err) => {
-              //       return (surfaceErrors ? Promise.reject(err) : Promise.resolve(true));
-              //     });
-              // }
+              count(outcome, value= 0.0, surfaceErrors = false) {
+                const attribution = retrieveSession('view-attribution');
+                if (!attribution) return Promise.resolve(true);
+                const replayLog = retrieveSession('view-count-replay');
+                if (replayLog) {
+                  for (const params in replayLog) {
+                    this.countInternal(params, surfaceErrors);
+                  }
+                }
+                let params = {
+                  data: {
+                    uid: this.id(),
+                    token: this.apiKey,
+                    timestamp: (new Date()).getTime() / 1000,
+                    outcome: outcome,
+                    content: attribution,
+                    value: value
+                  }
+                };
+                return this.countInternal(params, surfaceErrors);
+              }
+
+              countInternal(params, surfaceErrors) {
+                return this.CountApi(this.countApiUrl)
+                  .fetch(params)
+                  .catch((err) => {
+                    const replayLog = retrieveSession('view-count-replay');
+                    if (replayLog) {
+                      replayLog.push(params);
+                      storeSession('view-count-replay', replayLog);
+                    } else {
+                      storeSession('view-count-replay', [params]);
+                    }
+                    return (surfaceErrors ? Promise.reject(err) : Promise.resolve(true));
+                  });
+              }
 
               commit(surfaceErrors = false) {
                 if (!this.sampleDecision() || this.apiCallPending) {
@@ -1594,11 +1681,16 @@ var Xenon = (function () {
                 const saved = this.reset();
                 return this.JourneyApi(this.apiUrl)
                   .fetch(params)
+                  .then((value) => {
+                    this.apiCallPending = false;
+                    return Promise.resolve(value);
+                  })
                   .catch((err) => {
                     this.restore(saved);
                     this.apiCallPending = false;
+                    this.apiCallPending = false;
                     return (surfaceErrors ? Promise.reject(err) : Promise.resolve(true));
-                  }).finally(()=>this.apiCallPending = false);
+                  });
               }
 
               heartbeatState(stage = null) {
@@ -1684,12 +1776,14 @@ var Xenon = (function () {
                       resetLocal('heartbeat_type');
                       resetLocal('heartbeat_outcome');
                     }
+                    this.apiCallPending = false;
                     return Promise.resolve(value);
                   })
                   .catch((err) => {
                     this.restore(saved);
+                    this.apiCallPending = false;
                     return (surfaceErrors ? Promise.reject(err) : Promise.resolve(true));
-                  }).finally(()=>this.apiCallPending = false);
+                  });
               }
 
               deanonymize(person) {
@@ -1905,7 +1999,7 @@ var Xenon = (function () {
                 if (params.has('utm_source')) {
                   return [params.get('utm_source'), params.get('utm_campaign')]
                 }
-                return ['unattributed']
+                return ['Unattributed']
               }
 
               autodiscoverLeadFrom(queryFromUrl) {
@@ -1913,7 +2007,7 @@ var Xenon = (function () {
                   const params = new URLSearchParams(queryFromUrl);
                   const [source, identifier] = this.decipherParamsPerLibrary(params);
                   let attribution = retrieveSession('view-attribution');
-                  if (attribution) return null;
+                  if (attribution) return queryFromUrl;
                   storeSession('view-attribution', {
                     leadSource: source,
                     leadCampaign: identifier,
@@ -1933,7 +2027,7 @@ var Xenon = (function () {
                       }
                     }
                     this.variant(variantNames);
-                    (source === 'unattributed') ?
+                    (source === 'Unattributed') ?
                       this.leadUnattributed() :
                       this.leadAttributed(source, identifier);
                   }
@@ -1946,14 +2040,21 @@ var Xenon = (function () {
                   return query;
                 } else {
                   let variantNames = retrieveSession('view-tags');
-                  const source = 'unattributed';
+                  const source = 'Unattributed';
+                  let attribution = retrieveSession('view-attribution');
+                  if (attribution) return queryFromUrl;
+                  storeSession('view-attribution', {
+                    leadSource: source,
+                    leadCampaign: null,
+                    leadGuid: null
+                  });
                   if (!variantNames || !variantNames.includes(source)) {
                     (variantNames) ? variantNames.push(source) : variantNames = [source];
                     this.variant(variantNames);
                     this.leadUnattributed();
                   }
+                  return queryFromUrl;
                 }
-                return null;
               }
 
               pageURL(url) {

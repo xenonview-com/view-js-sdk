@@ -39,6 +39,10 @@ export class _Xenon {
     }
   }
 
+  version() {
+    return 'v0.1.38.10';
+  }
+
   init(apiKey, apiUrl = 'https://app.xenonview.com', onApiKeyFailure = null) {
     this.apiUrl = apiUrl;
     this.apiKey = apiKey;
@@ -104,11 +108,24 @@ export class _Xenon {
   }
 
   // Stock Business Outcomes:
-  leadAttributed(source, identifier) {
+  leadAttributed(source, identifier=null) {
+    const event = {
+      category: 'Attribution',
+      source: source
+    };
+    if (identifier) {
+      event['campaign'] = identifier;
+    }
+    this.journeyAdd(event);
     this.count("Attribution");
   }
 
   leadUnattributed() {
+    const event = {
+      category: 'Attribution',
+      source: 'Unattributed'
+    };
+    this.journeyAdd(event);
     this.count("Attribution");
   }
 
@@ -364,15 +381,20 @@ export class _Xenon {
     this.outcomeAdd(content);
   }
 
-  productAddedToCart(product) {
+  productAddedToCart(product, price = null) {
     const content = {
       superOutcome: 'Add Product To Cart',
       outcome: 'Add - ' + product,
       result: 'success'
     };
+    if (price) {
+      content['price'] = price;
+    } else {
+      price = 0.0;
+    }
     this.outcomeAdd(content);
     this.heartbeatState(1);
-    this.count("Add To Cart");
+    this.count("Add To Cart", price);
   }
 
   productNotAddedToCart(product) {
@@ -392,8 +414,11 @@ export class _Xenon {
     };
     if (price) {
       content['price'] = price;
+    } else {
+      price = 0.0;
     }
     this.outcomeAdd(content);
+    this.count("Upsell", price);
   }
 
   upsellDismissed(product, price = null) {
@@ -408,15 +433,23 @@ export class _Xenon {
     this.outcomeAdd(content);
   }
 
-  checkOut() {
+  checkOut(member=null) {
+    let outcome = "Check Out";
+    let countSting = "Check Out";
+
+    if (member != null) {
+      outcome = "Check Out - " + member;
+      countSting = "Checkout:" + member;
+    }
+
     const content = {
       superOutcome: 'Customer Checkout',
-      outcome: 'Check Out',
+      outcome: outcome,
       result: 'success'
     };
     this.outcomeAdd(content);
     this.heartbeatState(2);
-    this.count("Checkout");
+    this.count(countSting);
   }
 
   checkoutCanceled() {
@@ -437,19 +470,37 @@ export class _Xenon {
     this.outcomeAdd(content);
   }
 
-  purchase(SKUs, price = null) {
+  purchase(SKUs, price = null, discount=null, shipping=null, member=null) {
+    let outcome = "Purchase";
+    let purchaseSting = "Purchase";
+
+    if (member != null) {
+      outcome = "Purchase - " + member;
+      purchaseSting = "Purchase:"+member
+    }
+
     const content = {
       superOutcome: 'Customer Purchase',
-      outcome: 'Purchase - ' + SKUs,
+      outcome: outcome,
+      skus: SKUs,
       result: 'success'
     };
     if (price) {
       content['price'] = price;
+    } else {
+      price = 0.0;
     }
+    if (discount) {
+      content['discount'] = discount;
+    }
+    if (shipping) {
+      content['shipping'] = shipping;
+    }
+
     this.outcomeAdd(content);
 
     this.heartbeatState(3);
-    this.count("Purchase");
+    this.count(purchaseSting, price);
   }
 
   purchaseCancel(SKUs = null, price = null) {
@@ -625,8 +676,8 @@ export class _Xenon {
 
   pageLoadTime(loadTime, url) {
     const event = {
-      category: 'Performance',
-      action: 'Page Load Time - ' + loadTime.toString(),
+      category: 'Webpage Load Time',
+      time: loadTime.toString(),
       identifier: url,
     };
     this.journeyAdd(event);
@@ -646,21 +697,39 @@ export class _Xenon {
 
   // API Communication:
 
-  count(outcome, surfaceErrors = false) {
+  count(outcome, value= 0.0, surfaceErrors = false) {
     const attribution = retrieveSession('view-attribution');
     if (!attribution) return Promise.resolve(true);
+    const replayLog = retrieveSession('view-count-replay');
+    if (replayLog) {
+      for (const params in replayLog) {
+        this.countInternal(params, surfaceErrors);
+      }
+    }
     let params = {
       data: {
         uid: this.id(),
         token: this.apiKey,
         timestamp: (new Date()).getTime() / 1000,
         outcome: outcome,
-        content: attribution
+        content: attribution,
+        value: value
       }
     };
+    return this.countInternal(params, surfaceErrors);
+  }
+
+  countInternal(params, surfaceErrors) {
     return this.CountApi(this.countApiUrl)
       .fetch(params)
       .catch((err) => {
+        const replayLog = retrieveSession('view-count-replay');
+        if (replayLog) {
+          replayLog.push(params);
+          storeSession('view-count-replay', replayLog);
+        } else {
+          storeSession('view-count-replay', [params]);
+        }
         return (surfaceErrors ? Promise.reject(err) : Promise.resolve(true));
       });
   }
@@ -1041,13 +1110,20 @@ export class _Xenon {
     } else {
       let variantNames = retrieveSession('view-tags');
       const source = 'Unattributed';
+      let attribution = retrieveSession('view-attribution');
+      if (attribution) return queryFromUrl;
+      storeSession('view-attribution', {
+        leadSource: source,
+        leadCampaign: null,
+        leadGuid: null
+      })
       if (!variantNames || !variantNames.includes(source)) {
         (variantNames) ? variantNames.push(source) : variantNames = [source];
         this.variant(variantNames);
         this.leadUnattributed();
       }
+      return queryFromUrl;
     }
-    return null;
   }
 
   pageURL(url) {

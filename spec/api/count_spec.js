@@ -12,7 +12,8 @@ describe('CountApi', () => {
       leadSource: "<source>",
       leadCampaign: "<identifier>",
       leadGuid: null
-    }
+    },
+    value: 123.31
   };
   beforeEach(() => {
     subject = new CountApi(apiUrl);
@@ -29,7 +30,8 @@ describe('CountApi', () => {
       outcome: '<outcome>',
       leadSource: '<source>',
       leadCampaign: '<identifier>',
-      leadGuid: null
+      leadGuid: null,
+      value: 123.31
     });
   });
 });
