@@ -283,35 +283,69 @@ describe('View SDK', () => {
         const source = 'Google Ad';
         const identifier = 'Search';
         describe('when has id', () => {
-          it('then creates journey with outcome', () => {
-            const journey = unit.journey()[0];
-            expect(journey.category).toEqual('Attribution');
-            expect(journey.source).toEqual(source);
-            expect(journey.campaign).toEqual(identifier);
+         it('then counts', () => {
+            expect(countApi.fetch).toHaveBeenCalledWith({
+              data: {
+                uid: jasmine.any(String),
+                token: '<token>',
+                timestamp: jasmine.any(Number),
+                outcome: 'Attribution',
+                content: {leadSource: 'Attributed', leadCampaign: null, leadGuid: null},
+                value: 0
+              }
+            });
           });
           beforeEach(() => {
+            storeSession('view-attribution', {
+              leadSource: 'Attributed',
+              leadCampaign: null,
+              leadGuid: null
+            })
             unit.leadAttributed(source, identifier)
           });
         });
         describe('when no id', () => {
-          it('then creates journey with outcome', () => {
-            const journey = unit.journey()[0];
-            expect(journey.category).toEqual('Attribution');
-            expect(journey.source).toEqual(source);
-            expect(journey.campaign).toBeUndefined();
+          it('then counts', () => {
+            expect(countApi.fetch).toHaveBeenCalledWith({
+              data: {
+                uid: jasmine.any(String),
+                token: '<token>',
+                timestamp: jasmine.any(Number),
+                outcome: 'Attribution',
+                content: {leadSource: 'Attributed', leadCampaign: null, leadGuid: null},
+                value: 0
+              }
+            });
           });
           beforeEach(() => {
+            storeSession('view-attribution', {
+              leadSource: 'Attributed',
+              leadCampaign: null,
+              leadGuid: null
+            })
             unit.leadAttributed(source)
           });
         });
       });
       describe('when leadUnattributed', () => {
-        it('then creates journey with outcome', () => {
-          const journey = unit.journey()[0];
-          expect(journey.category).toEqual('Attribution');
-          expect(journey.source).toEqual('Unattributed');
+        it('then counts', () => {
+          expect(countApi.fetch).toHaveBeenCalledWith({
+            data: {
+              uid: jasmine.any(String),
+              token: '<token>',
+              timestamp: jasmine.any(Number),
+              outcome: 'Attribution',
+              content: {leadSource: 'Unattributed', leadCampaign: null, leadGuid: null},
+              value: 0
+            }
+          });
         });
         beforeEach(() => {
+          storeSession('view-attribution', {
+            leadSource: 'Unattributed',
+            leadCampaign: null,
+            leadGuid: null
+          })
           unit.leadUnattributed()
         });
       });
@@ -1999,12 +2033,6 @@ describe('View SDK', () => {
         });
         describe('when custom xenon attribution', () => {
           let filteredQuery = '';
-          it('then has an outcome', () => {
-            const journey = unit.journey()[0];
-            expect(journey.category).toEqual('Attribution');
-            expect(journey.source).toEqual('email');
-            expect(journey.campaign).toEqual('2024');
-          });
           it('then has tags', () => {
             const tags = sessionStorage.getItem('view-tags');
             expect(tags).toContain("email");
@@ -2034,12 +2062,6 @@ describe('View SDK', () => {
         });
         describe('when custom xenon attribution with only source', () => {
           let filteredQuery = '';
-          it('then has an outcome', () => {
-            const journey = unit.journey()[0];
-            expect(journey.category).toEqual('Attribution');
-            expect(journey.source).toEqual('email');
-            expect(journey.campaign).toBeUndefined()
-          });
           it('then has tags', () => {
             const tags = sessionStorage.getItem('view-tags');
             expect(tags).toContain("email");
@@ -2053,12 +2075,6 @@ describe('View SDK', () => {
         });
         describe('when Cerebro attribution', () => {
           let filteredQuery = '';
-          it('then has an outcome', () => {
-            const journey = unit.journey()[0];
-            expect(journey.category).toEqual('Attribution');
-            expect(journey.source).toEqual('Cerebro');
-            expect(journey.campaign).toEqual('2024');
-          });
           it('then has tags', () => {
             const tags = sessionStorage.getItem('view-tags');
             expect(tags).toContain("Cerebro");
@@ -2071,13 +2087,6 @@ describe('View SDK', () => {
             filteredQuery = unit.autodiscoverLeadFrom('?cr_campaignid=2024');
           });
           describe('when duplicate added', () => {
-            it('then has an outcome', () => {
-              const journey = unit.journey()[0];
-              expect(journey.category).toEqual('Attribution');
-              expect(journey.source).toEqual('Cerebro');
-              expect(journey.campaign).toEqual('2024');
-              expect(unit.journey().length).toEqual(1)
-            });
             it('then has tags', () => {
               const tags = retrieveSession('view-tags');
               expect(tags).toContain("Cerebro");
@@ -2093,12 +2102,6 @@ describe('View SDK', () => {
         });
         describe('when Klaviyo attribution', () => {
           let filteredQuery = '';
-          it('then has an outcome', () => {
-            const journey = unit.journey()[0];
-            expect(journey.category).toEqual('Attribution');
-            expect(journey.source).toEqual('Klaviyo');
-            expect(journey.campaign).toEqual('2024');
-          });
           it('then has tags', () => {
             const tags = sessionStorage.getItem('view-tags');
             expect(tags).toContain("Klaviyo");
@@ -2113,12 +2116,6 @@ describe('View SDK', () => {
         });
         describe('when Klaviyo with medium attribution', () => {
           let filteredQuery = '';
-          it('then has an outcome', () => {
-            const journey = unit.journey()[0];
-            expect(journey.category).toEqual('Attribution');
-            expect(journey.source).toEqual('Klaviyo - email');
-            expect(journey.campaign).toEqual('2024');
-          });
           it('then has tags', () => {
             const tags = sessionStorage.getItem('view-tags');
             expect(tags).toContain("Klaviyo - email");
@@ -2133,12 +2130,6 @@ describe('View SDK', () => {
         });
         describe('when Google Ad', () => {
           let filteredQuery = '';
-          it('then has an outcome', () => {
-            const journey = unit.journey()[0];
-            expect(journey.category).toEqual('Attribution');
-            expect(journey.source).toEqual('Google Ad');
-            expect(journey.campaign).toEqual('2024');
-          });
           it('then has tags', () => {
             const tags = sessionStorage.getItem('view-tags');
             expect(tags).toContain("Google Ad");
@@ -2151,14 +2142,8 @@ describe('View SDK', () => {
             filteredQuery = unit.autodiscoverLeadFrom('?g_campaignid=2024');
           });
         });
-        describe('when Share-a-sale ads', () => {
+        describe('when Share-a-sale ads method 1', () => {
           let filteredQuery = '';
-          it('then has an outcome', () => {
-            const journey = unit.journey()[0];
-            expect(journey.category).toEqual('Attribution');
-            expect(journey.source).toEqual('Share-a-sale');
-            expect(journey.campaign).toEqual('2024');
-          });
           it('then has tags', () => {
             const tags = sessionStorage.getItem('view-tags');
             expect(tags).toContain("Share-a-sale");
@@ -2171,14 +2156,22 @@ describe('View SDK', () => {
             filteredQuery = unit.autodiscoverLeadFrom('?utm_source=shareasale&sscid=2024');
           });
         });
+        describe('when Share-a-sale ads method 2', () => {
+          let filteredQuery = '';
+          it('then has tags', () => {
+            const tags = sessionStorage.getItem('view-tags');
+            expect(tags).toContain("Share-a-sale");
+            expect(tags).toContain("2024");
+          });
+          it('then filters appropriately', () => {
+            expect(filteredQuery).toEqual("?sscid=2024");
+          });
+          beforeEach(() => {
+            filteredQuery = unit.autodiscoverLeadFrom('?sscid=2024');
+          });
+        });
         describe('when Google Organic', () => {
           let filteredQuery = '';
-          it('then has an outcome', () => {
-            const journey = unit.journey()[0];
-            expect(journey.category).toEqual('Attribution');
-            expect(journey.source).toEqual('Google Organic');
-            expect(journey.campaign).toEqual('2024');
-          });
           it('then has tags', () => {
             const tags = sessionStorage.getItem('view-tags');
             expect(tags).toContain("Google Organic");
@@ -2193,12 +2186,6 @@ describe('View SDK', () => {
         });
         describe('when Google Paid Search', () => {
           let filteredQuery = '';
-          it('then has an outcome', () => {
-            const journey = unit.journey()[0];
-            expect(journey.category).toEqual('Attribution');
-            expect(journey.source).toEqual('Google Paid Search');
-            expect(journey.campaign).toEqual('2024');
-          });
           it('then has tags', () => {
             const tags = sessionStorage.getItem('view-tags');
             expect(tags).toContain("Google Paid Search");
@@ -2213,12 +2200,6 @@ describe('View SDK', () => {
         });
         describe('when Facebook Ad', () => {
           let filteredQuery = '';
-          it('then has an outcome', () => {
-            const journey = unit.journey()[0];
-            expect(journey.category).toEqual('Attribution');
-            expect(journey.source).toEqual('Facebook Ad');
-            expect(journey.campaign).toEqual('2024');
-          });
           it('then has tags', () => {
             const tags = sessionStorage.getItem('view-tags');
             expect(tags).toContain("Facebook Ad");
@@ -2233,12 +2214,6 @@ describe('View SDK', () => {
         });
         describe('when Email', () => {
           let filteredQuery = '';
-          it('then has an outcome', () => {
-            const journey = unit.journey()[0];
-            expect(journey.category).toEqual('Attribution');
-            expect(journey.source).toEqual('Email');
-            expect(journey.campaign).toEqual('2024');
-          });
           it('then has tags', () => {
             const tags = sessionStorage.getItem('view-tags');
             expect(tags).toContain("Email");
@@ -2253,12 +2228,6 @@ describe('View SDK', () => {
         });
         describe('when YouTube', () => {
           let filteredQuery = '';
-          it('then has an outcome', () => {
-            const journey = unit.journey()[0];
-            expect(journey.category).toEqual('Attribution');
-            expect(journey.source).toEqual('YouTube');
-            expect(journey.campaign).toEqual('2024');
-          });
           it('then has tags', () => {
             const tags = sessionStorage.getItem('view-tags');
             expect(tags).toContain("YouTube");
@@ -2285,12 +2254,6 @@ describe('View SDK', () => {
         });
         describe('when Other', () => {
           let filteredQuery = '';
-          it('then has an outcome', () => {
-            const journey = unit.journey()[0];
-            expect(journey.category).toEqual('Attribution');
-            expect(journey.source).toEqual('instagram');
-            expect(journey.campaign).toEqual('2024');
-          });
           it('then has tags', () => {
             const tags = sessionStorage.getItem('view-tags');
             expect(tags).toContain("instagram");
@@ -2305,11 +2268,6 @@ describe('View SDK', () => {
         });
         describe('when None', () => {
           let filteredQuery = '';
-          it('then has an outcome', () => {
-            const journey = unit.journey()[0];
-            expect(journey.category).toEqual('Attribution');
-            expect(journey.source).toEqual('Unattributed');
-          });
           it('then has tags', () => {
             const tags = sessionStorage.getItem('view-tags');
             expect(tags).toContain("Unattributed");
@@ -2338,11 +2296,6 @@ describe('View SDK', () => {
         });
         describe('when no Query', () => {
           let filteredQuery = '';
-          it('then has an outcome', () => {
-            const journey = unit.journey()[0];
-            expect(journey.category).toEqual('Attribution');
-            expect(journey.source).toEqual('Unattributed');
-          });
           it('then has tags', () => {
             const tags = sessionStorage.getItem('view-tags');
             expect(tags).toContain("Unattributed");

@@ -971,7 +971,7 @@ var Xenon = (function () {
               }
 
               version() {
-                return 'v0.1.38.10';
+                return 'v0.1.39.0';
               }
 
               init(apiKey, apiUrl = 'https://app.xenonview.com', onApiKeyFailure = null) {
@@ -1040,23 +1040,10 @@ var Xenon = (function () {
 
               // Stock Business Outcomes:
               leadAttributed(source, identifier=null) {
-                const event = {
-                  category: 'Attribution',
-                  source: source
-                };
-                if (identifier) {
-                  event['campaign'] = identifier;
-                }
-                this.journeyAdd(event);
                 this.count("Attribution");
               }
 
               leadUnattributed() {
-                const event = {
-                  category: 'Attribution',
-                  source: 'Unattributed'
-                };
-                this.journeyAdd(event);
                 this.count("Attribution");
               }
 
@@ -1979,6 +1966,9 @@ var Xenon = (function () {
                   return ['Google Ad', params.get('g_campaignid')]
                 }
                 if (params.has('utm_source') && params.get('utm_source').toLowerCase() === 'shareasale') {
+                  return ['Share-a-sale', params.get('sscid')]
+                }
+                if (params.has('sscid')) {
                   return ['Share-a-sale', params.get('sscid')]
                 }
                 if (params.has('g_adtype') && params.get('g_adtype') === 'none') {
