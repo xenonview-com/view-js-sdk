@@ -885,6 +885,27 @@ var Xenon = (function () {
               return new countApi(apiUrl);
             }
 
+            class errorLogApi extends ApiBase {
+              constructor(apiUrl) {
+                let props = {
+                  name: 'ApiErrorLog',
+                  url: 'error_log',
+                  apiUrl: apiUrl,
+                  authenticated: true
+                };
+                super(props);
+              }
+              params(data) {
+                const {log} = data;
+                let params = {};
+                params.log = log;
+                return params;
+              }
+            }
+            function ErrorLogApi(apiUrl){
+              return new errorLogApi(apiUrl);
+            }
+
             const _defaultSessionStorage = {};
             const _sessionStorage = {
               setItem: (key, value) => _defaultSessionStorage[key] = value,
@@ -949,12 +970,13 @@ var Xenon = (function () {
               constructor(apiKey = null, apiUrl = 'https://app.xenonview.com',
                           countApiUrl = 'https://counts.xenonlab.ai',
                           journeyApi = JourneyApi, deanonApi = DeanonApi, heartbeatApi = HeartbeatApi,
-                          sampleApi = SampleApi, countApi = CountApi) {
+                          sampleApi = SampleApi, countApi = CountApi, errorLogApi = ErrorLogApi) {
                 this.JourneyApi = journeyApi;
                 this.DeanonApi = deanonApi;
                 this.HeartbeatApi = heartbeatApi;
                 this.SampleApi = sampleApi;
                 this.CountApi = countApi;
+                this.ErrorLogApi = errorLogApi;
                 this.pageURL_ = null;
                 this.id();
                 let journey = this.journey();
@@ -971,7 +993,7 @@ var Xenon = (function () {
               }
 
               version() {
-                return 'v0.1.39.0';
+                return 'v0.1.40.0';
               }
 
               init(apiKey, apiUrl = 'https://app.xenonview.com', onApiKeyFailure = null) {
@@ -1787,6 +1809,21 @@ var Xenon = (function () {
                   }
                 };
                 return this.DeanonApi(this.apiUrl)
+                  .fetch(params);
+              }
+
+              recordError(log) {
+                if (!this.sampleDecision()) {
+                  return Promise.resolve(true);
+                }
+
+                let params = {
+                  data: {
+                    log: log,
+                    token: this.apiKey,
+                  }
+                };
+                return this.ErrorLogApi(this.apiUrl)
                   .fetch(params);
               }
 
