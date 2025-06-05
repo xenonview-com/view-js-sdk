@@ -12,18 +12,20 @@ import HeartbeatApi from "./api/heartbeat";
 import DeanonApi from "./api/deanonymize";
 import SampleApi from "./api/sample";
 import CountApi from "./api/count";
+import ErrorLogApi from "./api/error_log";
 import {resetLocal, resetSession, retrieveLocal, retrieveSession, storeLocal, storeSession} from "./storage/storage";
 
 export class _Xenon {
   constructor(apiKey = null, apiUrl = 'https://app.xenonview.com',
               countApiUrl = 'https://counts.xenonlab.ai',
               journeyApi = JourneyApi, deanonApi = DeanonApi, heartbeatApi = HeartbeatApi,
-              sampleApi = SampleApi, countApi = CountApi) {
+              sampleApi = SampleApi, countApi = CountApi, errorLogApi = ErrorLogApi) {
     this.JourneyApi = journeyApi;
     this.DeanonApi = deanonApi;
     this.HeartbeatApi = heartbeatApi;
     this.SampleApi = sampleApi;
     this.CountApi = countApi;
+    this.ErrorLogApi = errorLogApi;
     this.pageURL_ = null;
     this.id();
     let journey = this.journey();
@@ -40,7 +42,7 @@ export class _Xenon {
   }
 
   version() {
-    return 'v0.1.39.0';
+    return 'v0.1.40.0';
   }
 
   init(apiKey, apiUrl = 'https://app.xenonview.com', onApiKeyFailure = null) {
@@ -856,6 +858,21 @@ export class _Xenon {
       }
     };
     return this.DeanonApi(this.apiUrl)
+      .fetch(params);
+  }
+
+  recordError(log) {
+    if (!this.sampleDecision()) {
+      return Promise.resolve(true);
+    }
+
+    let params = {
+      data: {
+        log: log,
+        token: this.apiKey,
+      }
+    };
+    return this.ErrorLogApi(this.apiUrl)
       .fetch(params);
   }
 

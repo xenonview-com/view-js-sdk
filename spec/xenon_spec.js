@@ -31,6 +31,9 @@ describe('View SDK', () => {
   let countApi = jasmine.createSpyObj('MyCountApi', ['fetch']);
   let CountApi = jasmine.createSpy('constructor');
   CountApi.and.returnValue(countApi);
+  let errorLogApi = jasmine.createSpyObj('MyErrorLogApi', ['fetch']);
+  let ErrorLogApi = jasmine.createSpy('constructor');
+  ErrorLogApi.and.returnValue(errorLogApi);
   let apiKey = '<token>';
   let apiUrl = 'https://localhost';
   let countApiUrl = 'https://localhost2';
@@ -50,6 +53,8 @@ describe('View SDK', () => {
     sampleApi.fetch.calls.reset();
     CountApi.calls.reset();
     countApi.fetch.calls.reset();
+    ErrorLogApi.calls.reset();
+    errorLogApi.fetch.calls.reset();
   }
 
   describe('when no decision previously', () => {
@@ -2950,6 +2955,26 @@ describe('View SDK', () => {
           capturedValue = null;
         });
       });
+      describe('when recording errors', () => {
+        describe('when default', () => {
+          const log = ["<line>"]
+          it('then calls the view error log API', () => {
+            expect(ErrorLogApi).toHaveBeenCalledWith(apiUrl);
+            expect(errorLogApi.fetch).toHaveBeenCalledWith({
+              data: {
+                log: log,
+                token: apiKey,
+              }
+            });
+          });
+          beforeEach(() => {
+            let promise = new Promise(function (resolve, reject) {
+            });
+            errorLogApi.fetch.and.returnValue(promise);
+            unit.recordError(log);
+          });
+        });
+      });
       beforeEach(() => {
         sampleResolvePromise({sample: true});
         UnblockPromises();
@@ -3051,6 +3076,24 @@ describe('View SDK', () => {
           });
         });
       });
+      describe('when recording errors', () => {
+        describe('when default', () => {
+          const log = ["<line>"]
+          it('then never calls the view error log API', () => {
+            expect(ErrorLogApi).not.toHaveBeenCalledWith(apiUrl);
+            expect(errorLogApi.fetch).not.toHaveBeenCalledWith({
+              data: {
+                log: log,
+                token: apiKey,
+              }
+            });
+          });
+          beforeEach(() => {
+            resetCalls();
+            unit.recordError(log);
+          });
+        });
+      });
       beforeEach(() => {
         sampleResolvePromise({sample: false});
         UnblockPromises();
@@ -3101,8 +3144,8 @@ describe('View SDK', () => {
         countRejectPromise = reject;
       });
       countApi.fetch.and.returnValue(promise2);
-      unit = new _Xenon(apiKey, apiUrl, countApiUrl, JourneyApi, DeanonApi, HeartbeatApi, SampleApi, CountApi);
-      unit2 = new _Xenon(apiKey, apiUrl, countApiUrl, JourneyApi, DeanonApi, HeartbeatApi, SampleApi, CountApi);
+      unit = new _Xenon(apiKey, apiUrl, countApiUrl, JourneyApi, DeanonApi, HeartbeatApi, SampleApi, CountApi, ErrorLogApi);
+      unit2 = new _Xenon(apiKey, apiUrl, countApiUrl, JourneyApi, DeanonApi, HeartbeatApi, SampleApi, CountApi, ErrorLogApi);
     });
     afterEach(() => {
       unit = null;
