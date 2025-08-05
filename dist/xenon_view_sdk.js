@@ -921,12 +921,16 @@ var Xenon = (function () {
             };
             function getLocalStorage(){
               if (typeof window != 'undefined' && window !== undefined && window && window.localStorage) return window.localStorage;
-              if (typeof browser != 'undefined' && browser !== undefined && browser && browser.localStorage) return browser.localStorage;
+              if (typeof global$1.api != 'undefined' && global$1.api !== undefined && global$1.api && global$1.api &&
+                typeof global$1.api.browser != 'undefined' && global$1.api.browser !== undefined && global$1.api.browser && global$1.api.browser.localStorage)
+                  return global$1.api.browser.localStorage;
               return _localStorage;
             }
             function getSessionStorage(){
               if (typeof window != 'undefined' && window !== undefined && window && window.sessionStorage) return window.sessionStorage;
-              if (typeof browser != 'undefined' && browser !== undefined && browser && browser.sessionStorage) return browser.sessionStorage;
+              if (typeof global$1.api != 'undefined' && global$1.api !== undefined && global$1.api && global$1.api &&
+                typeof global$1.api.browser != 'undefined' && global$1.api.browser !== undefined && global$1.api.browser && global$1.api.browser.sessionStorage)
+                  return global$1.api.browser.sessionStorage;
               return _sessionStorage;
             }
 

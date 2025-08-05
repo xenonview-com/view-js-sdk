@@ -13,12 +13,16 @@ const _localStorage = {
 };
 function getLocalStorage(){
   if (typeof window != 'undefined' && window !== undefined && window && window.localStorage) return window.localStorage;
-  if (typeof browser != 'undefined' && browser !== undefined && browser && browser.localStorage) return browser.localStorage;
+  if (typeof global.api != 'undefined' && global.api !== undefined && global.api && global.api &&
+    typeof global.api.browser != 'undefined' && global.api.browser !== undefined && global.api.browser && global.api.browser.localStorage)
+      return global.api.browser.localStorage;
   return _localStorage;
 }
 function getSessionStorage(){
   if (typeof window != 'undefined' && window !== undefined && window && window.sessionStorage) return window.sessionStorage;
-  if (typeof browser != 'undefined' && browser !== undefined && browser && browser.sessionStorage) return browser.sessionStorage;
+  if (typeof global.api != 'undefined' && global.api !== undefined && global.api && global.api &&
+    typeof global.api.browser != 'undefined' && global.api.browser !== undefined && global.api.browser && global.api.browser.sessionStorage)
+      return global.api.browser.sessionStorage;
   return _sessionStorage;
 }
 
