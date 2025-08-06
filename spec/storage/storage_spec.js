@@ -7,7 +7,7 @@ import {
   storeSession
 } from "../../src/storage/storage";
 
-globalThis.api = null;
+globalThis.browser = null;
 
 describe('storeLocal', () => {
   describe('when no existing value', () => {
@@ -159,10 +159,10 @@ describe('when non browser style session/local storage', () => {
   });
   describe('when shopify style', () => {
     beforeEach(() => {
-      globalThis.api = {browser: {
+      globalThis.browser = {
         sessionStorage: session_,
         localStorage: local_
-      }};
+      };
       storeLocal('testing', 'helloWorld');
       storeSession('testing', 'helloWorld');
     });
@@ -181,7 +181,7 @@ describe('when non browser style session/local storage', () => {
       });
     });
     afterEach(() => {
-      globalThis.api = null;
+      globalThis.browser = null;
     });
   });
   describe('when default node style', () => {
