@@ -921,16 +921,18 @@ var Xenon = (function () {
             };
             function getLocalStorage(){
               if (typeof window != 'undefined' && window !== undefined && window && window.localStorage) return window.localStorage;
-              if (typeof global$1.api != 'undefined' && global$1.api !== undefined && global$1.api && global$1.api &&
-                typeof global$1.api.browser != 'undefined' && global$1.api.browser !== undefined && global$1.api.browser && global$1.api.browser.localStorage)
-                  return global$1.api.browser.localStorage;
+              const api_ = global$1.api ? global$1.api : api;
+              if (typeof api_ != 'undefined' && api_ !== undefined && api_ && api_ &&
+                typeof api_.browser != 'undefined' && api_.browser !== undefined && api_.browser && api_.browser.localStorage)
+                  return api_.browser.localStorage;
               return _localStorage;
             }
             function getSessionStorage(){
               if (typeof window != 'undefined' && window !== undefined && window && window.sessionStorage) return window.sessionStorage;
-              if (typeof global$1.api != 'undefined' && global$1.api !== undefined && global$1.api && global$1.api &&
-                typeof global$1.api.browser != 'undefined' && global$1.api.browser !== undefined && global$1.api.browser && global$1.api.browser.sessionStorage)
-                  return global$1.api.browser.sessionStorage;
+              const api_ = global$1.api ? global$1.api : api;
+              if (typeof api_ != 'undefined' && api_ !== undefined && api_ && api_ &&
+                typeof api_.browser != 'undefined' && api_.browser !== undefined && api_.browser && api_.browser.sessionStorage)
+                  return api_.browser.sessionStorage;
               return _sessionStorage;
             }
 
