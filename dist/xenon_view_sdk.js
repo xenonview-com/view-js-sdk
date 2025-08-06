@@ -921,14 +921,14 @@ var Xenon = (function () {
             };
             function getLocalStorage(){
               if (typeof window != 'undefined' && window !== undefined && window && window.localStorage) return window.localStorage;
-              const browser_ = typeof globalThis != 'undefined' && globalThis.browser ? globalThis.browser : null;
+              const browser_ = typeof self != 'undefined' && self.browser ? self.browser : null;
               if (typeof browser_ != 'undefined' && browser_ !== undefined && browser_ && browser_.localStorage)
                   return browser_.localStorage;
               return _localStorage;
             }
             function getSessionStorage(){
               if (typeof window != 'undefined' && window !== undefined && window && window.sessionStorage) return window.sessionStorage;
-              const browser_ = typeof globalThis != 'undefined' && globalThis.browser ? globalThis.browser : null;
+              const browser_ = typeof self != 'undefined' && self.browser ? self.browser : null;
               if (typeof browser_ != 'undefined' && browser_ !== undefined && browser_ && browser_.sessionStorage)
                 return browser_.sessionStorage;
               return _sessionStorage;
