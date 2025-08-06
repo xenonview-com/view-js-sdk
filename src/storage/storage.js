@@ -13,16 +13,18 @@ const _localStorage = {
 };
 function getLocalStorage(){
   if (typeof window != 'undefined' && window !== undefined && window && window.localStorage) return window.localStorage;
-  if (typeof global.api != 'undefined' && global.api !== undefined && global.api && global.api &&
-    typeof global.api.browser != 'undefined' && global.api.browser !== undefined && global.api.browser && global.api.browser.localStorage)
-      return global.api.browser.localStorage;
+  const api_ = global.api ? global.api : api;
+  if (typeof api_ != 'undefined' && api_ !== undefined && api_ && api_ &&
+    typeof api_.browser != 'undefined' && api_.browser !== undefined && api_.browser && api_.browser.localStorage)
+      return api_.browser.localStorage;
   return _localStorage;
 }
 function getSessionStorage(){
   if (typeof window != 'undefined' && window !== undefined && window && window.sessionStorage) return window.sessionStorage;
-  if (typeof global.api != 'undefined' && global.api !== undefined && global.api && global.api &&
-    typeof global.api.browser != 'undefined' && global.api.browser !== undefined && global.api.browser && global.api.browser.sessionStorage)
-      return global.api.browser.sessionStorage;
+  const api_ = global.api ? global.api : api;
+  if (typeof api_ != 'undefined' && api_ !== undefined && api_ && api_ &&
+    typeof api_.browser != 'undefined' && api_.browser !== undefined && api_.browser && api_.browser.sessionStorage)
+      return api_.browser.sessionStorage;
   return _sessionStorage;
 }
 
