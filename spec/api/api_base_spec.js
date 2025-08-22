@@ -1,16 +1,23 @@
 import ApiBase from '../../src/api/api_base';
+import {ImmediatelyResolvePromise, UnblockPromises} from "../helper/api_helper";
+
+const MockPromises = require("mock-promises");
 require('../helper/api_helper');
-import {UnblockPromises} from "../helper/api_helper";
 
 describe('ApiBase', () => {
   let Subject;
   let doneSpy, failSpy, request;
   const apiUrl = 'https://app.xenonview.com';
-  beforeEach(() => {
-    Subject = ApiBase;
+  beforeEach((done) => {
+    (async () => {
+      MockPromises.reset();
+      Subject = ApiBase;
+      done();
+    })();
   });
   afterEach(() => {
     UnblockPromises();
+    ImmediatelyResolvePromise(0);
   });
   describe('when calling fetch with default api', () => {
     beforeEach(() => {
@@ -114,7 +121,7 @@ describe('ApiBase', () => {
       let params = {
         method: 'GET',
         skipName: true,
-        headers:{}
+        headers: {}
       };
       let subject = new Subject(params);
       subject.fetch();
@@ -144,18 +151,20 @@ describe('ApiBase', () => {
     });
   });
   describe('when calling fetch with no name', () => {
-    let params_ = {'hello':'world'};
+    let params_ = {'hello': 'world'};
     beforeEach(() => {
-      class TestApi extends ApiBase{
+      class TestApi extends ApiBase {
         constructor() {
           super({
             skipName: true
           });
         }
+
         params(data) {
           return params_;
         }
       }
+
       let subject = new TestApi();
       subject.fetch();
     });
@@ -176,9 +185,10 @@ describe('ApiBase', () => {
   describe('when calling fetch and params throws error', () => {
     class TestApi extends ApiBase {
       params(data) {
-        throw(Error('This is a test!'));
+        throw (Error('This is a test!'));
       }
     }
+
     beforeEach(() => {
       let subject = new TestApi();
       doneSpy = jasmine.createSpy('done');

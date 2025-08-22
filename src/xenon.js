@@ -27,152 +27,150 @@ export class _Xenon {
     this.CountApi = countApi;
     this.ErrorLogApi = errorLogApi;
     this.pageURL_ = null;
-    this.id();
-    let journey = this.journey();
-    if (!journey) {
-      this.storeJourney([]);
-    }
     this.restoreJourney = [];
     this.apiCallPending = false;
     this.apiUrl = apiUrl;
     this.countApiUrl = countApiUrl;
-    if (apiKey) {
-      this.init(apiKey, apiUrl);
-    }
+
   }
 
   version() {
     return 'v0.1.40.0';
   }
 
-  init(apiKey, apiUrl = 'https://app.xenonview.com', onApiKeyFailure = null) {
+  async init(apiKey, apiUrl = 'https://app.xenonview.com', onApiKeyFailure = null) {
     this.apiUrl = apiUrl;
     this.apiKey = apiKey;
-    this.sampleDecision(null, onApiKeyFailure)
+    await this.id();
+    let journey = await this.journey();
+    if (!journey) {
+      await this.storeJourney([]);
+    }
+    await this.sampleDecision(null, onApiKeyFailure)
     this.apiCallPending = false;
   }
 
-  ecomAbandonment() {
-    storeLocal('heartbeat_type', 'ecom');
-    this.heartbeatState(0);
+  async ecomAbandonment() {
+    await storeLocal('heartbeat_type', 'ecom');
+    await this.heartbeatState(0);
   }
 
-  customAbandonment(outcome) {
-    storeLocal('heartbeat_type', 'custom');
-    storeLocal('heartbeat_outcome', outcome);
-    this.heartbeatState(0);
+  async customAbandonment(outcome) {
+    await storeLocal('heartbeat_type', 'custom');
+    await storeLocal('heartbeat_outcome', outcome);
+    await this.heartbeatState(0);
   }
 
-  cancelAbandonment() {
-    storeLocal('heartbeat_type', 'custom');
-    storeLocal('heartbeat_outcome', {
+  async cancelAbandonment() {
+    await storeLocal('heartbeat_type', 'custom');
+    await storeLocal('heartbeat_outcome', {
       remove: true
     });
-    this.heartbeatState(0);
+    await this.heartbeatState(0);
   }
 
-  platform(softwareVersion, deviceModel, operatingSystemName, operatingSystemVersion) {
+  async platform(softwareVersion, deviceModel, operatingSystemName, operatingSystemVersion) {
     const platform = {
       softwareVersion: softwareVersion,
       deviceModel: deviceModel,
       operatingSystemName: operatingSystemName,
       operatingSystemVersion: operatingSystemVersion
     };
-    storeSession('view-platform', platform);
+    await storeSession('view-platform', platform);
   }
 
-  removePlatform() {
-    resetSession('view-platform');
+  async removePlatform() {
+    await resetSession('view-platform');
   }
 
-  variant(variantNames) {
-    storeSession('view-tags', variantNames);
+  async variant(variantNames) {
+    await storeSession('view-tags', variantNames);
   }
 
-  resetVariants() {
-    resetSession('view-tags');
+  async resetVariants() {
+    await resetSession('view-tags');
   }
 
-  startVariant(variantName) {
-    let variantNames = retrieveSession('view-tags');
+  async startVariant(variantName) {
+    let variantNames = await retrieveSession('view-tags');
     if (!variantNames || !variantNames.includes(variantName)) {
-      this.resetVariants()
-      this.variant([variantName])
+      await this.resetVariants()
+      await this.variant([variantName])
     }
   }
 
-  addVariant(variantName) {
-    let variantNames = retrieveSession('view-tags');
+  async addVariant(variantName) {
+    let variantNames = await retrieveSession('view-tags');
     if (!variantNames || !variantNames.includes(variantName)) {
       (variantNames) ? variantNames.push(variantName) : variantNames = [variantName];
-      this.variant(variantNames);
+      await this.variant(variantNames);
     }
   }
 
   // Stock Business Outcomes:
-  leadAttributed(source, identifier=null) {
-    this.count("Attribution");
+  async leadAttributed(source, identifier = null) {
+    await this.count("Attribution");
   }
 
-  leadUnattributed() {
-    this.count("Attribution");
+  async leadUnattributed() {
+    await this.count("Attribution");
   }
 
-  leadCaptured(specifier) {
+  async leadCaptured(specifier) {
     const content = {
       superOutcome: 'Lead Capture',
       outcome: specifier,
       result: 'success'
     };
-    this.outcomeAdd(content);
+    await this.outcomeAdd(content);
   }
 
-  leadCaptureDeclined(specifier) {
+  async leadCaptureDeclined(specifier) {
     const content = {
       superOutcome: 'Lead Capture',
       outcome: specifier,
       result: 'fail'
     };
-    this.outcomeAdd(content);
+    await this.outcomeAdd(content);
   }
 
-  accountSignup(specifier) {
+  async accountSignup(specifier) {
     const content = {
       superOutcome: 'Account Signup',
       outcome: specifier,
       result: 'success'
     };
-    this.outcomeAdd(content);
+    await this.outcomeAdd(content);
   }
 
-  accountSignupDeclined(specifier) {
+  async accountSignupDeclined(specifier) {
     const content = {
       superOutcome: 'Account Signup',
       outcome: specifier,
       result: 'fail'
     };
-    this.outcomeAdd(content);
+    await this.outcomeAdd(content);
   }
 
-  applicationInstalled() {
+  async applicationInstalled() {
     let content = {
       superOutcome: 'Application Installation',
       outcome: 'Installed',
       result: 'success'
     };
-    this.outcomeAdd(content);
+    await this.outcomeAdd(content);
   }
 
-  applicationNotInstalled() {
+  async applicationNotInstalled() {
     const content = {
       superOutcome: 'Application Installation',
       outcome: 'Not Installed',
       result: 'fail'
     };
-    this.outcomeAdd(content);
+    await this.outcomeAdd(content);
   }
 
-  initialSubscription(tier, method = null, price = null, term = null) {
+  async initialSubscription(tier, method = null, price = null, term = null) {
     const content = {
       superOutcome: 'Initial Subscription',
       outcome: 'Subscribe - ' + tier,
@@ -187,10 +185,10 @@ export class _Xenon {
     if (term) {
       content['term'] = term;
     }
-    this.outcomeAdd(content);
+    await this.outcomeAdd(content);
   }
 
-  subscriptionDeclined(tier, method = null, price = null, term = null) {
+  async subscriptionDeclined(tier, method = null, price = null, term = null) {
     const content = {
       superOutcome: 'Initial Subscription',
       outcome: 'Decline - ' + tier,
@@ -205,10 +203,10 @@ export class _Xenon {
     if (term) {
       content['term'] = term;
     }
-    this.outcomeAdd(content);
+    await this.outcomeAdd(content);
   }
 
-  subscriptionRenewed(tier, method = null, price = null, term = null) {
+  async subscriptionRenewed(tier, method = null, price = null, term = null) {
     const content = {
       superOutcome: 'Subscription Renewal',
       outcome: 'Renew - ' + tier,
@@ -223,10 +221,10 @@ export class _Xenon {
     if (term) {
       content['term'] = term;
     }
-    this.outcomeAdd(content);
+    await this.outcomeAdd(content);
   }
 
-  subscriptionPaused(tier, method = null, price = null, term = null) {
+  async subscriptionPaused(tier, method = null, price = null, term = null) {
     const content = {
       superOutcome: 'Subscription Renewal',
       outcome: 'Paused - ' + tier,
@@ -241,10 +239,10 @@ export class _Xenon {
     if (term) {
       content['term'] = term;
     }
-    this.outcomeAdd(content);
+    await this.outcomeAdd(content);
   }
 
-  subscriptionCanceled(tier, method = null, price = null, term = null) {
+  async subscriptionCanceled(tier, method = null, price = null, term = null) {
     const content = {
       superOutcome: 'Subscription Renewal',
       outcome: 'Cancel - ' + tier,
@@ -259,10 +257,10 @@ export class _Xenon {
     if (term) {
       content['term'] = term;
     }
-    this.outcomeAdd(content);
+    await this.outcomeAdd(content);
   }
 
-  subscriptionUpsold(tier, method = null, price = null, term = null) {
+  async subscriptionUpsold(tier, method = null, price = null, term = null) {
     const content = {
       superOutcome: 'Subscription Upsold',
       outcome: 'Upsold - ' + tier,
@@ -277,10 +275,10 @@ export class _Xenon {
     if (term) {
       content['term'] = term;
     }
-    this.outcomeAdd(content);
+    await this.outcomeAdd(content);
   }
 
-  subscriptionUpsellDeclined(tier, method = null, price = null, term = null) {
+  async subscriptionUpsellDeclined(tier, method = null, price = null, term = null) {
     const content = {
       superOutcome: 'Subscription Upsold',
       outcome: 'Declined - ' + tier,
@@ -295,10 +293,10 @@ export class _Xenon {
     if (term) {
       content['term'] = term;
     }
-    this.outcomeAdd(content);
+    await this.outcomeAdd(content);
   }
 
-  subscriptionDownsell(tier, method = null, price = null, term = null) {
+  async subscriptionDownsell(tier, method = null, price = null, term = null) {
     const content = {
       superOutcome: 'Subscription Upsold',
       outcome: 'Downsell - ' + tier,
@@ -313,10 +311,10 @@ export class _Xenon {
     if (term) {
       content['term'] = term;
     }
-    this.outcomeAdd(content);
+    await this.outcomeAdd(content);
   }
 
-  adClicked(provider, id = null, price = null) {
+  async adClicked(provider, id = null, price = null) {
     const content = {
       superOutcome: 'Advertisement',
       outcome: 'Ad Click - ' + provider,
@@ -328,10 +326,10 @@ export class _Xenon {
     if (price) {
       content['price'] = price;
     }
-    this.outcomeAdd(content);
+    await this.outcomeAdd(content);
   }
 
-  adIgnored(provider, id = null, price = null) {
+  async adIgnored(provider, id = null, price = null) {
     const content = {
       superOutcome: 'Advertisement',
       outcome: 'Ad Ignored - ' + provider,
@@ -343,10 +341,10 @@ export class _Xenon {
     if (price) {
       content['price'] = price;
     }
-    this.outcomeAdd(content);
+    await this.outcomeAdd(content);
   }
 
-  referral(kind, detail = null) {
+  async referral(kind, detail = null) {
     const content = {
       superOutcome: 'Referral',
       outcome: 'Referred - ' + kind,
@@ -355,10 +353,10 @@ export class _Xenon {
     if (detail) {
       content['details'] = detail;
     }
-    this.outcomeAdd(content);
+    await this.outcomeAdd(content);
   }
 
-  referralDeclined(kind, detail = null) {
+  async referralDeclined(kind, detail = null) {
     const content = {
       superOutcome: 'Referral',
       outcome: 'Declined - ' + kind,
@@ -367,10 +365,10 @@ export class _Xenon {
     if (detail) {
       content['details'] = detail;
     }
-    this.outcomeAdd(content);
+    await this.outcomeAdd(content);
   }
 
-  productAddedToCart(product, price = null) {
+  async productAddedToCart(product, price = null) {
     const content = {
       superOutcome: 'Add Product To Cart',
       outcome: 'Add - ' + product,
@@ -381,21 +379,21 @@ export class _Xenon {
     } else {
       price = 0.0;
     }
-    this.outcomeAdd(content);
-    this.heartbeatState(1);
-    this.count("Add To Cart", price);
+    await this.outcomeAdd(content);
+    await this.heartbeatState(1);
+    await this.count("Add To Cart", price);
   }
 
-  productNotAddedToCart(product) {
+  async productNotAddedToCart(product) {
     const content = {
       superOutcome: 'Add Product To Cart',
       outcome: 'Ignore - ' + product,
       result: 'fail'
     };
-    this.outcomeAdd(content);
+    await this.outcomeAdd(content);
   }
 
-  upsold(product, price = null) {
+  async upsold(product, price = null) {
     const content = {
       superOutcome: 'Upsold Product',
       outcome: 'Upsold - ' + product,
@@ -406,11 +404,11 @@ export class _Xenon {
     } else {
       price = 0.0;
     }
-    this.outcomeAdd(content);
-    this.count("Upsell", price);
+    await this.outcomeAdd(content);
+    await this.count("Upsell", price);
   }
 
-  upsellDismissed(product, price = null) {
+  async upsellDismissed(product, price = null) {
     const content = {
       superOutcome: 'Upsold Product',
       outcome: 'Dismissed - ' + product,
@@ -419,10 +417,10 @@ export class _Xenon {
     if (price) {
       content['price'] = price;
     }
-    this.outcomeAdd(content);
+    await this.outcomeAdd(content);
   }
 
-  checkOut(member=null) {
+  async checkOut(member = null) {
     let outcome = "Check Out";
     let countSting = "Check Out";
 
@@ -436,36 +434,36 @@ export class _Xenon {
       outcome: outcome,
       result: 'success'
     };
-    this.outcomeAdd(content);
-    this.heartbeatState(2);
-    this.count(countSting);
+    await this.outcomeAdd(content);
+    await this.heartbeatState(2);
+    await this.count(countSting);
   }
 
-  checkoutCanceled() {
+  async checkoutCanceled() {
     const content = {
       superOutcome: 'Customer Checkout',
       outcome: 'Canceled',
       result: 'fail'
     };
-    this.outcomeAdd(content);
+    await this.outcomeAdd(content);
   }
 
-  productRemoved(product) {
+  async productRemoved(product) {
     const content = {
       superOutcome: 'Customer Checkout',
       outcome: 'Product Removed - ' + product,
       result: 'fail'
     };
-    this.outcomeAdd(content);
+    await this.outcomeAdd(content);
   }
 
-  purchase(SKUs, price = null, discount=null, shipping=null, member=null) {
+  async purchase(SKUs, price = null, discount = null, shipping = null, member = null) {
     let outcome = "Purchase";
     let purchaseSting = "Purchase";
 
     if (member != null) {
       outcome = "Purchase - " + member;
-      purchaseSting = "Purchase:"+member
+      purchaseSting = "Purchase:" + member
     }
 
     const content = {
@@ -486,13 +484,12 @@ export class _Xenon {
       content['shipping'] = shipping;
     }
 
-    this.outcomeAdd(content);
-
-    this.heartbeatState(3);
-    this.count(purchaseSting, price);
+    await this.outcomeAdd(content);
+    await this.heartbeatState(3);
+    await this.count(purchaseSting, price);
   }
 
-  purchaseCancel(SKUs = null, price = null) {
+  async purchaseCancel(SKUs = null, price = null) {
     const outcome = 'Canceled' + (SKUs ? ' - ' + SKUs : '');
     const content = {
       superOutcome: 'Customer Purchase',
@@ -502,48 +499,48 @@ export class _Xenon {
     if (price) {
       content['price'] = price;
     }
-    this.outcomeAdd(content);
+    await this.outcomeAdd(content);
   }
 
-  promiseFulfilled() {
+  async promiseFulfilled() {
     const content = {
       superOutcome: 'Promise Fulfillment',
       outcome: 'Fulfilled',
       result: 'success'
     };
-    this.outcomeAdd(content);
+    await this.outcomeAdd(content);
   }
 
-  promiseUnfulfilled() {
+  async promiseUnfulfilled() {
     const content = {
       superOutcome: 'Promise Fulfillment',
       outcome: 'Unfulfilled',
       result: 'fail'
     };
-    this.outcomeAdd(content);
+    await this.outcomeAdd(content);
   }
 
-  productKept(product) {
+  async productKept(product) {
     const content = {
       superOutcome: 'Product Disposition',
       outcome: 'Kept - ' + product,
       result: 'success'
     };
-    this.outcomeAdd(content);
+    await this.outcomeAdd(content);
   }
 
-  productReturned(product) {
+  async productReturned(product) {
     const content = {
       superOutcome: 'Product Disposition',
       outcome: 'Returned - ' + product,
       result: 'fail'
     };
-    this.outcomeAdd(content);
+    await this.outcomeAdd(content);
   }
 
 // Stock Milestones:
 
-  featureAttempted(name, detail = null) {
+  async featureAttempted(name, detail = null) {
     const event = {
       category: 'Feature',
       action: 'Attempted',
@@ -552,10 +549,10 @@ export class _Xenon {
     if (detail) {
       event['details'] = detail;
     }
-    this.journeyAdd(event);
+    await this.journeyAdd(event);
   }
 
-  featureCompleted(name, detail = null) {
+  async featureCompleted(name, detail = null) {
     const event = {
       category: 'Feature',
       action: 'Completed',
@@ -564,10 +561,10 @@ export class _Xenon {
     if (detail) {
       event['details'] = detail;
     }
-    this.journeyAdd(event);
+    await this.journeyAdd(event);
   }
 
-  featureFailed(name, detail = null) {
+  async featureFailed(name, detail = null) {
     const event = {
       category: 'Feature',
       action: 'Failed',
@@ -576,10 +573,10 @@ export class _Xenon {
     if (detail) {
       event['details'] = detail;
     }
-    this.journeyAdd(event);
+    await this.journeyAdd(event);
   }
 
-  contentViewed(contentType, identifier = null) {
+  async contentViewed(contentType, identifier = null) {
     const event = {
       category: 'Content',
       action: 'Viewed',
@@ -588,10 +585,10 @@ export class _Xenon {
     if (identifier) {
       event['identifier'] = identifier;
     }
-    this.journeyAdd(event);
+    await this.journeyAdd(event);
   }
 
-  contentEdited(contentType, identifier = null, detail = null) {
+  async contentEdited(contentType, identifier = null, detail = null) {
     const event = {
       category: 'Content',
       action: 'Edited',
@@ -603,10 +600,10 @@ export class _Xenon {
     if (detail) {
       event['details'] = detail;
     }
-    this.journeyAdd(event);
+    await this.journeyAdd(event);
   }
 
-  contentCreated(contentType, identifier = null) {
+  async contentCreated(contentType, identifier = null) {
     const event = {
       category: 'Content',
       action: 'Created',
@@ -615,10 +612,10 @@ export class _Xenon {
     if (identifier) {
       event['identifier'] = identifier;
     }
-    this.journeyAdd(event);
+    await this.journeyAdd(event);
   }
 
-  contentDeleted(contentType, identifier = null) {
+  async contentDeleted(contentType, identifier = null) {
     const event = {
       category: 'Content',
       action: 'Deleted',
@@ -627,10 +624,10 @@ export class _Xenon {
     if (identifier) {
       event['identifier'] = identifier;
     }
-    this.journeyAdd(event);
+    await this.journeyAdd(event);
   }
 
-  contentArchived(contentType, identifier = null) {
+  async contentArchived(contentType, identifier = null) {
     const event = {
       category: 'Content',
       action: 'Archived',
@@ -639,10 +636,10 @@ export class _Xenon {
     if (identifier) {
       event['identifier'] = identifier;
     }
-    this.journeyAdd(event);
+    await this.journeyAdd(event);
   }
 
-  contentRequested(contentType, identifier = null) {
+  async contentRequested(contentType, identifier = null) {
     const event = {
       category: 'Content',
       action: 'Requested',
@@ -651,53 +648,47 @@ export class _Xenon {
     if (identifier) {
       event['identifier'] = identifier;
     }
-    this.journeyAdd(event);
+    await this.journeyAdd(event);
   }
 
-  contentSearched(contentType) {
+  async contentSearched(contentType) {
     const event = {
       category: 'Content',
       action: 'Searched',
       type: contentType,
     };
-    this.journeyAdd(event);
+    await this.journeyAdd(event);
   }
 
-  pageLoadTime(loadTime, url) {
+  async pageLoadTime(loadTime, url) {
     const event = {
       category: 'Webpage Load Time',
       time: loadTime.toString(),
       identifier: url,
     };
-    this.journeyAdd(event);
+    await this.journeyAdd(event);
   }
 
   // Custom Milestones
 
-  milestone(category, operation, name, detail) {
+  async milestone(category, operation, name, detail) {
     const event = {
       category: category,
       action: operation,
       name: name,
       details: detail
     };
-    this.journeyAdd(event);
+    await this.journeyAdd(event);
   }
 
   // API Communication:
 
-  count(outcome, value= 0.0, surfaceErrors = false) {
-    const attribution = retrieveSession('view-attribution');
+  async count(outcome, value = 0.0, surfaceErrors = false) {
+    const attribution = await retrieveSession('view-attribution');
     if (!attribution) return Promise.resolve(true);
-    const replayLog = retrieveSession('view-count-replay');
-    if (replayLog) {
-      for (const params in replayLog) {
-        this.countInternal(params, surfaceErrors);
-      }
-    }
     let params = {
       data: {
-        uid: this.id(),
+        uid: await this.id(),
         token: this.apiKey,
         timestamp: (new Date()).getTime() / 1000,
         outcome: outcome,
@@ -705,65 +696,64 @@ export class _Xenon {
         value: value
       }
     };
-    return this.countInternal(params, surfaceErrors);
+    let replayLog = await retrieveSession('view-count-replay');
+    if (replayLog) {
+      replayLog.push(params);
+    } else {
+      replayLog = [params];
+    }
+    await storeSession('view-count-replay', replayLog);
+    try {
+      let result = null;
+      while (replayLog.length > 0) {
+        const params = replayLog.shift();
+        result = await this.CountApi(this.countApiUrl).fetch(params);
+        await storeSession('view-count-replay', replayLog);
+      }
+      return result;
+    } catch (error) {
+      return (surfaceErrors ? Promise.reject(error) : Promise.resolve(true));
+    }
   }
 
-  countInternal(params, surfaceErrors) {
-    return this.CountApi(this.countApiUrl)
-      .fetch(params)
-      .catch((err) => {
-        const replayLog = retrieveSession('view-count-replay');
-        if (replayLog) {
-          replayLog.push(params);
-          storeSession('view-count-replay', replayLog);
-        } else {
-          storeSession('view-count-replay', [params]);
-        }
-        return (surfaceErrors ? Promise.reject(err) : Promise.resolve(true));
-      });
+  async heartbeatState(stage = null) {
+    const previousStage = await retrieveLocal('heartbeat_stage');
+    if (stage && stage > previousStage) {
+      await storeLocal('heartbeat_stage', stage);
+    }
+    if (!stage && !previousStage) {
+      await storeLocal('heartbeat_stage', 0);
+    }
+    return Number(await retrieveLocal('heartbeat_stage'));
   }
 
-  commit(surfaceErrors = false) {
-    if (!this.sampleDecision() || this.apiCallPending) {
+  async commit(surfaceErrors = false) {
+    if (!await this.sampleDecision() || this.apiCallPending) {
       return Promise.resolve(true);
     }
     this.apiCallPending = true;
     let params = {
       data: {
-        id: this.id(),
-        journey: this.journey(),
+        id: await this.id(),
+        journey: await this.journey(),
         token: this.apiKey,
         timestamp: (new Date()).getTime() / 1000
       }
     };
-    const saved = this.reset();
-    return this.JourneyApi(this.apiUrl)
-      .fetch(params)
-      .then((value) => {
-        this.apiCallPending = false;
-        return Promise.resolve(value);
-      })
-      .catch((err) => {
-        this.restore(saved);
-        this.apiCallPending = false;
-        this.apiCallPending = false
-        return (surfaceErrors ? Promise.reject(err) : Promise.resolve(true));
-      });
+    const saved = await this.reset();
+    try {
+      const value = await this.JourneyApi(this.apiUrl).fetch(params);
+      this.apiCallPending = false;
+      return Promise.resolve(value);
+    } catch (error) {
+      await this.restore(saved);
+      this.apiCallPending = false;
+      return (surfaceErrors ? Promise.reject(error) : Promise.resolve(true));
+    }
   }
 
-  heartbeatState(stage = null) {
-    const previousStage = retrieveLocal('heartbeat_stage');
-    if (stage && stage > previousStage) {
-      storeLocal('heartbeat_stage', stage);
-    }
-    if (!stage && !previousStage) {
-      storeLocal('heartbeat_stage', 0);
-    }
-    return Number(retrieveLocal('heartbeat_stage'));
-  }
-
-  heartbeatMessage(type) {
-    const stage = this.heartbeatState();
+  async heartbeatMessage(type) {
+    const stage = await this.heartbeatState();
     const messages = {
       ecom: {
         0: {
@@ -798,16 +788,16 @@ export class _Xenon {
     if (Object.keys(messages).includes(type)) {
       return messages[type][stage];
     }
-    return retrieveLocal('heartbeat_outcome')
+    return await retrieveLocal('heartbeat_outcome')
   }
 
-  heartbeat(surfaceErrors = false) {
-    const platform = retrieveSession('view-platform');
-    const tags = retrieveSession('view-tags');
+  async heartbeat(surfaceErrors = false) {
+    const platform = await retrieveSession('view-platform');
+    const tags = await retrieveSession('view-tags');
     let params = {
       data: {
-        id: this.id(),
-        journey: this.journey(),
+        id: await this.id(),
+        journey: await this.journey(),
         token: this.apiKey,
         platform: platform ? platform : {},
         tags: tags ? tags : [],
@@ -815,54 +805,51 @@ export class _Xenon {
       }
     };
 
-    const heartbeatType = retrieveLocal('heartbeat_type');
+    const heartbeatType = await retrieveLocal('heartbeat_type');
     if (heartbeatType) {
-      params.data['watchdog'] = this.heartbeatMessage(heartbeatType);
+      params.data['watchdog'] = await this.heartbeatMessage(heartbeatType);
     }
 
-    if (!this.sampleDecision() || this.apiCallPending) {
+    if (!await this.sampleDecision() || this.apiCallPending) {
       return Promise.resolve(true);
     }
     this.apiCallPending = true;
 
-    const saved = this.reset();
-    return this.HeartbeatApi(this.apiUrl)
-      .fetch(params)
-      .then((value) => {
-        if (heartbeatType && Object.keys(params.data['watchdog']).includes('remove')) {
-          resetLocal('heartbeat_stage');
-          resetLocal('heartbeat_type');
-          resetLocal('heartbeat_outcome');
-        }
-        this.apiCallPending = false;
-        return Promise.resolve(value);
-      })
-      .catch((err) => {
-        this.restore(saved);
-        this.apiCallPending = false;
-        return (surfaceErrors ? Promise.reject(err) : Promise.resolve(true));
-      });
+    const saved = await this.reset();
+    try {
+      const value = await this.HeartbeatApi(this.apiUrl).fetch(params);
+      if (heartbeatType && Object.keys(params.data['watchdog']).includes('remove')) {
+        await resetLocal('heartbeat_stage');
+        await resetLocal('heartbeat_type');
+        await resetLocal('heartbeat_outcome');
+      }
+      this.apiCallPending = false;
+      return Promise.resolve(value);
+    } catch (error) {
+      await this.restore(saved);
+      this.apiCallPending = false;
+      return (surfaceErrors ? Promise.reject(error) : Promise.resolve(true));
+    }
   }
 
-  deanonymize(person) {
-    if (!this.sampleDecision()) {
+  async deanonymize(person) {
+    if (!await this.sampleDecision()) {
       return Promise.resolve(true);
     }
 
     let params = {
       data: {
-        id: this.id(),
+        id: await this.id(),
         person: person,
         token: this.apiKey,
         timestamp: (new Date()).getTime() / 1000
       }
     };
-    return this.DeanonApi(this.apiUrl)
-      .fetch(params);
+    return await this.DeanonApi(this.apiUrl).fetch(params);
   }
 
-  recordError(log) {
-    if (!this.sampleDecision()) {
+  async recordError(log) {
+    if (!await this.sampleDecision()) {
       return Promise.resolve(true);
     }
 
@@ -872,59 +859,59 @@ export class _Xenon {
         token: this.apiKey,
       }
     };
-    return this.ErrorLogApi(this.apiUrl)
-      .fetch(params);
+    return await this.ErrorLogApi(this.apiUrl).fetch(params);
   }
 
   // Internals:
 
-  id(id) {
+  async id(id) {
     if (id) {
-      storeSession('xenon-view', id);
+      await storeSession('xenon-view', id);
     }
-    id = retrieveSession('xenon-view');
+    id = await retrieveSession('xenon-view');
     if (!id || id === '') {
-      return this.newId();
+      return await this.newId();
     }
     return id;
   }
 
-  newId() {
-    storeSession('xenon-view', crypto.randomUUID());
-    return retrieveSession('xenon-view');
+  async newId() {
+    await storeSession('xenon-view', crypto.randomUUID());
+    return await retrieveSession('xenon-view');
   }
 
-  sampleDecision(decision = null, onApiKeyFailure = null) {
+  async sampleDecision(decision = null, onApiKeyFailure = null) {
     if (decision !== null) {
-      storeSession('xenon-will-sample', decision)
+      await storeSession('xenon-will-sample', decision)
     }
-    decision = retrieveSession('xenon-will-sample');
+    decision = await retrieveSession('xenon-will-sample');
     if (decision === null || decision === '') {
-      let params = {data: {id: this.id(), token: this.apiKey}};
-      this.SampleApi(this.apiUrl).fetch(params).then((json) => {
-        decision = this.sampleDecision(json['sample'], onApiKeyFailure);
-      }).catch((error) => {
+      let params = {data: {id: await this.id(), token: this.apiKey}};
+      try {
+        const json = await this.SampleApi(this.apiUrl).fetch(params);
+        decision = await this.sampleDecision(json['sample'], onApiKeyFailure);
+      } catch (error) {
         if (error.authIssue && onApiKeyFailure) {
           onApiKeyFailure(error);
           return;
         }
-        decision = this.sampleDecision(true, onApiKeyFailure);
-      });
+        decision = await this.sampleDecision(true, onApiKeyFailure);
+      }
     }
-    decision = (decision !== null) ? Boolean(decision) : null;
+    decision = Boolean(decision);
     return decision;
   }
 
-  outcomeAdd(content) {
-    let platform = retrieveSession('view-platform');
+  async outcomeAdd(content) {
+    let platform = await retrieveSession('view-platform');
     if (platform) content['platform'] = platform;
-    let tags = retrieveSession('view-tags');
+    let tags = await retrieveSession('view-tags');
     if (tags) content['tags'] = tags;
-    this.journeyAdd(content);
+    await this.journeyAdd(content);
   }
 
-  journeyAdd(content) {
-    let journey = this.journey();
+  async journeyAdd(content) {
+    let journey = await this.journey();
     content.timestamp = (new Date()).getTime() / 1000;
     if (this.pageURL_) {
       content.url = this.pageURL_;
@@ -940,7 +927,7 @@ export class _Xenon {
     } else {
       journey = [content];
     }
-    this.storeJourney(journey);
+    await this.storeJourney(journey);
   }
 
 
@@ -987,39 +974,40 @@ export class _Xenon {
     return content.details === last.details;
   }
 
-  journey() {
-    return retrieveLocal('view-journey');
+  async journey() {
+    return await retrieveLocal('view-journey');
   }
 
-  storeJourney(journey) {
-    storeLocal('view-journey', journey);
+  async storeJourney(journey) {
+    await storeLocal('view-journey', journey);
   }
 
-  reset() {
-    this.restoreJourney = this.journey();
-    resetLocal('view-journey');
-    this.storeJourney([]);
+  async reset() {
+    this.restoreJourney = await this.journey();
+    await resetLocal('view-journey');
+    await this.storeJourney([]);
     return this.restoreJourney
   }
 
-  restore(journey = null) {
-    let currentJourney = this.journey();
+  async restore(journey = null) {
+    let currentJourney = await this.journey();
     let restoreJourney = journey ? journey : this.restoreJourney;
     if (currentJourney !== null && currentJourney.length) {
       restoreJourney = restoreJourney.concat(currentJourney);
     }
 
-    function compare( a, b ) {
-      if ( a.timestamp < b.timestamp ){
+    function compare(a, b) {
+      if (a.timestamp < b.timestamp) {
         return -1;
       }
-      if ( a.timestamp > b.timestamp ){
+      if (a.timestamp > b.timestamp) {
         return 1;
       }
       return 0;
     }
-    restoreJourney.sort( compare );
-    this.storeJourney(restoreJourney);
+
+    restoreJourney.sort(compare);
+    await this.storeJourney(restoreJourney);
     this.restoreJourney = [];
   }
 
@@ -1078,18 +1066,18 @@ export class _Xenon {
     return ['Unattributed']
   }
 
-  autodiscoverLeadFrom(queryFromUrl) {
+  async autodiscoverLeadFrom(queryFromUrl) {
     if (queryFromUrl && queryFromUrl !== '' && queryFromUrl !== '?') {
       const params = new URLSearchParams(queryFromUrl);
       const [source, identifier] = this.decipherParamsPerLibrary(params);
-      let attribution = retrieveSession('view-attribution');
+      let attribution = await retrieveSession('view-attribution');
       if (attribution) return queryFromUrl;
-      storeSession('view-attribution', {
+      await storeSession('view-attribution', {
         leadSource: source,
         leadCampaign: identifier,
         leadGuid: null
       })
-      let variantNames = retrieveSession('view-tags');
+      let variantNames = await retrieveSession('view-tags');
       if (source && (!variantNames || !variantNames.includes(source))) {
         if (variantNames) {
           variantNames.push(source);
@@ -1102,10 +1090,10 @@ export class _Xenon {
             variantNames.push(identifier);
           }
         }
-        this.variant(variantNames);
+        await this.variant(variantNames);
         (source === 'Unattributed') ?
-          this.leadUnattributed() :
-          this.leadAttributed(source, identifier);
+          await this.leadUnattributed() :
+          await this.leadAttributed(source, identifier);
       }
       params.delete('xenonId');
       params.delete('xenonSrc');
@@ -1115,19 +1103,19 @@ export class _Xenon {
       }
       return query;
     } else {
-      let variantNames = retrieveSession('view-tags');
+      let variantNames = await retrieveSession('view-tags');
       const source = 'Unattributed';
-      let attribution = retrieveSession('view-attribution');
+      let attribution = await retrieveSession('view-attribution');
       if (attribution) return queryFromUrl;
-      storeSession('view-attribution', {
+      await storeSession('view-attribution', {
         leadSource: source,
         leadCampaign: null,
         leadGuid: null
       })
       if (!variantNames || !variantNames.includes(source)) {
         (variantNames) ? variantNames.push(source) : variantNames = [source];
-        this.variant(variantNames);
-        this.leadUnattributed();
+        await this.variant(variantNames);
+        await this.leadUnattributed();
       }
       return queryFromUrl;
     }

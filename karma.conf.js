@@ -10,8 +10,12 @@ module.exports = function (config) {
 
     // frameworks to use
     // available frameworks: https://www.npmjs.com/search?q=keywords:karma-adapter
-    frameworks: ['browserify', 'jasmine'],
+    frameworks: ['parallel', 'browserify', 'jasmine'],
 
+    parallelOptions: {
+      executors: 10, // Number of parallel executors (defaults to CPU count - 1)
+      shardStrategy: 'description-length' // Or 'custom' with a function
+    },
 
     // list of files / patterns to load in the browser
     files: [

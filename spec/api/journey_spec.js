@@ -1,17 +1,28 @@
 import JourneyApi from "../../src/api/journey";
+import {ImmediatelyResolvePromise, UnblockPromises} from "../helper/api_helper";
+import MockPromises from "mock-promises";
+
 require('../helper/api_helper');
-import {UnblockPromises} from "../helper/api_helper";
 
 describe('JourneyApi', () => {
   let subject;
   const apiUrl = 'https://app.xenonview.com';
   let dataWithoutJourney = {id: 'somevalue', token: "<testToken>", timestamp: 0.1}
   let dataWithJourney = {...dataWithoutJourney, journey: ['step']};
-  beforeEach(() => {
-    subject = new JourneyApi(apiUrl);
-    const data = dataWithJourney;
-    subject.fetch({data});
-    UnblockPromises();
+  beforeEach((done) => {
+    (async () => {
+      MockPromises.reset();
+      subject = new JourneyApi(apiUrl);
+      const data = dataWithJourney;
+      subject.fetch({data}).then(() => done(), () => done());
+      const request = jasmine.Ajax.requests.mostRecent();
+      const response = [{'result': 'success'}];
+      request.succeed(response);
+      UnblockPromises();
+    })();
+  });
+  afterEach(() => {
+    ImmediatelyResolvePromise(0);
   });
   it('requests journey', () => {
     expect(`${apiUrl}/journey`).toHaveBeenRequested();

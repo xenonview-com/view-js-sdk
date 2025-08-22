@@ -1,16 +1,21 @@
 import '../../helper/api_helper';
 import {UnblockPromises} from "../../helper/api_helper";
 import {fetchJson} from '../../../src/api/fetch/json';
+import MockPromises from "mock-promises";
 
 
 describe('fetchJson', () => {
   let doneSpy, failSpy, request;
   describe('when default fetch', () => {
-    beforeEach(() => {
-      doneSpy = jasmine.createSpy('done');
-      failSpy = jasmine.createSpy('fail');
-      fetchJson('http://localhost',).then(doneSpy, failSpy);
-      request = jasmine.Ajax.requests.mostRecent();
+    beforeEach((done) => {
+      (async () => {
+        MockPromises.reset();
+        doneSpy = jasmine.createSpy('done');
+        failSpy = jasmine.createSpy('fail');
+        fetchJson('http://localhost',).then(doneSpy, failSpy);
+        request = jasmine.Ajax.requests.mostRecent();
+        done();
+      })();
     });
     it('requests base url', () => {
       expect(`http://localhost`).toHaveBeenRequestedWith({

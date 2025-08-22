@@ -10,7 +10,8 @@
 import {_Xenon} from '../src/xenon';
 import './helper/api_helper';
 import {UnblockPromises, ImmediatelyResolvePromise} from './helper/api_helper';
-import {retrieveSession, storeSession, retrieveLocal} from '../src/storage/storage';
+import {retrieveSession, storeSession, retrieveLocal, resetSession} from '../src/storage/storage';
+import MockPromises from "mock-promises";
 
 ``
 describe('View SDK', () => {
@@ -39,8 +40,10 @@ describe('View SDK', () => {
   let countApiUrl = 'https://localhost2';
   let sampleResolvePromise = null;
   let sampleRejectPromise = null;
+  let samplePromise = null;
   let countResolvePromise = null;
   let countRejectPromise = null;
+  let countPromise = null;
 
   function resetCalls() {
     DeanonApi.calls.reset();
@@ -60,8 +63,12 @@ describe('View SDK', () => {
   describe('when no decision previously', () => {
     describe('when able to sample', () => {
       // Platforming, Tagging, Sampling and Init tests
-      it('then has a positive sample decision', () => {
-        expect(unit.sampleDecision()).toBeTrue();
+      it('then has a positive sample decision', (done) => {
+        (async () => {
+          ImmediatelyResolvePromise(3);
+          expect(await unit.sampleDecision()).toBeTrue();
+          done();
+        })();
       });
       it('then calls the view sample API', () => {
         expect(sampleApi.fetch).toHaveBeenCalledWith({
@@ -75,25 +82,41 @@ describe('View SDK', () => {
         expect(unit.version()).toEqual(jasmine.any(String));
       });
       describe('when initialized', () => {
-        it('then has default journey', () => {
-          expect(unit.journey()).toEqual([]);
+        it('then has default journey', (done) => {
+          (async () => {
+            ImmediatelyResolvePromise(3);
+            expect(await unit.journey()).toEqual([]);
+            done();
+          })();
         });
-        it('then has default id', () => {
-          expect(unit.id()).not.toBeNull();
-          expect(unit.id()).not.toEqual('');
+        it('then has default id', (done) => {
+          (async () => {
+            expect(await unit.id()).not.toBeNull();
+            expect(await unit.id()).not.toEqual('');
+            done();
+          })();
         });
-        it('then has default id when storage cleared', () => {
+        it('then has default id when storage cleared', (done) => {
           sessionStorage.removeItem('xenon-view');
-          expect(unit.id()).not.toBeNull();
-          expect(unit.id()).not.toEqual('');
+          (async () => {
+            expect(await unit.id()).not.toBeNull();
+            expect(await unit.id()).not.toEqual('');
+            done();
+          })();
         });
         describe('when id set', () => {
           let testId = '<some random uuid>';
-          beforeEach(() => {
-            unit.id(testId);
+          beforeEach((done) => {
+            (async () => {
+              await unit.id(testId);
+              done();
+            })();
           });
-          it('then has set id', () => {
-            expect(unit.id()).toEqual(testId);
+          it('then has set id', (done) => {
+            (async () => {
+              expect(await unit.id()).toEqual(testId);
+              done();
+            })();
           });
           it('then persists id', () => {
             expect(sessionStorage.getItem('xenon-view')).toEqual(JSON.stringify(testId));
@@ -101,186 +124,288 @@ describe('View SDK', () => {
         });
       });
       describe('when initialized and previous journey', () => {
-        it('then has previous journey', () => {
-          let journeyStr = JSON.stringify(unit.journey()[0]);
-          expect(journeyStr).toContain('{"superOutcome":"Lead Capture","outcome":"Phone Number","result":"success","timestamp":');
+        it('then has previous journey', (done) => {
+          (async () => {
+            const value = await unit.journey();
+            let journeyStr = JSON.stringify(value[0]);
+            expect(journeyStr).toContain('{"superOutcome":"Lead Capture","outcome":"Phone Number","result":"success","timestamp":');
+            done();
+          })();
         });
-        beforeEach(() => {
-          unit.leadCaptured('Phone Number');
-          unit = new _Xenon();
+        beforeEach((done) => {
+          (async () => {
+            ImmediatelyResolvePromise(9);
+            await unit.leadCaptured('Phone Number');
+            unit = new _Xenon();
+            sampleResolvePromise({sample: true});
+            UnblockPromises();
+            ImmediatelyResolvePromise(10);
+            await unit.init(apiKey, apiUrl);
+            done();
+          })();
         });
       });
       describe('when initialized with a previous id', () => {
         let testId = '<some random uuid>';
-        it('then has previous id', () => {
-          expect(unit.id()).toEqual(testId);
+        it('then has previous id', (done) => {
+          (async () => {
+            expect(await unit.id()).toEqual(testId);
+            done();
+          })();
         });
-        beforeEach(() => {
-          unit.id(testId);
-          unit = new _Xenon();
+        beforeEach((done) => {
+          (async () => {
+            await unit.id(testId);
+            unit = new _Xenon();
+            done();
+          })();
         });
       });
       describe('when regenerating an ID', () => {
         let previousId = null;
-        it('then has previous id', () => {
-          expect(unit.id()).not.toEqual(previousId);
+        it('then has previous id', (done) => {
+          (async () => {
+            expect(await unit.id()).not.toEqual(previousId);
+            done();
+          })();
         });
-        beforeEach(() => {
-          previousId = unit.id();
-          unit = new _Xenon();
-          unit.newId();
+        beforeEach((done) => {
+          (async () => {
+            ImmediatelyResolvePromise(3);
+            previousId = await unit.id();
+            unit = new _Xenon();
+            ImmediatelyResolvePromise(3);
+            await unit.newId();
+            done();
+          })();
         });
       });
       describe('when adding outcome after platform reset', () => {
-        it('then journey doesn\'t contain platform', () => {
-          const journey = unit.journey()[0];
-          expect(Object.keys(journey)).not.toContain('platform')
+        it('then journey doesn\'t contain platform', (done) => {
+          (async () => {
+            const journey = await unit.journey();
+            expect(Object.keys(journey[0])).not.toContain('platform')
+            done();
+          })();
         });
-        beforeEach(() => {
+        beforeEach((done) => {
           const softwareVersion = '5.1.5';
           const deviceModel = 'Pixel 4 XL';
           const operatingSystemName = 'Android';
           const operatingSystemVersion = '12.0';
-          unit.platform(softwareVersion, deviceModel, operatingSystemName, operatingSystemVersion);
-          unit.removePlatform();
-          unit.applicationInstalled()
+          (async () => {
+            ImmediatelyResolvePromise(3);
+            await unit.platform(softwareVersion, deviceModel, operatingSystemName, operatingSystemVersion);
+            ImmediatelyResolvePromise(3);
+            await unit.removePlatform();
+            ImmediatelyResolvePromise(7);
+            await unit.applicationInstalled()
+            done();
+          })();
         });
       });
       describe('when adding outcome after platform set', () => {
-        it('then journey contains platform', () => {
-          const journey = unit.journey()[0];
-          expect(journey.platform.softwareVersion).toEqual('5.1.5');
-          expect(journey.platform.deviceModel).toEqual('Pixel 4 XL');
-          expect(journey.platform.operatingSystemName).toEqual('Android');
-          expect(journey.platform.operatingSystemVersion).toEqual('12.0');
+        it('then journey contains platform', (done) => {
+          (async () => {
+            const journey = (await unit.journey())[0];
+            expect(journey.platform.softwareVersion).toEqual('5.1.5');
+            expect(journey.platform.deviceModel).toEqual('Pixel 4 XL');
+            expect(journey.platform.operatingSystemName).toEqual('Android');
+            expect(journey.platform.operatingSystemVersion).toEqual('12.0');
+            done();
+          })();
         });
-        beforeEach(() => {
+        beforeEach((done) => {
           const softwareVersion = '5.1.5';
           const deviceModel = 'Pixel 4 XL';
           const operatingSystemName = 'Android';
           const operatingSystemVersion = '12.0';
-          unit.platform(softwareVersion, deviceModel, operatingSystemName, operatingSystemVersion);
-          unit.applicationInstalled()
+          (async () => {
+            ImmediatelyResolvePromise(3);
+            await unit.platform(softwareVersion, deviceModel, operatingSystemName, operatingSystemVersion);
+            ImmediatelyResolvePromise(7);
+            await unit.applicationInstalled()
+            done();
+          })();
         });
       });
-      describe('when restart tags', () => {
-        describe('without previous duplicate', () => {
-          beforeEach(() => {
-            unit.resetVariants()
-            unit.startVariant('test')
+      describe("when testing tags", () => {
+        describe('when restart tags', () => {
+          describe('without previous duplicate', () => {
+            beforeEach((done) => {
+              (async () => {
+                ImmediatelyResolvePromise(3);
+                await unit.resetVariants();
+                ImmediatelyResolvePromise(7);
+                await unit.startVariant('test');
+                done();
+              })();
+            });
+            it('should have variant', () => {
+              const tags = sessionStorage.getItem('view-tags');
+              expect(tags).toContain("test");
+            });
           });
-          it('should have variant', () => {
-            const tags = sessionStorage.getItem('view-tags');
-            expect(tags).toContain("test");
+          describe('with previous duplicate', () => {
+            beforeEach((done) => {
+              (async () => {
+                ImmediatelyResolvePromise(3);
+                await unit.resetVariants()
+                ImmediatelyResolvePromise(7);
+                await unit.variant(['test'])
+                ImmediatelyResolvePromise(7);
+                await unit.startVariant('test');
+                done();
+              })();
+            });
+            it('should have variant', () => {
+              const tagsString = sessionStorage.getItem('view-tags');
+              const tags = JSON.parse(tagsString)
+              expect(tags).toContain("test");
+              expect(tags.length).toEqual(1);
+            });
           });
-          afterEach(() => {
-            unit.resetVariants()
-          });
-        });
-        describe('with previous duplicate', () => {
-          beforeEach(() => {
-            unit.resetVariants()
-            unit.variant(['test'])
-            unit.startVariant('test')
-          });
-          it('should have variant', () => {
-            const tagsString = sessionStorage.getItem('view-tags');
-            const tags = JSON.parse(tagsString)
-            expect(tags).toContain("test");
-            expect(tags.length).toEqual(1);
-          });
-          afterEach(() => {
-            unit.resetVariants()
-          });
-        });
-        describe('with previous not duplicate', () => {
-          beforeEach(() => {
-            unit.resetVariants()
-            unit.variant(['test1'])
-            unit.startVariant('test')
-          });
-          it('should only have variant', () => {
-            const tagsString = sessionStorage.getItem('view-tags');
-            const tags = JSON.parse(tagsString)
-            expect(tags).toContain("test");
-            expect(tags.length).toEqual(1);
-          });
-          afterEach(() => {
-            unit.resetVariants()
-          });
-        });
-      })
-      describe('when appending tag', () => {
-        describe('without previous duplicate', () => {
-          beforeEach(() => {
-            unit.resetVariants()
-            unit.addVariant('test')
-          });
-          it('should have variant', () => {
-            const tags = sessionStorage.getItem('view-tags');
-            expect(tags).toContain("test");
-          });
-          afterEach(() => {
-            unit.resetVariants()
+          describe('with previous not duplicate', () => {
+            beforeEach((done) => {
+              (async () => {
+                ImmediatelyResolvePromise(3);
+                await unit.resetVariants()
+                ImmediatelyResolvePromise(7);
+                await unit.variant(['test1'])
+                ImmediatelyResolvePromise(7);
+                await unit.startVariant('test');
+                done();
+              })();
+            });
+            it('should only have variant', () => {
+              const tagsString = sessionStorage.getItem('view-tags');
+              const tags = JSON.parse(tagsString)
+              expect(tags).toContain("test");
+              expect(tags.length).toEqual(1);
+            });
           });
         });
-        describe('with previous duplicate', () => {
-          beforeEach(() => {
+        describe('when appending tag', () => {
+          describe('without previous duplicate', () => {
+            beforeEach((done) => {
+              (async () => {
+                ImmediatelyResolvePromise(3);
+                await unit.resetVariants()
+                ImmediatelyResolvePromise(7);
+                unit.addVariant('test')
+                done();
+              })();
+            });
+            it('should have variant', () => {
+              const tags = sessionStorage.getItem('view-tags');
+              expect(tags).toContain("test");
+            });
+          });
+          describe('with previous duplicate', () => {
+            beforeEach((done) => {
+              (async () => {
+                ImmediatelyResolvePromise(3);
+                await unit.resetVariants();
+                ImmediatelyResolvePromise(7);
+                await unit.variant(['test']);
+                done();
+              })();
+            });
+            describe('when start Variant', () => {
+              it('should have variant', () => {
+                const tagsString = sessionStorage.getItem('view-tags');
+                const tags = JSON.parse(tagsString)
+                expect(tags).toContain("test");
+                expect(tags.length).toEqual(1);
+              });
+              beforeEach((done) => {
+                (async () => {
+                  ImmediatelyResolvePromise(7);
+                  await unit.startVariant('test');
+                  done();
+                })();
+              });
+            });
+            describe('when adding variant', () => {
+              it('should have variant', () => {
+                const tagsString = sessionStorage.getItem('view-tags');
+                const tags = JSON.parse(tagsString)
+                expect(tags).toContain("test");
+                expect(tags.length).toEqual(1);
+              });
+              beforeEach((done) => {
+                (async () => {
+                  ImmediatelyResolvePromise(7);
+                  await unit.addVariant('test');
+                  done();
+                })();
+              });
+            });
+          });
+          describe('with previous not duplicate', () => {
+            beforeEach((done) => {
+              (async () => {
+                ImmediatelyResolvePromise(3);
+                await unit.resetVariants()
+                ImmediatelyResolvePromise(7);
+                await unit.variant(['test1'])
+                ImmediatelyResolvePromise(7);
+                await unit.addVariant('test');
+                done();
+              })();
+            });
+            it('should have variant', () => {
+              const tagsString = sessionStorage.getItem('view-tags');
+              const tags = JSON.parse(tagsString)
+              expect(tags).toContain("test1");
+              expect(tags.length).toEqual(2);
+            });
+          });
+        })
+        describe('when adding outcome after tags reset', () => {
+          beforeEach((done) => {
+            (async () => {
+              ImmediatelyResolvePromise(7);
+              await unit.variant(['tag'])
+              ImmediatelyResolvePromise(3);
+              await unit.resetVariants()
+              ImmediatelyResolvePromise(7);
+              await unit.applicationInstalled();
+              done();
+            })();
+          });
+          it('then journey doesn\'t contain tags', (done) => {
+            (async () => {
+              const journey = (await unit.journey())[0];
+              expect(Object.keys(journey)).not.toContain('tags');
+              done();
+            })();
+          });
+        });
+        describe('when adding outcome after tags', () => {
+          beforeEach((done) => {
+            (async () => {
+              ImmediatelyResolvePromise(7);
+              await unit.variant(['tag'])
+              ImmediatelyResolvePromise(7);
+              await unit.applicationInstalled();
+              done();
+            })();
+          });
+          it('then journey contains tags', (done) => {
+            (async () => {
+              const journey = (await unit.journey())[0];
+              expect(journey.tags).toEqual(['tag']);
+              done();
+            })();
+          });
+        });
+        afterEach((done) => {
+          (async () => {
+            ImmediatelyResolvePromise(3);
             unit.resetVariants()
-            unit.variant(['test'])
-            unit.addVariant('test')
-          });
-          it('should have variant', () => {
-            const tagsString = sessionStorage.getItem('view-tags');
-            const tags = JSON.parse(tagsString)
-            expect(tags).toContain("test");
-            expect(tags.length).toEqual(1);
-          });
-          afterEach(() => {
-            unit.resetVariants()
-          });
-        });
-        describe('with previous not duplicate', () => {
-          beforeEach(() => {
-            unit.resetVariants()
-            unit.variant(['test1'])
-            unit.addVariant('test')
-          });
-          it('should have variant', () => {
-            const tagsString = sessionStorage.getItem('view-tags');
-            const tags = JSON.parse(tagsString)
-            expect(tags).toContain("test1");
-            expect(tags.length).toEqual(2);
-          });
-          afterEach(() => {
-            unit.resetVariants()
-          });
-        });
-      })
-      describe('when adding outcome after tags reset', () => {
-        it('then journey doesn\'t contain tags', () => {
-          const journey = unit.journey()[0];
-          expect(Object.keys(journey)).not.toContain('tags')
-        });
-        beforeEach(() => {
-          const tags = ['tag'];
-          unit.variant(tags);
-          unit.resetVariants();
-          unit.applicationInstalled()
-        });
-      });
-      describe('when adding outcome after tags', () => {
-        it('then journey contains tags', () => {
-          const journey = unit.journey()[0];
-          expect(journey.tags).toEqual(['tag'])
-        });
-        beforeEach(() => {
-          const tags = ['tag'];
-          unit.variant(tags);
-          unit.applicationInstalled()
-        });
-        afterEach(() => {
-          unit.resetVariants()
+            done();
+          })();
         });
       });
       // Stock Business Outcomes tests
@@ -288,7 +413,7 @@ describe('View SDK', () => {
         const source = 'Google Ad';
         const identifier = 'Search';
         describe('when has id', () => {
-         it('then counts', () => {
+          it('then counts', () => {
             expect(countApi.fetch).toHaveBeenCalledWith({
               data: {
                 uid: jasmine.any(String),
@@ -300,13 +425,18 @@ describe('View SDK', () => {
               }
             });
           });
-          beforeEach(() => {
-            storeSession('view-attribution', {
-              leadSource: 'Attributed',
-              leadCampaign: null,
-              leadGuid: null
-            })
-            unit.leadAttributed(source, identifier)
+          beforeEach((done) => {
+            (async () => {
+              await storeSession('view-attribution', {
+                leadSource: 'Attributed',
+                leadCampaign: null,
+                leadGuid: null
+              });
+              ImmediatelyResolvePromise(7);
+              countResolvePromise({"result": "success"});
+              await unit.leadAttributed(source, identifier)
+              done();
+            })();
           });
         });
         describe('when no id', () => {
@@ -322,13 +452,18 @@ describe('View SDK', () => {
               }
             });
           });
-          beforeEach(() => {
-            storeSession('view-attribution', {
-              leadSource: 'Attributed',
-              leadCampaign: null,
-              leadGuid: null
-            })
-            unit.leadAttributed(source)
+          beforeEach((done) => {
+            (async () => {
+              await storeSession('view-attribution', {
+                leadSource: 'Attributed',
+                leadCampaign: null,
+                leadGuid: null
+              });
+              ImmediatelyResolvePromise(7);
+              countResolvePromise({"result": "success"});
+              await unit.leadAttributed(source)
+              done();
+            })();
           });
         });
       });
@@ -345,83 +480,130 @@ describe('View SDK', () => {
             }
           });
         });
-        beforeEach(() => {
-          storeSession('view-attribution', {
-            leadSource: 'Unattributed',
-            leadCampaign: null,
-            leadGuid: null
-          })
-          unit.leadUnattributed()
+        beforeEach((done) => {
+          (async () => {
+            await storeSession('view-attribution', {
+              leadSource: 'Unattributed',
+              leadCampaign: null,
+              leadGuid: null
+            });
+            ImmediatelyResolvePromise(7);
+            countResolvePromise({"result": "success"});
+            await unit.leadUnattributed()
+            done();
+          })();
         });
       });
       describe('when leadCaptured', () => {
         const phone = 'Phone Number';
-        it('then creates journey with outcome', () => {
-          const journey = unit.journey()[0];
-          expect(journey.superOutcome).toEqual('Lead Capture');
-          expect(journey.outcome).toEqual(phone);
-          expect(journey.result).toEqual('success');
+        it('then creates journey with outcome', (done) => {
+          (async () => {
+            const journey = (await unit.journey())[0];
+            expect(journey.superOutcome).toEqual('Lead Capture');
+            expect(journey.outcome).toEqual(phone);
+            expect(journey.result).toEqual('success');
+            done();
+          })();
         });
-        beforeEach(() => {
-          unit.leadCaptured(phone)
+        beforeEach((done) => {
+          (async () => {
+            ImmediatelyResolvePromise(7);
+            await unit.leadCaptured(phone)
+            done();
+          })();
         });
       });
       describe('when leadCaptureDeclined', () => {
         const phone = 'Phone Number';
-        it('then creates journey with outcome', () => {
-          const journey = unit.journey()[0];
-          expect(journey.superOutcome).toEqual('Lead Capture');
-          expect(journey.outcome).toEqual(phone);
-          expect(journey.result).toEqual('fail');
+        it('then creates journey with outcome', (done) => {
+          (async () => {
+            const journey = (await unit.journey())[0];
+            expect(journey.superOutcome).toEqual('Lead Capture');
+            expect(journey.outcome).toEqual(phone);
+            expect(journey.result).toEqual('fail');
+            done();
+          })();
         });
-        beforeEach(() => {
-          unit.leadCaptureDeclined(phone)
+        beforeEach((done) => {
+          (async () => {
+            ImmediatelyResolvePromise(7);
+            await unit.leadCaptureDeclined(phone)
+            done();
+          })();
         });
       });
       describe('when accountSignup', () => {
         const viaFacebook = 'Facebook';
-        it('then creates journey with outcome', () => {
-          const journey = unit.journey()[0];
-          expect(journey.superOutcome).toEqual('Account Signup');
-          expect(journey.outcome).toEqual(viaFacebook);
-          expect(journey.result).toEqual('success');
+        it('then creates journey with outcome', (done) => {
+          (async () => {
+            const journey = (await unit.journey())[0];
+            expect(journey.superOutcome).toEqual('Account Signup');
+            expect(journey.outcome).toEqual(viaFacebook);
+            expect(journey.result).toEqual('success');
+            done();
+          })();
         });
-        beforeEach(() => {
-          unit.accountSignup(viaFacebook)
+        beforeEach((done) => {
+          (async () => {
+            ImmediatelyResolvePromise(7);
+            await unit.accountSignup(viaFacebook)
+            done();
+          })();
         });
       });
       describe('when accountSignupDeclined', () => {
         const viaFacebook = 'Facebook';
-        it('then creates journey with outcome', () => {
-          const journey = unit.journey()[0];
-          expect(journey.superOutcome).toEqual('Account Signup');
-          expect(journey.outcome).toEqual(viaFacebook);
-          expect(journey.result).toEqual('fail');
+        it('then creates journey with outcome', (done) => {
+          (async () => {
+            const journey = (await unit.journey())[0];
+            expect(journey.superOutcome).toEqual('Account Signup');
+            expect(journey.outcome).toEqual(viaFacebook);
+            expect(journey.result).toEqual('fail');
+            done();
+          })();
         });
-        beforeEach(() => {
-          unit.accountSignupDeclined(viaFacebook)
+        beforeEach((done) => {
+          (async () => {
+            ImmediatelyResolvePromise(7);
+            await unit.accountSignupDeclined(viaFacebook)
+            done();
+          })();
         });
       });
       describe('when applicationInstalled', () => {
-        it('then creates journey with outcome', () => {
-          const journey = unit.journey()[0];
-          expect(journey.superOutcome).toEqual('Application Installation');
-          expect(journey.outcome).toEqual('Installed');
-          expect(journey.result).toEqual('success');
+        it('then creates journey with outcome', (done) => {
+          (async () => {
+            const journey = (await unit.journey())[0];
+            expect(journey.superOutcome).toEqual('Application Installation');
+            expect(journey.outcome).toEqual('Installed');
+            expect(journey.result).toEqual('success');
+            done();
+          })();
         });
-        beforeEach(() => {
-          unit.applicationInstalled()
+        beforeEach((done) => {
+          (async () => {
+            ImmediatelyResolvePromise(7);
+            await unit.applicationInstalled();
+            done();
+          })();
         });
       });
       describe('when applicationNotInstalled', () => {
-        it('then creates journey with outcome', () => {
-          const journey = unit.journey()[0];
-          expect(journey.superOutcome).toEqual('Application Installation');
-          expect(journey.outcome).toEqual('Not Installed');
-          expect(journey.result).toEqual('fail');
+        it('then creates journey with outcome', (done) => {
+          (async () => {
+            const journey = (await unit.journey())[0];
+            expect(journey.superOutcome).toEqual('Application Installation');
+            expect(journey.outcome).toEqual('Not Installed');
+            expect(journey.result).toEqual('fail');
+            done();
+          })();
         });
-        beforeEach(() => {
-          unit.applicationNotInstalled()
+        beforeEach((done) => {
+          (async () => {
+            ImmediatelyResolvePromise(7);
+            await unit.applicationNotInstalled();
+            done();
+          })();
         });
       });
       describe('when initialSubscription', () => {
@@ -430,41 +612,69 @@ describe('View SDK', () => {
         const price = '$25'; // optional
         const term = '30d'; // optional
         describe('when has method, price and term', () => {
-          it('then creates journey with outcome', () => {
-            const journey = unit.journey()[0];
-            expect(journey.term).toEqual(term);
+          it('then creates journey with outcome', (done) => {
+            (async () => {
+              const journey = (await unit.journey())[0];
+              expect(journey.term).toEqual(term);
+              done();
+            })();
           });
-          beforeEach(() => {
-            unit.initialSubscription(tierSilver, method, price, term)
+          beforeEach((done) => {
+            (async () => {
+              ImmediatelyResolvePromise(7);
+              await unit.initialSubscription(tierSilver, method, price, term);
+              done();
+            })();
           });
         });
         describe('when has method and price', () => {
-          it('then creates journey with outcome', () => {
-            const journey = unit.journey()[0];
-            expect(journey.price).toEqual(price);
+          it('then creates journey with outcome', (done) => {
+            (async () => {
+              const journey = (await unit.journey())[0];
+              expect(journey.price).toEqual(price);
+              done();
+            })();
           });
-          beforeEach(() => {
-            unit.initialSubscription(tierSilver, method, price)
+          beforeEach((done) => {
+            (async () => {
+              ImmediatelyResolvePromise(7);
+              await unit.initialSubscription(tierSilver, method, price);
+              done();
+            })();
           });
         });
         describe('when has method', () => {
-          it('then creates journey with outcome', () => {
-            const journey = unit.journey()[0];
-            expect(journey.method).toEqual(method);
+          it('then creates journey with outcome', (done) => {
+            (async () => {
+              const journey = (await unit.journey())[0];
+              expect(journey.method).toEqual(method);
+              done();
+            })();
           });
-          beforeEach(() => {
-            unit.initialSubscription(tierSilver, method)
+          beforeEach((done) => {
+            (async () => {
+              ImmediatelyResolvePromise(7);
+              await unit.initialSubscription(tierSilver, method);
+              done();
+            })();
           });
         });
         describe('when no method', () => {
-          it('then creates journey with outcome', () => {
-            const journey = unit.journey()[0];
-            expect(journey.superOutcome).toEqual('Initial Subscription');
-            expect(journey.outcome).toEqual('Subscribe - ' + tierSilver);
-            expect(journey.result).toEqual('success');
+          it('then creates journey with outcome', (done) => {
+            (async () => {
+              const journey = (await unit.journey())[0];
+              expect(journey.superOutcome).toEqual('Initial Subscription');
+              expect(journey.outcome).toEqual('Subscribe - ' + tierSilver);
+              expect(journey.result).toEqual('success');
+              done();
+            })();
           });
-          beforeEach(() => {
-            unit.initialSubscription(tierSilver)
+          beforeEach((done) => {
+            (async () => {
+              ImmediatelyResolvePromise(7);
+              await unit.initialSubscription(tierSilver);
+              done();
+            })();
           });
         });
       });
@@ -474,41 +684,69 @@ describe('View SDK', () => {
         const price = '$25'; // optional
         const term = '30d'; // optional
         describe('when has method, price, and term', () => {
-          it('then creates journey with outcome', () => {
-            const journey = unit.journey()[0];
-            expect(journey.term).toEqual(term);
+          it('then creates journey with outcome', (done) => {
+            (async () => {
+              const journey = (await unit.journey())[0];
+              expect(journey.term).toEqual(term);
+              done();
+            })();
           });
-          beforeEach(() => {
-            unit.subscriptionDeclined(tierSilver, method, price, term)
+          beforeEach((done) => {
+            (async () => {
+              ImmediatelyResolvePromise(7);
+              await unit.subscriptionDeclined(tierSilver, method, price, term);
+              done();
+            })();
           });
         });
         describe('when has method and price', () => {
-          it('then creates journey with outcome', () => {
-            const journey = unit.journey()[0];
-            expect(journey.price).toEqual(price);
+          it('then creates journey with outcome', (done) => {
+            (async () => {
+              const journey = (await unit.journey())[0];
+              expect(journey.price).toEqual(price);
+              done();
+            })();
           });
-          beforeEach(() => {
-            unit.subscriptionDeclined(tierSilver, method, price)
+          beforeEach((done) => {
+            (async () => {
+              ImmediatelyResolvePromise(7);
+              await unit.subscriptionDeclined(tierSilver, method, price);
+              done();
+            })();
           });
         });
         describe('when has method', () => {
-          it('then creates journey with outcome', () => {
-            const journey = unit.journey()[0];
-            expect(journey.method).toEqual(method);
+          it('then creates journey with outcome', (done) => {
+            (async () => {
+              const journey = (await unit.journey())[0];
+              expect(journey.method).toEqual(method);
+              done();
+            })();
           });
-          beforeEach(() => {
-            unit.subscriptionDeclined(tierSilver, method)
+          beforeEach((done) => {
+            (async () => {
+              ImmediatelyResolvePromise(7);
+              await unit.subscriptionDeclined(tierSilver, method);
+              done();
+            })();
           });
         });
         describe('when no method', () => {
-          it('then creates journey with outcome', () => {
-            const journey = unit.journey()[0];
-            expect(journey.superOutcome).toEqual('Initial Subscription');
-            expect(journey.outcome).toEqual('Decline - ' + tierSilver);
-            expect(journey.result).toEqual('fail');
+          it('then creates journey with outcome', (done) => {
+            (async () => {
+              const journey = (await unit.journey())[0];
+              expect(journey.superOutcome).toEqual('Initial Subscription');
+              expect(journey.outcome).toEqual('Decline - ' + tierSilver);
+              expect(journey.result).toEqual('fail');
+              done();
+            })();
           });
-          beforeEach(() => {
-            unit.subscriptionDeclined(tierSilver)
+          beforeEach((done) => {
+            (async () => {
+              ImmediatelyResolvePromise(7);
+              await unit.subscriptionDeclined(tierSilver);
+              done();
+            })();
           });
         });
       });
@@ -517,89 +755,142 @@ describe('View SDK', () => {
         const method = 'Stripe'; // optional
         const price = '$25'; // optional
         const term = '30d'; // optional
-
         describe('when has method, price and term', () => {
-          it('then creates journey with outcome', () => {
-            const journey = unit.journey()[0];
-            expect(journey.term).toEqual(term);
+          it('then creates journey with outcome', (done) => {
+            (async () => {
+              const journey = (await unit.journey())[0];
+              expect(journey.term).toEqual(term);
+              done();
+            })();
           });
-          beforeEach(() => {
-            unit.subscriptionRenewed(tierSilver, method, price, term)
+          beforeEach((done) => {
+            (async () => {
+              ImmediatelyResolvePromise(7);
+              await unit.subscriptionRenewed(tierSilver, method, price, term);
+              done();
+            })();
           });
         });
         describe('when has method and price', () => {
-          it('then creates journey with outcome', () => {
-            const journey = unit.journey()[0];
-            expect(journey.price).toEqual(price);
+          it('then creates journey with outcome', (done) => {
+            (async () => {
+              const journey = (await unit.journey())[0];
+              expect(journey.price).toEqual(price);
+              done();
+            })();
           });
-          beforeEach(() => {
-            unit.subscriptionRenewed(tierSilver, method, price)
+          beforeEach((done) => {
+            (async () => {
+              ImmediatelyResolvePromise(7);
+              await unit.subscriptionRenewed(tierSilver, method, price);
+              done();
+            })();
           });
         });
         describe('when has method', () => {
-          it('then creates journey with outcome', () => {
-            const journey = unit.journey()[0];
-            expect(journey.method).toEqual(method);
+          it('then creates journey with outcome', (done) => {
+            (async () => {
+              const journey = (await unit.journey())[0];
+              expect(journey.method).toEqual(method);
+              done();
+            })();
           });
-          beforeEach(() => {
-            unit.subscriptionRenewed(tierSilver, method)
+          beforeEach((done) => {
+            (async () => {
+              ImmediatelyResolvePromise(7);
+              await unit.subscriptionRenewed(tierSilver, method);
+              done();
+            })();
           });
         });
         describe('when no method', () => {
-          it('then creates journey with outcome', () => {
-            const journey = unit.journey()[0];
-            expect(journey.superOutcome).toEqual('Subscription Renewal');
-            expect(journey.outcome).toEqual('Renew - ' + tierSilver);
-            expect(journey.result).toEqual('success');
+          it('then creates journey with outcome', (done) => {
+            (async () => {
+              const journey = (await unit.journey())[0];
+              expect(journey.superOutcome).toEqual('Subscription Renewal');
+              expect(journey.outcome).toEqual('Renew - ' + tierSilver);
+              expect(journey.result).toEqual('success');
+              done();
+            })();
           });
-          beforeEach(() => {
-            unit.subscriptionRenewed(tierSilver)
+          beforeEach((done) => {
+            (async () => {
+              ImmediatelyResolvePromise(7);
+              await unit.subscriptionRenewed(tierSilver);
+              done();
+            })();
           });
         });
-
       });
       describe('when subscriptionPaused', () => {
         const tierSilver = 'Silver Monthly';
         const method = 'Stripe'; // optional
         const price = '$25'; // optional
         const term = '30d'; // optional
-
         describe('when has method, price, and term', () => {
-          it('then creates journey with outcome', () => {
-            const journey = unit.journey()[0];
-            expect(journey.term).toEqual(term);
+          it('then creates journey with outcome', (done) => {
+            (async () => {
+              const journey = (await unit.journey())[0];
+              expect(journey.term).toEqual(term);
+              done();
+            })();
           });
-          beforeEach(() => {
-            unit.subscriptionPaused(tierSilver, method, price, term)
+          beforeEach((done) => {
+            (async () => {
+              ImmediatelyResolvePromise(7);
+              await unit.subscriptionPaused(tierSilver, method, price, term);
+              done();
+            })();
           });
         });
         describe('when has method and price', () => {
-          it('then creates journey with outcome', () => {
-            const journey = unit.journey()[0];
-            expect(journey.price).toEqual(price);
+          it('then creates journey with outcome', (done) => {
+            (async () => {
+              const journey = (await unit.journey())[0];
+              expect(journey.price).toEqual(price);
+              done();
+            })();
           });
-          beforeEach(() => {
-            unit.subscriptionPaused(tierSilver, method, price)
+          beforeEach((done) => {
+            (async () => {
+              ImmediatelyResolvePromise(7);
+              await unit.subscriptionPaused(tierSilver, method, price);
+              done();
+            })();
           });
         });
         describe('when has method', () => {
-          it('then creates journey with outcome', () => {
-            const journey = unit.journey()[0];
-            expect(journey.method).toEqual(method);
+          it('then creates journey with outcome', (done) => {
+            (async () => {
+              const journey = (await unit.journey())[0];
+              expect(journey.method).toEqual(method);
+              done();
+            })();
           });
-          beforeEach(() => {
-            unit.subscriptionPaused(tierSilver, method)
+          beforeEach((done) => {
+            (async () => {
+              ImmediatelyResolvePromise(7);
+              await unit.subscriptionPaused(tierSilver, method);
+              done();
+            })();
           });
         });
         describe('when no method', () => {
-          it('then creates journey with outcome', () => {
-            const journey = unit.journey()[0];
-            expect(journey.superOutcome).toEqual('Subscription Renewal');
-            expect(journey.outcome).toEqual('Paused - ' + tierSilver);
-            expect(journey.result).toEqual('fail');
+          it('then creates journey with outcome', (done) => {
+            (async () => {
+              const journey = (await unit.journey())[0];
+              expect(journey.superOutcome).toEqual('Subscription Renewal');
+              expect(journey.outcome).toEqual('Paused - ' + tierSilver);
+              expect(journey.result).toEqual('fail');
+              done();
+            })();
           });
-          beforeEach(() => {
-            unit.subscriptionPaused(tierSilver)
+          beforeEach((done) => {
+            (async () => {
+              ImmediatelyResolvePromise(7);
+              await unit.subscriptionPaused(tierSilver);
+              done();
+            })();
           });
         });
       });
@@ -608,46 +899,72 @@ describe('View SDK', () => {
         const method = 'Stripe'; // optional
         const price = '$25'; // optional
         const term = '30d'; // optional
-
         describe('when has method, price, and term', () => {
-          it('then creates journey with outcome', () => {
-            const journey = unit.journey()[0];
-            expect(journey.term).toEqual(term);
+          it('then creates journey with outcome', (done) => {
+            (async () => {
+              const journey = (await unit.journey())[0];
+              expect(journey.term).toEqual(term);
+              done();
+            })();
           });
-          beforeEach(() => {
-            unit.subscriptionCanceled(tierSilver, method, price, term)
+          beforeEach((done) => {
+            (async () => {
+              ImmediatelyResolvePromise(7);
+              await unit.subscriptionCanceled(tierSilver, method, price, term);
+              done();
+            })();
           });
         });
         describe('when has method and price', () => {
-          it('then creates journey with outcome', () => {
-            const journey = unit.journey()[0];
-            expect(journey.price).toEqual(price);
+          it('then creates journey with outcome', (done) => {
+            (async () => {
+              const journey = (await unit.journey())[0];
+              expect(journey.price).toEqual(price);
+              done();
+            })();
           });
-          beforeEach(() => {
-            unit.subscriptionCanceled(tierSilver, method, price)
+          beforeEach((done) => {
+            (async () => {
+              ImmediatelyResolvePromise(7);
+              await unit.subscriptionCanceled(tierSilver, method, price);
+              done();
+            })();
           });
         });
         describe('when has method', () => {
-          it('then creates journey with outcome', () => {
-            const journey = unit.journey()[0];
-            expect(journey.method).toEqual(method);
+          it('then creates journey with outcome', (done) => {
+            (async () => {
+              const journey = (await unit.journey())[0];
+              expect(journey.method).toEqual(method);
+              done();
+            })();
           });
-          beforeEach(() => {
-            unit.subscriptionCanceled(tierSilver, method)
+          beforeEach((done) => {
+            (async () => {
+              ImmediatelyResolvePromise(7);
+              await unit.subscriptionCanceled(tierSilver, method);
+              done();
+            })();
           });
         });
         describe('when no method', () => {
-          it('then creates journey with outcome', () => {
-            const journey = unit.journey()[0];
-            expect(journey.superOutcome).toEqual('Subscription Renewal');
-            expect(journey.outcome).toEqual('Cancel - ' + tierSilver);
-            expect(journey.result).toEqual('fail');
+          it('then creates journey with outcome', (done) => {
+            (async () => {
+              const journey = (await unit.journey())[0];
+              expect(journey.superOutcome).toEqual('Subscription Renewal');
+              expect(journey.outcome).toEqual('Cancel - ' + tierSilver);
+              expect(journey.result).toEqual('fail');
+              done();
+            })();
           });
-          beforeEach(() => {
-            unit.subscriptionCanceled(tierSilver)
+          beforeEach((done) => {
+            (async () => {
+              ImmediatelyResolvePromise(7);
+              await unit.subscriptionCanceled(tierSilver);
+              done();
+            })();
           });
         });
-
       });
       describe('when subscriptionUpsold', () => {
         const tierSilver = 'Silver Monthly';
@@ -655,41 +972,69 @@ describe('View SDK', () => {
         const price = '$25'; // optional
         const term = '30d'; // optional
         describe('when has method, price and term', () => {
-          it('then creates journey with outcome', () => {
-            const journey = unit.journey()[0];
-            expect(journey.term).toEqual(term);
+          it('then creates journey with outcome', (done) => {
+            (async () => {
+              const journey = (await unit.journey())[0];
+              expect(journey.term).toEqual(term);
+              done();
+            })();
           });
-          beforeEach(() => {
-            unit.subscriptionUpsold(tierSilver, method, price, term)
+          beforeEach((done) => {
+            (async () => {
+              ImmediatelyResolvePromise(7);
+              await unit.subscriptionUpsold(tierSilver, method, price, term);
+              done();
+            })();
           });
         });
         describe('when has method and price', () => {
-          it('then creates journey with outcome', () => {
-            const journey = unit.journey()[0];
-            expect(journey.price).toEqual(price);
+          it('then creates journey with outcome', (done) => {
+            (async () => {
+              const journey = (await unit.journey())[0];
+              expect(journey.price).toEqual(price);
+              done();
+            })();
           });
-          beforeEach(() => {
-            unit.subscriptionUpsold(tierSilver, method, price)
+          beforeEach((done) => {
+            (async () => {
+              ImmediatelyResolvePromise(7);
+              await unit.subscriptionUpsold(tierSilver, method, price);
+              done();
+            })();
           });
         });
         describe('when has method', () => {
-          it('then creates journey with outcome', () => {
-            const journey = unit.journey()[0];
-            expect(journey.method).toEqual(method);
+          it('then creates journey with outcome', (done) => {
+            (async () => {
+              const journey = (await unit.journey())[0];
+              expect(journey.method).toEqual(method);
+              done();
+            })();
           });
-          beforeEach(() => {
-            unit.subscriptionUpsold(tierSilver, method)
+          beforeEach((done) => {
+            (async () => {
+              ImmediatelyResolvePromise(7);
+              await unit.subscriptionUpsold(tierSilver, method);
+              done();
+            })();
           });
         });
         describe('when no method', () => {
-          it('then creates journey with outcome', () => {
-            const journey = unit.journey()[0];
-            expect(journey.superOutcome).toEqual('Subscription Upsold');
-            expect(journey.outcome).toEqual('Upsold - ' + tierSilver);
-            expect(journey.result).toEqual('success');
+          it('then creates journey with outcome', (done) => {
+            (async () => {
+              const journey = (await unit.journey())[0];
+              expect(journey.superOutcome).toEqual('Subscription Upsold');
+              expect(journey.outcome).toEqual('Upsold - ' + tierSilver);
+              expect(journey.result).toEqual('success');
+              done();
+            })();
           });
-          beforeEach(() => {
-            unit.subscriptionUpsold(tierSilver)
+          beforeEach((done) => {
+            (async () => {
+              ImmediatelyResolvePromise(7);
+              await unit.subscriptionUpsold(tierSilver);
+              done();
+            })();
           });
         });
       });
@@ -698,46 +1043,72 @@ describe('View SDK', () => {
         const method = 'Stripe'; // optional
         const price = '$25'; // optional
         const term = '30d'; // optional
-
         describe('when has method, price and term', () => {
-          it('then creates journey with outcome', () => {
-            const journey = unit.journey()[0];
-            expect(journey.term).toEqual(term);
+          it('then creates journey with outcome', (done) => {
+            (async () => {
+              const journey = (await unit.journey())[0];
+              expect(journey.term).toEqual(term);
+              done();
+            })();
           });
-          beforeEach(() => {
-            unit.subscriptionUpsellDeclined(tierSilver, method, price, term);
+          beforeEach((done) => {
+            (async () => {
+              ImmediatelyResolvePromise(7);
+              await unit.subscriptionUpsellDeclined(tierSilver, method, price, term);
+              done();
+            })();
           });
         });
         describe('when has method, and price', () => {
-          it('then creates journey with outcome', () => {
-            const journey = unit.journey()[0];
-            expect(journey.price).toEqual(price);
+          it('then creates journey with outcome', (done) => {
+            (async () => {
+              const journey = (await unit.journey())[0];
+              expect(journey.price).toEqual(price);
+              done();
+            })();
           });
-          beforeEach(() => {
-            unit.subscriptionUpsellDeclined(tierSilver, method, price);
+          beforeEach((done) => {
+            (async () => {
+              ImmediatelyResolvePromise(7);
+              await unit.subscriptionUpsellDeclined(tierSilver, method, price);
+              done();
+            })();
           });
         });
         describe('when has method', () => {
-          it('then creates journey with outcome', () => {
-            const journey = unit.journey()[0];
-            expect(journey.method).toEqual(method);
+          it('then creates journey with outcome', (done) => {
+            (async () => {
+              const journey = (await unit.journey())[0];
+              expect(journey.method).toEqual(method);
+              done();
+            })();
           });
-          beforeEach(() => {
-            unit.subscriptionUpsellDeclined(tierSilver, method);
+          beforeEach((done) => {
+            (async () => {
+              ImmediatelyResolvePromise(7);
+              await unit.subscriptionUpsellDeclined(tierSilver, method);
+              done();
+            })();
           });
         });
         describe('when no method', () => {
-          it('then creates journey with outcome', () => {
-            const journey = unit.journey()[0];
-            expect(journey.superOutcome).toEqual('Subscription Upsold');
-            expect(journey.outcome).toEqual('Declined - ' + tierSilver);
-            expect(journey.result).toEqual('fail');
+          it('then creates journey with outcome', (done) => {
+            (async () => {
+              const journey = (await unit.journey())[0];
+              expect(journey.superOutcome).toEqual('Subscription Upsold');
+              expect(journey.outcome).toEqual('Declined - ' + tierSilver);
+              expect(journey.result).toEqual('fail');
+              done();
+            })();
           });
-          beforeEach(() => {
-            unit.subscriptionUpsellDeclined(tierSilver);
+          beforeEach((done) => {
+            (async () => {
+              ImmediatelyResolvePromise(7);
+              await unit.subscriptionUpsellDeclined(tierSilver);
+              done();
+            })();
           });
         });
-
       });
       describe('when subscriptionDownsell', () => {
         const tierSilver = 'Silver Monthly';
@@ -745,41 +1116,69 @@ describe('View SDK', () => {
         const price = '$25'; // optional
         const term = '30d'; // optional
         describe('when has method, price and term', () => {
-          it('then creates journey with outcome', () => {
-            const journey = unit.journey()[0];
-            expect(journey.term).toEqual(term);
+          it('then creates journey with outcome', (done) => {
+            (async () => {
+              const journey = (await unit.journey())[0];
+              expect(journey.term).toEqual(term);
+              done();
+            })();
           });
-          beforeEach(() => {
-            unit.subscriptionDownsell(tierSilver, method, price, term);
+          beforeEach((done) => {
+            (async () => {
+              ImmediatelyResolvePromise(7);
+              await unit.subscriptionDownsell(tierSilver, method, price, term);
+              done();
+            })();
           });
         });
         describe('when has method and price', () => {
-          it('then creates journey with outcome', () => {
-            const journey = unit.journey()[0];
-            expect(journey.price).toEqual(price);
+          it('then creates journey with outcome', (done) => {
+            (async () => {
+              const journey = (await unit.journey())[0];
+              expect(journey.price).toEqual(price);
+              done();
+            })();
           });
-          beforeEach(() => {
-            unit.subscriptionDownsell(tierSilver, method, price);
+          beforeEach((done) => {
+            (async () => {
+              ImmediatelyResolvePromise(7);
+              await unit.subscriptionDownsell(tierSilver, method, price);
+              done();
+            })();
           });
         });
         describe('when has method', () => {
-          it('then creates journey with outcome', () => {
-            const journey = unit.journey()[0];
-            expect(journey.method).toEqual(method);
+          it('then creates journey with outcome', (done) => {
+            (async () => {
+              const journey = (await unit.journey())[0];
+              expect(journey.method).toEqual(method);
+              done();
+            })();
           });
-          beforeEach(() => {
-            unit.subscriptionDownsell(tierSilver, method);
+          beforeEach((done) => {
+            (async () => {
+              ImmediatelyResolvePromise(7);
+              await unit.subscriptionDownsell(tierSilver, method);
+              done();
+            })();
           });
         });
         describe('when no method', () => {
-          it('then creates journey with outcome', () => {
-            const journey = unit.journey()[0];
-            expect(journey.superOutcome).toEqual('Subscription Upsold');
-            expect(journey.outcome).toEqual('Downsell - ' + tierSilver);
-            expect(journey.result).toEqual('fail');
+          it('then creates journey with outcome', (done) => {
+            (async () => {
+              const journey = (await unit.journey())[0];
+              expect(journey.superOutcome).toEqual('Subscription Upsold');
+              expect(journey.outcome).toEqual('Downsell - ' + tierSilver);
+              expect(journey.result).toEqual('fail');
+              done();
+            })();
           });
-          beforeEach(() => {
-            unit.subscriptionDownsell(tierSilver);
+          beforeEach((done) => {
+            (async () => {
+              ImmediatelyResolvePromise(7);
+              await unit.subscriptionDownsell(tierSilver);
+              done();
+            })();
           });
         });
       });
@@ -787,41 +1186,61 @@ describe('View SDK', () => {
         const provider = 'AdMob';
         const id = 'ID-1234'; // optional
         const price = '$0.225'; // optional
-
         describe('when has id and price', () => {
-          it('then creates journey with outcome', () => {
-            const journey = unit.journey()[0];
-            expect(journey.superOutcome).toEqual('Advertisement');
-            expect(journey.outcome).toEqual('Ad Click - ' + provider);
-            expect(journey.result).toEqual('success');
-            expect(journey.id).toEqual(id);
-            expect(journey.price).toEqual(price);
+          it('then creates journey with outcome', (done) => {
+            (async () => {
+              const journey = (await unit.journey())[0];
+              expect(journey.superOutcome).toEqual('Advertisement');
+              expect(journey.outcome).toEqual('Ad Click - ' + provider);
+              expect(journey.result).toEqual('success');
+              expect(journey.id).toEqual(id);
+              expect(journey.price).toEqual(price);
+              done();
+            })();
           });
-          beforeEach(() => {
-            unit.adClicked(provider, id, price);
+          beforeEach((done) => {
+            (async () => {
+              ImmediatelyResolvePromise(7);
+              await unit.adClicked(provider, id, price);
+              done();
+            })();
           });
         });
         describe('when has id', () => {
-          it('then creates journey with outcome', () => {
-            const journey = unit.journey()[0];
-            expect(journey.superOutcome).toEqual('Advertisement');
-            expect(journey.outcome).toEqual('Ad Click - ' + provider);
-            expect(journey.result).toEqual('success');
-            expect(journey.id).toEqual(id);
+          it('then creates journey with outcome', (done) => {
+            (async () => {
+              const journey = (await unit.journey())[0];
+              expect(journey.superOutcome).toEqual('Advertisement');
+              expect(journey.outcome).toEqual('Ad Click - ' + provider);
+              expect(journey.result).toEqual('success');
+              expect(journey.id).toEqual(id);
+              done();
+            })();
           });
-          beforeEach(() => {
-            unit.adClicked(provider, id);
+          beforeEach((done) => {
+            (async () => {
+              ImmediatelyResolvePromise(7);
+              await unit.adClicked(provider, id);
+              done();
+            })();
           });
         });
         describe('when no method', () => {
-          it('then creates journey with outcome', () => {
-            const journey = unit.journey()[0];
-            expect(journey.superOutcome).toEqual('Advertisement');
-            expect(journey.outcome).toEqual('Ad Click - ' + provider);
-            expect(journey.result).toEqual('success');
+          it('then creates journey with outcome', (done) => {
+            (async () => {
+              const journey = (await unit.journey())[0];
+              expect(journey.superOutcome).toEqual('Advertisement');
+              expect(journey.outcome).toEqual('Ad Click - ' + provider);
+              expect(journey.result).toEqual('success');
+              done();
+            })();
           });
-          beforeEach(() => {
-            unit.adClicked(provider);
+          beforeEach((done) => {
+            (async () => {
+              ImmediatelyResolvePromise(7);
+              await unit.adClicked(provider);
+              done();
+            })();
           });
         });
       });
@@ -829,41 +1248,61 @@ describe('View SDK', () => {
         const provider = 'AdMob';
         const id = 'ID-1234'; // optional
         const price = '$0.225'; // optional
-
         describe('when has id and price', () => {
-          it('then creates journey with outcome', () => {
-            const journey = unit.journey()[0];
-            expect(journey.superOutcome).toEqual('Advertisement');
-            expect(journey.outcome).toEqual('Ad Ignored - ' + provider);
-            expect(journey.result).toEqual('fail');
-            expect(journey.id).toEqual(id);
-            expect(journey.price).toEqual(price);
+          it('then creates journey with outcome', (done) => {
+            (async () => {
+              const journey = (await unit.journey())[0];
+              expect(journey.superOutcome).toEqual('Advertisement');
+              expect(journey.outcome).toEqual('Ad Ignored - ' + provider);
+              expect(journey.result).toEqual('fail');
+              expect(journey.id).toEqual(id);
+              expect(journey.price).toEqual(price);
+              done();
+            })();
           });
-          beforeEach(() => {
-            unit.adIgnored(provider, id, price);
+          beforeEach((done) => {
+            (async () => {
+              ImmediatelyResolvePromise(7);
+              await unit.adIgnored(provider, id, price);
+              done();
+            })();
           });
         });
         describe('when has id', () => {
-          it('then creates journey with outcome', () => {
-            const journey = unit.journey()[0];
-            expect(journey.superOutcome).toEqual('Advertisement');
-            expect(journey.outcome).toEqual('Ad Ignored - ' + provider);
-            expect(journey.result).toEqual('fail');
-            expect(journey.id).toEqual(id);
+          it('then creates journey with outcome', (done) => {
+            (async () => {
+              const journey = (await unit.journey())[0];
+              expect(journey.superOutcome).toEqual('Advertisement');
+              expect(journey.outcome).toEqual('Ad Ignored - ' + provider);
+              expect(journey.result).toEqual('fail');
+              expect(journey.id).toEqual(id);
+              done();
+            })();
           });
-          beforeEach(() => {
-            unit.adIgnored(provider, id);
+          beforeEach((done) => {
+            (async () => {
+              ImmediatelyResolvePromise(7);
+              await unit.adIgnored(provider, id);
+              done();
+            })();
           });
         });
         describe('when no method', () => {
-          it('then creates journey with outcome', () => {
-            const journey = unit.journey()[0];
-            expect(journey.superOutcome).toEqual('Advertisement');
-            expect(journey.outcome).toEqual('Ad Ignored - ' + provider);
-            expect(journey.result).toEqual('fail');
+          it('then creates journey with outcome', (done) => {
+            (async () => {
+              const journey = (await unit.journey())[0];
+              expect(journey.superOutcome).toEqual('Advertisement');
+              expect(journey.outcome).toEqual('Ad Ignored - ' + provider);
+              expect(journey.result).toEqual('fail');
+              done();
+            })();
           });
-          beforeEach(() => {
-            unit.adIgnored(provider);
+          beforeEach((done) => {
+            (async () => {
+              ImmediatelyResolvePromise(7);
+              await unit.adIgnored(provider);
+              done();
+            })();
           });
         });
       });
@@ -871,52 +1310,79 @@ describe('View SDK', () => {
         const kind = 'Share';
         const detail = 'Review'; // optional
         describe('when has detail', () => {
-          it('then creates journey with outcome', () => {
-            const journey = unit.journey()[0];
-            expect(journey.superOutcome).toEqual('Referral');
-            expect(journey.outcome).toEqual('Referred - ' + kind);
-            expect(journey.result).toEqual('success');
+          it('then creates journey with outcome', (done) => {
+            (async () => {
+              const journey = (await unit.journey())[0];
+              expect(journey.superOutcome).toEqual('Referral');
+              expect(journey.outcome).toEqual('Referred - ' + kind);
+              expect(journey.result).toEqual('success');
+              done();
+            })();
           });
-          beforeEach(() => {
-            unit.referral(kind, detail)
+          beforeEach((done) => {
+            (async () => {
+              ImmediatelyResolvePromise(7);
+              await unit.referral(kind, detail);
+              done();
+            })();
           });
         });
         describe('when no detail', () => {
-          it('then creates journey with outcome', () => {
-            const journey = unit.journey()[0];
-            expect(journey.superOutcome).toEqual('Referral');
-            expect(journey.outcome).toEqual('Referred - ' + kind);
-            expect(journey.result).toEqual('success');
+          it('then creates journey with outcome', (done) => {
+            (async () => {
+              const journey = (await unit.journey())[0];
+              expect(journey.superOutcome).toEqual('Referral');
+              expect(journey.outcome).toEqual('Referred - ' + kind);
+              expect(journey.result).toEqual('success');
+              done();
+            })();
           });
-          beforeEach(() => {
-            unit.referral(kind)
+          beforeEach((done) => {
+            (async () => {
+              ImmediatelyResolvePromise(7);
+              await unit.referral(kind);
+              done();
+            })();
           });
         });
-
       });
       describe('when referralDeclined', () => {
         const kind = 'Share';
         const detail = 'Review'; // optional
         describe('when has detail', () => {
-          it('then creates journey with outcome', () => {
-            const journey = unit.journey()[0];
-            expect(journey.superOutcome).toEqual('Referral');
-            expect(journey.outcome).toEqual('Declined - ' + kind);
-            expect(journey.result).toEqual('fail');
+          it('then creates journey with outcome', (done) => {
+            (async () => {
+              const journey = (await unit.journey())[0];
+              expect(journey.superOutcome).toEqual('Referral');
+              expect(journey.outcome).toEqual('Declined - ' + kind);
+              expect(journey.result).toEqual('fail');
+              done();
+            })();
           });
-          beforeEach(() => {
-            unit.referralDeclined(kind, detail)
+          beforeEach((done) => {
+            (async () => {
+              ImmediatelyResolvePromise(7);
+              await unit.referralDeclined(kind, detail);
+              done();
+            })();
           });
         });
         describe('when no detail', () => {
-          it('then creates journey with outcome', () => {
-            const journey = unit.journey()[0];
-            expect(journey.superOutcome).toEqual('Referral');
-            expect(journey.outcome).toEqual('Declined - ' + kind);
-            expect(journey.result).toEqual('fail');
+          it('then creates journey with outcome', (done) => {
+            (async () => {
+              const journey = (await unit.journey())[0];
+              expect(journey.superOutcome).toEqual('Referral');
+              expect(journey.outcome).toEqual('Declined - ' + kind);
+              expect(journey.result).toEqual('fail');
+              done();
+            })();
           });
-          beforeEach(() => {
-            unit.referralDeclined(kind)
+          beforeEach((done) => {
+            (async () => {
+              ImmediatelyResolvePromise(7);
+              await unit.referralDeclined(kind);
+              done();
+            })();
           });
         });
 
@@ -926,11 +1392,14 @@ describe('View SDK', () => {
         const laptop = 'Dell XPS';
         const price = 1234.56;
         describe('when only product', () => {
-          it('then creates journey with outcome', () => {
-            const journey = unit.journey()[0];
-            expect(journey.superOutcome).toEqual('Add Product To Cart');
-            expect(journey.outcome).toEqual('Add - ' + laptop);
-            expect(journey.result).toEqual('success');
+          it('then creates journey with outcome', (done) => {
+            (async () => {
+              const journey = (await unit.journey())[0];
+              expect(journey.superOutcome).toEqual('Add Product To Cart');
+              expect(journey.outcome).toEqual('Add - ' + laptop);
+              expect(journey.result).toEqual('success');
+              done();
+            })();
           });
           it('then counts', () => {
             expect(countApi.fetch).toHaveBeenCalledWith({
@@ -944,22 +1413,30 @@ describe('View SDK', () => {
               }
             });
           });
-          beforeEach(() => {
-            storeSession('view-attribution', {
-              leadSource: null,
-              leadCampaign: null,
-              leadGuid: null
-            })
-            unit.productAddedToCart(laptop);
+          beforeEach((done) => {
+            (async () => {
+              await storeSession('view-attribution', {
+                leadSource: null,
+                leadCampaign: null,
+                leadGuid: null
+              })
+              ImmediatelyResolvePromise(7);
+              countResolvePromise({"result": "success"});
+              unit.productAddedToCart(laptop);
+              done();
+            })();
           });
         });
         describe('when product and price', () => {
-          it('then creates journey with outcome', () => {
-            const journey = unit.journey()[0];
-            expect(journey.superOutcome).toEqual('Add Product To Cart');
-            expect(journey.outcome).toEqual('Add - ' + laptop);
-            expect(journey.result).toEqual('success');
-            expect(journey.price).toEqual(price);
+          it('then creates journey with outcome', (done) => {
+            (async () => {
+              const journey = (await unit.journey())[0];
+              expect(journey.superOutcome).toEqual('Add Product To Cart');
+              expect(journey.outcome).toEqual('Add - ' + laptop);
+              expect(journey.result).toEqual('success');
+              expect(journey.price).toEqual(price);
+              done();
+            })();
           });
           it('then counts', () => {
             expect(countApi.fetch).toHaveBeenCalledWith({
@@ -973,13 +1450,18 @@ describe('View SDK', () => {
               }
             });
           });
-          beforeEach(() => {
-            storeSession('view-attribution', {
-              leadSource: null,
-              leadCampaign: null,
-              leadGuid: null
-            })
-            unit.productAddedToCart(laptop, price);
+          beforeEach((done) => {
+            (async () => {
+              await storeSession('view-attribution', {
+                leadSource: null,
+                leadCampaign: null,
+                leadGuid: null
+              })
+              ImmediatelyResolvePromise(7);
+              countResolvePromise({"result": "success"});
+              unit.productAddedToCart(laptop, price);
+              done();
+            })();
           });
         });
         beforeEach(() => {
@@ -988,27 +1470,36 @@ describe('View SDK', () => {
       });
       describe('when productNotAddedToCart', () => {
         const laptop = 'Dell XPS';
-        it('then creates journey with outcome', () => {
-          const journey = unit.journey()[0];
-          expect(journey.superOutcome).toEqual('Add Product To Cart');
-          expect(journey.outcome).toEqual('Ignore - ' + laptop);
-          expect(journey.result).toEqual('fail');
+        it('then creates journey with outcome', (done) => {
+          (async () => {
+            const journey = (await unit.journey())[0];
+            expect(journey.superOutcome).toEqual('Add Product To Cart');
+            expect(journey.outcome).toEqual('Ignore - ' + laptop);
+            expect(journey.result).toEqual('fail');
+            done();
+          })();
         });
-        beforeEach(() => {
-          unit.productNotAddedToCart(laptop)
+        beforeEach((done) => {
+          (async () => {
+            ImmediatelyResolvePromise(7);
+            await unit.productNotAddedToCart(laptop);
+            done();
+          })();
         });
       });
       describe('when upsold', () => {
         const laptop = 'Dell XPS';
         const price = 25; // optional
-
         describe('when has price', () => {
-          it('then creates journey with outcome', () => {
-            const journey = unit.journey()[0];
-            expect(journey.superOutcome).toEqual('Upsold Product');
-            expect(journey.outcome).toEqual('Upsold - ' + laptop);
-            expect(journey.result).toEqual('success');
-            expect(journey.price).toEqual(price);
+          it('then creates journey with outcome', (done) => {
+            (async () => {
+              const journey = (await unit.journey())[0];
+              expect(journey.superOutcome).toEqual('Upsold Product');
+              expect(journey.outcome).toEqual('Upsold - ' + laptop);
+              expect(journey.result).toEqual('success');
+              expect(journey.price).toEqual(price);
+              done();
+            })();
           });
           it('then counts', () => {
             expect(countApi.fetch).toHaveBeenCalledWith({
@@ -1022,21 +1513,29 @@ describe('View SDK', () => {
               }
             });
           });
-          beforeEach(() => {
-            storeSession('view-attribution', {
-              leadSource: null,
-              leadCampaign: null,
-              leadGuid: null
-            })
-            unit.upsold(laptop, price)
+          beforeEach((done) => {
+            (async () => {
+              await storeSession('view-attribution', {
+                leadSource: null,
+                leadCampaign: null,
+                leadGuid: null
+              })
+              ImmediatelyResolvePromise(7);
+              countResolvePromise({"result": "success"});
+              unit.upsold(laptop, price);
+              done();
+            })();
           });
         });
         describe('when no price', () => {
-          it('then creates journey with outcome', () => {
-            const journey = unit.journey()[0];
-            expect(journey.superOutcome).toEqual('Upsold Product');
-            expect(journey.outcome).toEqual('Upsold - ' + laptop);
-            expect(journey.result).toEqual('success');
+          it('then creates journey with outcome', (done) => {
+            (async () => {
+              const journey = (await unit.journey())[0];
+              expect(journey.superOutcome).toEqual('Upsold Product');
+              expect(journey.outcome).toEqual('Upsold - ' + laptop);
+              expect(journey.result).toEqual('success');
+              done();
+            })();
           });
           it('then counts', () => {
             expect(countApi.fetch).toHaveBeenCalledWith({
@@ -1050,51 +1549,72 @@ describe('View SDK', () => {
               }
             });
           });
-          beforeEach(() => {
-            storeSession('view-attribution', {
-              leadSource: null,
-              leadCampaign: null,
-              leadGuid: null
-            })
-            unit.upsold(laptop)
+          beforeEach((done) => {
+            (async () => {
+              await storeSession('view-attribution', {
+                leadSource: null,
+                leadCampaign: null,
+                leadGuid: null
+              })
+              ImmediatelyResolvePromise(7);
+              countResolvePromise({"result": "success"});
+              unit.upsold(laptop);
+              done();
+            })();
           });
         });
       });
       describe('when upsellDismissed', () => {
         const laptop = 'Dell XPS';
         const price = '$25'; // optional
-
         describe('when price', () => {
-          it('then creates journey with outcome', () => {
-            const journey = unit.journey()[0];
-            expect(journey.superOutcome).toEqual('Upsold Product');
-            expect(journey.outcome).toEqual('Dismissed - ' + laptop);
-            expect(journey.result).toEqual('fail');
-            expect(journey.price).toEqual(price);
+          it('then creates journey with outcome', (done) => {
+            (async () => {
+              const journey = (await unit.journey())[0];
+              expect(journey.superOutcome).toEqual('Upsold Product');
+              expect(journey.outcome).toEqual('Dismissed - ' + laptop);
+              expect(journey.result).toEqual('fail');
+              expect(journey.price).toEqual(price);
+              done();
+            })();
           });
-          beforeEach(() => {
-            unit.upsellDismissed(laptop, price)
+          beforeEach((done) => {
+            (async () => {
+              ImmediatelyResolvePromise(7);
+              unit.upsellDismissed(laptop, price);
+              done();
+            })();
           });
         });
         describe('when no price', () => {
-          it('then creates journey with outcome', () => {
-            const journey = unit.journey()[0];
-            expect(journey.superOutcome).toEqual('Upsold Product');
-            expect(journey.outcome).toEqual('Dismissed - ' + laptop);
-            expect(journey.result).toEqual('fail');
+          it('then creates journey with outcome', (done) => {
+            (async () => {
+              const journey = (await unit.journey())[0];
+              expect(journey.superOutcome).toEqual('Upsold Product');
+              expect(journey.outcome).toEqual('Dismissed - ' + laptop);
+              expect(journey.result).toEqual('fail');
+              done();
+            })();
           });
-          beforeEach(() => {
-            unit.upsellDismissed(laptop)
+          beforeEach((done) => {
+            (async () => {
+              ImmediatelyResolvePromise(7);
+              unit.upsellDismissed(laptop);
+              done();
+            })();
           });
         });
       });
       describe('when checkOut', () => {
         describe('when no member', () => {
-          it('then creates journey with outcome', () => {
-            const journey = unit.journey()[0];
-            expect(journey.superOutcome).toEqual('Customer Checkout');
-            expect(journey.outcome).toEqual('Check Out');
-            expect(journey.result).toEqual('success');
+          it('then creates journey with outcome', (done) => {
+            (async () => {
+              const journey = (await unit.journey())[0];
+              expect(journey.superOutcome).toEqual('Customer Checkout');
+              expect(journey.outcome).toEqual('Check Out');
+              expect(journey.result).toEqual('success');
+              done();
+            })();
           });
           it('then counts', () => {
             expect(countApi.fetch).toHaveBeenCalledWith({
@@ -1108,16 +1628,24 @@ describe('View SDK', () => {
               }
             });
           });
-          beforeEach(() => {
-            unit.checkOut()
+          beforeEach((done) => {
+            (async () => {
+              ImmediatelyResolvePromise(7);
+              countResolvePromise({"result": "success"});
+              unit.checkOut();
+              done();
+            })();
           });
         });
         describe('when member', () => {
-          it('then creates journey with outcome', () => {
-            const journey = unit.journey()[0];
-            expect(journey.superOutcome).toEqual('Customer Checkout');
-            expect(journey.outcome).toEqual('Check Out - Guest');
-            expect(journey.result).toEqual('success');
+          it('then creates journey with outcome', (done) => {
+            (async () => {
+              const journey = (await unit.journey())[0];
+              expect(journey.superOutcome).toEqual('Customer Checkout');
+              expect(journey.outcome).toEqual('Check Out - Guest');
+              expect(journey.result).toEqual('success');
+              done();
+            })();
           });
           it('then counts', () => {
             expect(countApi.fetch).toHaveBeenCalledWith({
@@ -1131,8 +1659,13 @@ describe('View SDK', () => {
               }
             });
           });
-          beforeEach(() => {
-            unit.checkOut("Guest")
+          beforeEach((done) => {
+            (async () => {
+              ImmediatelyResolvePromise(7);
+              countResolvePromise({"result": "success"});
+              unit.checkOut("Guest");
+              done();
+            })();
           });
         });
         beforeEach(() => {
@@ -1144,26 +1677,40 @@ describe('View SDK', () => {
         });
       });
       describe('when checkoutCanceled', () => {
-        it('then creates journey with outcome', () => {
-          const journey = unit.journey()[0];
-          expect(journey.superOutcome).toEqual('Customer Checkout');
-          expect(journey.outcome).toEqual('Canceled');
-          expect(journey.result).toEqual('fail');
+        it('then creates journey with outcome', (done) => {
+          (async () => {
+            const journey = (await unit.journey())[0];
+            expect(journey.superOutcome).toEqual('Customer Checkout');
+            expect(journey.outcome).toEqual('Canceled');
+            expect(journey.result).toEqual('fail');
+            done();
+          })();
         });
-        beforeEach(() => {
-          unit.checkoutCanceled()
+        beforeEach((done) => {
+          (async () => {
+            ImmediatelyResolvePromise(7);
+            unit.checkoutCanceled();
+            done();
+          })();
         });
       });
       describe('when productRemoved', () => {
         const laptop = 'Dell XPS';
-        it('then creates journey with outcome', () => {
-          const journey = unit.journey()[0];
-          expect(journey.superOutcome).toEqual('Customer Checkout');
-          expect(journey.outcome).toEqual('Product Removed - ' + laptop);
-          expect(journey.result).toEqual('fail');
+        it('then creates journey with outcome', (done) => {
+          (async () => {
+            const journey = (await unit.journey())[0];
+            expect(journey.superOutcome).toEqual('Customer Checkout');
+            expect(journey.outcome).toEqual('Product Removed - ' + laptop);
+            expect(journey.result).toEqual('fail');
+            done();
+          })();
         });
-        beforeEach(() => {
-          unit.productRemoved(laptop)
+        beforeEach((done) => {
+          (async () => {
+            ImmediatelyResolvePromise(7);
+            unit.productRemoved(laptop);
+            done();
+          })();
         });
       });
       describe('when purchased', () => {
@@ -1172,13 +1719,16 @@ describe('View SDK', () => {
         const shipping = 3; // optional
         const discount = 15; // optional
         describe('when price', () => {
-          it('then creates journey with outcome', () => {
-            const journey = unit.journey()[0];
-            expect(journey.superOutcome).toEqual('Customer Purchase');
-            expect(journey.outcome).toEqual('Purchase');
-            expect(journey.skus).toEqual(SKUs);
-            expect(journey.result).toEqual('success');
-            expect(journey.price).toEqual(price);
+          it('then creates journey with outcome', (done) => {
+            (async () => {
+              const journey = (await unit.journey())[0];
+              expect(journey.superOutcome).toEqual('Customer Purchase');
+              expect(journey.outcome).toEqual('Purchase');
+              expect(journey.skus).toEqual(SKUs);
+              expect(journey.result).toEqual('success');
+              expect(journey.price).toEqual(price);
+              done();
+            })();
           });
           it('then counts', () => {
             expect(countApi.fetch).toHaveBeenCalledWith({
@@ -1192,24 +1742,32 @@ describe('View SDK', () => {
               }
             });
           });
-          beforeEach(() => {
-            storeSession('view-attribution', {
-              leadSource: null,
-              leadCampaign: null,
-              leadGuid: null
-            })
-            unit.purchase(SKUs, price)
+          beforeEach((done) => {
+            (async () => {
+              await storeSession('view-attribution', {
+                leadSource: null,
+                leadCampaign: null,
+                leadGuid: null
+              })
+              ImmediatelyResolvePromise(7);
+              countResolvePromise({"result": "success"});
+              unit.purchase(SKUs, price);
+              done();
+            })();
           });
         });
         describe('when price plus shipping', () => {
-          it('then creates journey with outcome', () => {
-            const journey = unit.journey()[0];
-            expect(journey.superOutcome).toEqual('Customer Purchase');
-            expect(journey.outcome).toEqual('Purchase');
-            expect(journey.skus).toEqual(SKUs);
-            expect(journey.result).toEqual('success');
-            expect(journey.price).toEqual(price);
-            expect(journey.shipping).toEqual(shipping);
+          it('then creates journey with outcome', (done) => {
+            (async () => {
+              const journey = (await unit.journey())[0];
+              expect(journey.superOutcome).toEqual('Customer Purchase');
+              expect(journey.outcome).toEqual('Purchase');
+              expect(journey.skus).toEqual(SKUs);
+              expect(journey.result).toEqual('success');
+              expect(journey.price).toEqual(price);
+              expect(journey.shipping).toEqual(shipping);
+              done();
+            })();
           });
           it('then counts', () => {
             expect(countApi.fetch).toHaveBeenCalledWith({
@@ -1223,22 +1781,30 @@ describe('View SDK', () => {
               }
             });
           });
-          beforeEach(() => {
-            storeSession('view-attribution', {
-              leadSource: null,
-              leadCampaign: null,
-              leadGuid: null
-            })
-            unit.purchase(SKUs, price, null, shipping)
+          beforeEach((done) => {
+            (async () => {
+              await storeSession('view-attribution', {
+                leadSource: null,
+                leadCampaign: null,
+                leadGuid: null
+              })
+              ImmediatelyResolvePromise(7);
+              countResolvePromise({"result": "success"});
+              unit.purchase(SKUs, price, null, shipping);
+              done();
+            })();
           });
         });
         describe('when price plus member', () => {
-          it('then creates journey with outcome', () => {
-            const journey = unit.journey()[0];
-            expect(journey.superOutcome).toEqual('Customer Purchase');
-            expect(journey.outcome).toEqual('Purchase - Guest');
-            expect(journey.skus).toEqual(SKUs);
-            expect(journey.result).toEqual('success');
+          it('then creates journey with outcome', (done) => {
+            (async () => {
+              const journey = (await unit.journey())[0];
+              expect(journey.superOutcome).toEqual('Customer Purchase');
+              expect(journey.outcome).toEqual('Purchase - Guest');
+              expect(journey.skus).toEqual(SKUs);
+              expect(journey.result).toEqual('success');
+              done();
+            })();
           });
           it('then counts', () => {
             expect(countApi.fetch).toHaveBeenCalledWith({
@@ -1252,24 +1818,32 @@ describe('View SDK', () => {
               }
             });
           });
-          beforeEach(() => {
-            storeSession('view-attribution', {
-              leadSource: null,
-              leadCampaign: null,
-              leadGuid: null
-            })
-            unit.purchase(SKUs, price, null, null, "Guest")
+          beforeEach((done) => {
+            (async () => {
+              await storeSession('view-attribution', {
+                leadSource: null,
+                leadCampaign: null,
+                leadGuid: null
+              })
+              ImmediatelyResolvePromise(7);
+              countResolvePromise({"result": "success"});
+              unit.purchase(SKUs, price, null, null, "Guest");
+              done();
+            })();
           });
         });
         describe('when price plus discount', () => {
-          it('then creates journey with outcome', () => {
-            const journey = unit.journey()[0];
-            expect(journey.superOutcome).toEqual('Customer Purchase');
-            expect(journey.outcome).toEqual('Purchase');
-            expect(journey.skus).toEqual(SKUs);
-            expect(journey.result).toEqual('success');
-            expect(journey.price).toEqual(price);
-            expect(journey.discount).toEqual(discount);
+          it('then creates journey with outcome', (done) => {
+            (async () => {
+              const journey = (await unit.journey())[0];
+              expect(journey.superOutcome).toEqual('Customer Purchase');
+              expect(journey.outcome).toEqual('Purchase');
+              expect(journey.skus).toEqual(SKUs);
+              expect(journey.result).toEqual('success');
+              expect(journey.price).toEqual(price);
+              expect(journey.discount).toEqual(discount);
+              done();
+            })();
           });
           it('then counts', () => {
             expect(countApi.fetch).toHaveBeenCalledWith({
@@ -1283,22 +1857,30 @@ describe('View SDK', () => {
               }
             });
           });
-          beforeEach(() => {
-            storeSession('view-attribution', {
-              leadSource: null,
-              leadCampaign: null,
-              leadGuid: null
-            })
-            unit.purchase(SKUs, price, discount)
+          beforeEach((done) => {
+            (async () => {
+              await storeSession('view-attribution', {
+                leadSource: null,
+                leadCampaign: null,
+                leadGuid: null
+              })
+              ImmediatelyResolvePromise(7);
+              countResolvePromise({"result": "success"});
+              unit.purchase(SKUs, price, discount);
+              done();
+            })();
           });
         });
         describe('when no price', () => {
-          it('then creates journey with outcome', () => {
-            const journey = unit.journey()[0];
-            expect(journey.superOutcome).toEqual('Customer Purchase');
-            expect(journey.outcome).toEqual('Purchase');
-            expect(journey.skus).toEqual(SKUs);
-            expect(journey.result).toEqual('success');
+          it('then creates journey with outcome', (done) => {
+            (async () => {
+              const journey = (await unit.journey())[0];
+              expect(journey.superOutcome).toEqual('Customer Purchase');
+              expect(journey.outcome).toEqual('Purchase');
+              expect(journey.skus).toEqual(SKUs);
+              expect(journey.result).toEqual('success');
+              done();
+            })();
           });
           it('then counts', () => {
             expect(countApi.fetch).toHaveBeenCalledWith({
@@ -1312,13 +1894,18 @@ describe('View SDK', () => {
               }
             });
           });
-          beforeEach(() => {
-            storeSession('view-attribution', {
-              leadSource: null,
-              leadCampaign: null,
-              leadGuid: null
-            })
-            unit.purchase(SKUs)
+          beforeEach((done) => {
+            (async () => {
+              await storeSession('view-attribution', {
+                leadSource: null,
+                leadCampaign: null,
+                leadGuid: null
+              })
+              ImmediatelyResolvePromise(7);
+              countResolvePromise({"result": "success"});
+              unit.purchase(SKUs);
+              done();
+            })();
           });
         });
         beforeEach(() => {
@@ -1328,86 +1915,134 @@ describe('View SDK', () => {
       describe('when purchaseCanceled', () => {
         const SKUs = '12345, 6789-b';
         const price = '$25'; // optional
-
         describe('when SKUs and price', () => {
-          it('then creates journey with outcome', () => {
-            const journey = unit.journey()[0];
-            expect(journey.superOutcome).toEqual('Customer Purchase');
-            expect(journey.outcome).toEqual('Canceled - ' + SKUs);
-            expect(journey.result).toEqual('fail');
-            expect(journey.price).toEqual(price);
+          it('then creates journey with outcome', (done) => {
+            (async () => {
+              const journey = (await unit.journey())[0];
+              expect(journey.superOutcome).toEqual('Customer Purchase');
+              expect(journey.outcome).toEqual('Canceled - ' + SKUs);
+              expect(journey.result).toEqual('fail');
+              expect(journey.price).toEqual(price);
+              done();
+            })();
           });
-          beforeEach(() => {
-            unit.purchaseCancel(SKUs, price)
+          beforeEach((done) => {
+            (async () => {
+              ImmediatelyResolvePromise(7);
+              unit.purchaseCancel(SKUs, price);
+              done();
+            })();
           });
         });
         describe('when SKUs', () => {
-          it('then creates journey with outcome', () => {
-            const journey = unit.journey()[0];
-            expect(journey.superOutcome).toEqual('Customer Purchase');
-            expect(journey.outcome).toEqual('Canceled - ' + SKUs);
-            expect(journey.result).toEqual('fail');
+          it('then creates journey with outcome', (done) => {
+            (async () => {
+              const journey = (await unit.journey())[0];
+              expect(journey.superOutcome).toEqual('Customer Purchase');
+              expect(journey.outcome).toEqual('Canceled - ' + SKUs);
+              expect(journey.result).toEqual('fail');
+              done();
+            })();
           });
-          beforeEach(() => {
-            unit.purchaseCancel(SKUs)
+          beforeEach((done) => {
+            (async () => {
+              ImmediatelyResolvePromise(7);
+              unit.purchaseCancel(SKUs);
+              done();
+            })();
           });
         });
         describe('when without SKUs', () => {
-          it('then creates journey with outcome', () => {
-            const journey = unit.journey()[0];
-            expect(journey.superOutcome).toEqual('Customer Purchase');
-            expect(journey.outcome).toEqual('Canceled');
-            expect(journey.result).toEqual('fail');
+          it('then creates journey with outcome', (done) => {
+            (async () => {
+              const journey = (await unit.journey())[0];
+              expect(journey.superOutcome).toEqual('Customer Purchase');
+              expect(journey.outcome).toEqual('Canceled');
+              expect(journey.result).toEqual('fail');
+              done();
+            })();
           });
-          beforeEach(() => {
-            unit.purchaseCancel()
+          beforeEach((done) => {
+            (async () => {
+              ImmediatelyResolvePromise(7);
+              unit.purchaseCancel();
+              done();
+            })();
           });
         });
       });
       describe('when promiseFulfilled', () => {
-        it('then creates journey with outcome', () => {
-          const journey = unit.journey()[0];
-          expect(journey.superOutcome).toEqual('Promise Fulfillment');
-          expect(journey.outcome).toEqual('Fulfilled');
-          expect(journey.result).toEqual('success');
+        it('then creates journey with outcome', (done) => {
+          (async () => {
+            const journey = (await unit.journey())[0];
+            expect(journey.superOutcome).toEqual('Promise Fulfillment');
+            expect(journey.outcome).toEqual('Fulfilled');
+            expect(journey.result).toEqual('success');
+            done();
+          })();
         });
-        beforeEach(() => {
-          unit.promiseFulfilled()
+        beforeEach((done) => {
+          (async () => {
+            ImmediatelyResolvePromise(7);
+            unit.promiseFulfilled();
+            done();
+          })();
         });
       });
       describe('when promiseUnfulfilled', () => {
-        it('then creates journey with outcome', () => {
-          const journey = unit.journey()[0];
-          expect(journey.superOutcome).toEqual('Promise Fulfillment');
-          expect(journey.outcome).toEqual('Unfulfilled');
-          expect(journey.result).toEqual('fail');
+        it('then creates journey with outcome', (done) => {
+          (async () => {
+            const journey = (await unit.journey())[0];
+            expect(journey.superOutcome).toEqual('Promise Fulfillment');
+            expect(journey.outcome).toEqual('Unfulfilled');
+            expect(journey.result).toEqual('fail');
+            done();
+          })();
         });
-        beforeEach(() => {
-          unit.promiseUnfulfilled()
+        beforeEach((done) => {
+          (async () => {
+            ImmediatelyResolvePromise(7);
+            unit.promiseUnfulfilled();
+            done();
+          })();
         });
       });
       describe('when productKept', () => {
         const laptop = 'Dell XPS';
-        it('then creates journey with outcome', () => {
-          const journey = unit.journey()[0];
-          expect(journey.superOutcome).toEqual('Product Disposition');
-          expect(journey.outcome).toEqual('Kept - ' + laptop);
-          expect(journey.result).toEqual('success');
+        it('then creates journey with outcome', (done) => {
+          (async () => {
+            const journey = (await unit.journey())[0];
+            expect(journey.superOutcome).toEqual('Product Disposition');
+            expect(journey.outcome).toEqual('Kept - ' + laptop);
+            expect(journey.result).toEqual('success');
+            done();
+          })();
         });
-        beforeEach(() => {
-          unit.productKept(laptop)
+        beforeEach((done) => {
+          (async () => {
+            ImmediatelyResolvePromise(7);
+            unit.productKept(laptop);
+            done();
+          })();
         });
       });
       describe('when productReturned', () => {
         const laptop = 'Dell XPS';
-        it('then creates journey with outcome', () => {
-          const journey = unit.journey()[0];
-          expect(journey.superOutcome).toEqual('Product Disposition');
-          expect(journey.outcome).toEqual('Returned - ' + laptop);
-          expect(journey.result).toEqual('fail');
+        it('then creates journey with outcome', (done) => {
+          (async () => {
+            const journey = (await unit.journey())[0];
+            expect(journey.superOutcome).toEqual('Product Disposition');
+            expect(journey.outcome).toEqual('Returned - ' + laptop);
+            expect(journey.result).toEqual('fail');
+            done();
+          })();
         });
-        beforeEach(() => {
-          unit.productReturned(laptop)
+        beforeEach((done) => {
+          (async () => {
+            ImmediatelyResolvePromise(7);
+            unit.productReturned(laptop);
+            done();
+          })();
         });
       });
       // Stock Milestones tests
@@ -1415,56 +2050,83 @@ describe('View SDK', () => {
         const name = 'Scale Recipe';
         const detail = 'x2'; // optional
         describe('when has detail', () => {
-          it('then has a milestone', () => {
-            const journey = unit.journey()[0];
-            expect(journey.category).toEqual('Feature');
-            expect(journey.action).toEqual('Attempted');
-            expect(journey.name).toEqual(name);
-            expect(journey.details).toEqual(detail);
+          it('then has a milestone', (done) => {
+            (async () => {
+              const journey = (await unit.journey())[0];
+              expect(journey.category).toEqual('Feature');
+              expect(journey.action).toEqual('Attempted');
+              expect(journey.name).toEqual(name);
+              expect(journey.details).toEqual(detail);
+              done();
+            })();
           });
-          beforeEach(() => {
-            unit.featureAttempted(name, detail);
+          beforeEach((done) => {
+            (async () => {
+              ImmediatelyResolvePromise(10);
+              unit.featureAttempted(name, detail);
+              done();
+            })();
           });
         });
         describe('when has no detail', () => {
-          it('then has a milestone', () => {
-            const journey = unit.journey()[0];
-            expect(journey.category).toEqual('Feature');
-            expect(journey.action).toEqual('Attempted');
-            expect(journey.name).toEqual(name);
-            expect(journey.details).toBe(undefined);
+          it('then has a milestone', (done) => {
+            (async () => {
+              const journey = (await unit.journey())[0];
+              expect(journey.category).toEqual('Feature');
+              expect(journey.action).toEqual('Attempted');
+              expect(journey.name).toEqual(name);
+              expect(journey.details).toBe(undefined);
+              done();
+            })();
           });
-          beforeEach(() => {
-            unit.featureAttempted(name);
+          beforeEach((done) => {
+            (async () => {
+              ImmediatelyResolvePromise(10);
+              unit.featureAttempted(name);
+              done();
+            })();
           });
         });
-
       });
       describe('when featureCompleted', () => {
         const name = 'Scale Recipe';
         const detail = 'x2'; // optional
         describe('when has detail', () => {
-          it('then has a milestone', () => {
-            const journey = unit.journey()[0];
-            expect(journey.category).toEqual('Feature');
-            expect(journey.action).toEqual('Completed');
-            expect(journey.name).toEqual(name);
-            expect(journey.details).toEqual(detail);
+          it('then has a milestone', (done) => {
+            (async () => {
+              const journey = (await unit.journey())[0];
+              expect(journey.category).toEqual('Feature');
+              expect(journey.action).toEqual('Completed');
+              expect(journey.name).toEqual(name);
+              expect(journey.details).toEqual(detail);
+              done();
+            })();
           });
-          beforeEach(() => {
-            unit.featureCompleted(name, detail);
+          beforeEach((done) => {
+            (async () => {
+              ImmediatelyResolvePromise(10);
+              unit.featureCompleted(name, detail);
+              done();
+            })();
           });
         });
         describe('when has no detail', () => {
-          it('then has a milestone', () => {
-            const journey = unit.journey()[0];
-            expect(journey.category).toEqual('Feature');
-            expect(journey.action).toEqual('Completed');
-            expect(journey.name).toEqual(name);
-            expect(journey.details).toBe(undefined);
+          it('then has a milestone', (done) => {
+            (async () => {
+              const journey = (await unit.journey())[0];
+              expect(journey.category).toEqual('Feature');
+              expect(journey.action).toEqual('Completed');
+              expect(journey.name).toEqual(name);
+              expect(journey.details).toBe(undefined);
+              done();
+            })();
           });
-          beforeEach(() => {
-            unit.featureCompleted(name);
+          beforeEach((done) => {
+            (async () => {
+              ImmediatelyResolvePromise(10);
+              unit.featureCompleted(name);
+              done();
+            })();
           });
         });
       });
@@ -1472,27 +2134,41 @@ describe('View SDK', () => {
         const name = 'Scale Recipe';
         const detail = 'x2'; // optional
         describe('when has detail', () => {
-          it('then has a milestone', () => {
-            const journey = unit.journey()[0];
-            expect(journey.category).toEqual('Feature');
-            expect(journey.action).toEqual('Failed');
-            expect(journey.name).toEqual(name);
-            expect(journey.details).toEqual(detail);
+          it('then has a milestone', (done) => {
+            (async () => {
+              const journey = (await unit.journey())[0];
+              expect(journey.category).toEqual('Feature');
+              expect(journey.action).toEqual('Failed');
+              expect(journey.name).toEqual(name);
+              expect(journey.details).toEqual(detail);
+              done();
+            })();
           });
-          beforeEach(() => {
-            unit.featureFailed(name, detail);
+          beforeEach((done) => {
+            (async () => {
+              ImmediatelyResolvePromise(10);
+              unit.featureFailed(name, detail);
+              done();
+            })();
           });
         });
         describe('when has no detail', () => {
-          it('then has a milestone', () => {
-            const journey = unit.journey()[0];
-            expect(journey.category).toEqual('Feature');
-            expect(journey.action).toEqual('Failed');
-            expect(journey.name).toEqual(name);
-            expect(journey.details).toBe(undefined);
+          it('then has a milestone', (done) => {
+            (async () => {
+              const journey = (await unit.journey())[0];
+              expect(journey.category).toEqual('Feature');
+              expect(journey.action).toEqual('Failed');
+              expect(journey.name).toEqual(name);
+              expect(journey.details).toBe(undefined);
+              done();
+            })();
           });
-          beforeEach(() => {
-            unit.featureFailed(name);
+          beforeEach((done) => {
+            (async () => {
+              ImmediatelyResolvePromise(10);
+              unit.featureFailed(name);
+              done();
+            })();
           });
         });
       });
@@ -1500,27 +2176,41 @@ describe('View SDK', () => {
         const contentType = 'Blog Post';
         const identifier = 'how-to-install-xenon-view'; // optional
         describe('when has identifier', () => {
-          it('then has a milestone', () => {
-            const journey = unit.journey()[0];
-            expect(journey.category).toEqual('Content');
-            expect(journey.action).toEqual('Viewed');
-            expect(journey.type).toEqual(contentType);
-            expect(journey.identifier).toEqual(identifier);
+          it('then has a milestone', (done) => {
+            (async () => {
+              const journey = (await unit.journey())[0];
+              expect(journey.category).toEqual('Content');
+              expect(journey.action).toEqual('Viewed');
+              expect(journey.type).toEqual(contentType);
+              expect(journey.identifier).toEqual(identifier);
+              done();
+            })();
           });
-          beforeEach(() => {
-            unit.contentViewed(contentType, identifier);
+          beforeEach((done) => {
+            (async () => {
+              ImmediatelyResolvePromise(10);
+              unit.contentViewed(contentType, identifier);
+              done();
+            })();
           });
         });
         describe('when has no identifier', () => {
-          it('then has a milestone', () => {
-            const journey = unit.journey()[0];
-            expect(journey.category).toEqual('Content');
-            expect(journey.action).toEqual('Viewed');
-            expect(journey.type).toEqual(contentType);
-            expect(journey.identifier).toBe(undefined);
+          it('then has a milestone', (done) => {
+            (async () => {
+              const journey = (await unit.journey())[0];
+              expect(journey.category).toEqual('Content');
+              expect(journey.action).toEqual('Viewed');
+              expect(journey.type).toEqual(contentType);
+              expect(journey.identifier).toBe(undefined);
+              done();
+            })();
           });
-          beforeEach(() => {
-            unit.contentViewed(contentType);
+          beforeEach((done) => {
+            (async () => {
+              ImmediatelyResolvePromise(10);
+              unit.contentViewed(contentType);
+              done();
+            })();
           });
         });
       });
@@ -1529,40 +2219,61 @@ describe('View SDK', () => {
         const identifier = 'how-to-install-xenon-view'; // optional
         const detail = 'Rewrote'; //optional
         describe('when has details', () => {
-          it('then has a milestone', () => {
-            const journey = unit.journey()[0];
-            expect(journey.category).toEqual('Content');
-            expect(journey.action).toEqual('Edited');
-            expect(journey.type).toEqual(contentType);
-            expect(journey.details).toEqual(detail);
+          it('then has a milestone', (done) => {
+            (async () => {
+              const journey = (await unit.journey())[0];
+              expect(journey.category).toEqual('Content');
+              expect(journey.action).toEqual('Edited');
+              expect(journey.type).toEqual(contentType);
+              expect(journey.details).toEqual(detail);
+              done();
+            })();
           });
-          beforeEach(() => {
-            unit.contentEdited(contentType, identifier, detail);
+          beforeEach((done) => {
+            (async () => {
+              ImmediatelyResolvePromise(10);
+              unit.contentEdited(contentType, identifier, detail);
+              done();
+            })();
           });
         });
         describe('when has identifier', () => {
-          it('then has a milestone', () => {
-            const journey = unit.journey()[0];
-            expect(journey.category).toEqual('Content');
-            expect(journey.action).toEqual('Edited');
-            expect(journey.type).toEqual(contentType);
-            expect(journey.identifier).toEqual(identifier);
+          it('then has a milestone', (done) => {
+            (async () => {
+              const journey = (await unit.journey())[0];
+              expect(journey.category).toEqual('Content');
+              expect(journey.action).toEqual('Edited');
+              expect(journey.type).toEqual(contentType);
+              expect(journey.identifier).toEqual(identifier);
+              done();
+            })();
           });
-          beforeEach(() => {
-            unit.contentEdited(contentType, identifier);
+          beforeEach((done) => {
+            (async () => {
+              ImmediatelyResolvePromise(10);
+              unit.contentEdited(contentType, identifier);
+              done();
+            })();
           });
         });
         describe('when has no identifier', () => {
-          it('then has a milestone', () => {
-            const journey = unit.journey()[0];
-            expect(journey.category).toEqual('Content');
-            expect(journey.action).toEqual('Edited');
-            expect(journey.type).toEqual(contentType);
-            expect(journey.identifier).toBe(undefined);
-            expect(journey.details).toBe(undefined);
+          it('then has a milestone', (done) => {
+            (async () => {
+              const journey = (await unit.journey())[0];
+              expect(journey.category).toEqual('Content');
+              expect(journey.action).toEqual('Edited');
+              expect(journey.type).toEqual(contentType);
+              expect(journey.identifier).toBe(undefined);
+              expect(journey.details).toBe(undefined);
+              done();
+            })();
           });
-          beforeEach(() => {
-            unit.contentEdited(contentType);
+          beforeEach((done) => {
+            (async () => {
+              ImmediatelyResolvePromise(10);
+              unit.contentEdited(contentType);
+              done();
+            })();
           });
         });
       });
@@ -1570,27 +2281,41 @@ describe('View SDK', () => {
         const contentType = 'Blog Post';
         const identifier = 'how-to-install-xenon-view'; // optional
         describe('when has identifier', () => {
-          it('then has a milestone', () => {
-            const journey = unit.journey()[0];
-            expect(journey.category).toEqual('Content');
-            expect(journey.action).toEqual('Created');
-            expect(journey.type).toEqual(contentType);
-            expect(journey.identifier).toEqual(identifier);
+          it('then has a milestone', (done) => {
+            (async () => {
+              const journey = (await unit.journey())[0];
+              expect(journey.category).toEqual('Content');
+              expect(journey.action).toEqual('Created');
+              expect(journey.type).toEqual(contentType);
+              expect(journey.identifier).toEqual(identifier);
+              done();
+            })();
           });
-          beforeEach(() => {
-            unit.contentCreated(contentType, identifier);
+          beforeEach((done) => {
+            (async () => {
+              ImmediatelyResolvePromise(10);
+              unit.contentCreated(contentType, identifier);
+              done();
+            })();
           });
         });
         describe('when has no identifier', () => {
-          it('then has a milestone', () => {
-            const journey = unit.journey()[0];
-            expect(journey.category).toEqual('Content');
-            expect(journey.action).toEqual('Created');
-            expect(journey.type).toEqual(contentType);
-            expect(journey.identifier).toBe(undefined);
+          it('then has a milestone', (done) => {
+            (async () => {
+              const journey = (await unit.journey())[0];
+              expect(journey.category).toEqual('Content');
+              expect(journey.action).toEqual('Created');
+              expect(journey.type).toEqual(contentType);
+              expect(journey.identifier).toBe(undefined);
+              done();
+            })();
           });
-          beforeEach(() => {
-            unit.contentCreated(contentType);
+          beforeEach((done) => {
+            (async () => {
+              ImmediatelyResolvePromise(10);
+              unit.contentCreated(contentType);
+              done();
+            })();
           });
         });
       });
@@ -1598,27 +2323,41 @@ describe('View SDK', () => {
         const contentType = 'Blog Post';
         const identifier = 'how-to-install-xenon-view'; // optional
         describe('when has identifier', () => {
-          it('then has a milestone', () => {
-            const journey = unit.journey()[0];
-            expect(journey.category).toEqual('Content');
-            expect(journey.action).toEqual('Deleted');
-            expect(journey.type).toEqual(contentType);
-            expect(journey.identifier).toEqual(identifier);
+          it('then has a milestone', (done) => {
+            (async () => {
+              const journey = (await unit.journey())[0];
+              expect(journey.category).toEqual('Content');
+              expect(journey.action).toEqual('Deleted');
+              expect(journey.type).toEqual(contentType);
+              expect(journey.identifier).toEqual(identifier);
+              done();
+            })();
           });
-          beforeEach(() => {
-            unit.contentDeleted(contentType, identifier);
+          beforeEach((done) => {
+            (async () => {
+              ImmediatelyResolvePromise(10);
+              unit.contentDeleted(contentType, identifier);
+              done();
+            })();
           });
         });
         describe('when has no identifier', () => {
-          it('then has a milestone', () => {
-            const journey = unit.journey()[0];
-            expect(journey.category).toEqual('Content');
-            expect(journey.action).toEqual('Deleted');
-            expect(journey.type).toEqual(contentType);
-            expect(journey.identifier).toBe(undefined);
+          it('then has a milestone', (done) => {
+            (async () => {
+              const journey = (await unit.journey())[0];
+              expect(journey.category).toEqual('Content');
+              expect(journey.action).toEqual('Deleted');
+              expect(journey.type).toEqual(contentType);
+              expect(journey.identifier).toBe(undefined);
+              done();
+            })();
           });
-          beforeEach(() => {
-            unit.contentDeleted(contentType);
+          beforeEach((done) => {
+            (async () => {
+              ImmediatelyResolvePromise(10);
+              unit.contentDeleted(contentType);
+              done();
+            })();
           });
         });
       });
@@ -1626,27 +2365,41 @@ describe('View SDK', () => {
         const contentType = 'Blog Post';
         const identifier = 'how-to-install-xenon-view'; // optional
         describe('when has identifier', () => {
-          it('then has a milestone', () => {
-            const journey = unit.journey()[0];
-            expect(journey.category).toEqual('Content');
-            expect(journey.action).toEqual('Archived');
-            expect(journey.type).toEqual(contentType);
-            expect(journey.identifier).toEqual(identifier);
+          it('then has a milestone', (done) => {
+            (async () => {
+              const journey = (await unit.journey())[0];
+              expect(journey.category).toEqual('Content');
+              expect(journey.action).toEqual('Archived');
+              expect(journey.type).toEqual(contentType);
+              expect(journey.identifier).toEqual(identifier);
+              done();
+            })();
           });
-          beforeEach(() => {
-            unit.contentArchived(contentType, identifier);
+          beforeEach((done) => {
+            (async () => {
+              ImmediatelyResolvePromise(10);
+              unit.contentArchived(contentType, identifier);
+              done();
+            })();
           });
         });
         describe('when has no identifier', () => {
-          it('then has a milestone', () => {
-            const journey = unit.journey()[0];
-            expect(journey.category).toEqual('Content');
-            expect(journey.action).toEqual('Archived');
-            expect(journey.type).toEqual(contentType);
-            expect(journey.identifier).toBe(undefined);
+          it('then has a milestone', (done) => {
+            (async () => {
+              const journey = (await unit.journey())[0];
+              expect(journey.category).toEqual('Content');
+              expect(journey.action).toEqual('Archived');
+              expect(journey.type).toEqual(contentType);
+              expect(journey.identifier).toBe(undefined);
+              done();
+            })();
           });
-          beforeEach(() => {
-            unit.contentArchived(contentType);
+          beforeEach((done) => {
+            (async () => {
+              ImmediatelyResolvePromise(10);
+              unit.contentArchived(contentType);
+              done();
+            })();
           });
         });
       });
@@ -1654,53 +2407,81 @@ describe('View SDK', () => {
         const contentType = 'Blog Post';
         const identifier = 'how-to-install-xenon-view'; // optional
         describe('when has identifier', () => {
-          it('then has a milestone', () => {
-            const journey = unit.journey()[0];
-            expect(journey.category).toEqual('Content');
-            expect(journey.action).toEqual('Requested');
-            expect(journey.type).toEqual(contentType);
-            expect(journey.identifier).toEqual(identifier);
+          it('then has a milestone', (done) => {
+            (async () => {
+              const journey = (await unit.journey())[0];
+              expect(journey.category).toEqual('Content');
+              expect(journey.action).toEqual('Requested');
+              expect(journey.type).toEqual(contentType);
+              expect(journey.identifier).toEqual(identifier);
+              done();
+            })();
           });
-          beforeEach(() => {
-            unit.contentRequested(contentType, identifier);
+          beforeEach((done) => {
+            (async () => {
+              ImmediatelyResolvePromise(30);
+              await unit.contentRequested(contentType, identifier);
+              done();
+            })();
           });
         });
         describe('when has no identifier', () => {
-          it('then has a milestone', () => {
-            const journey = unit.journey()[0];
-            expect(journey.category).toEqual('Content');
-            expect(journey.action).toEqual('Requested');
-            expect(journey.type).toEqual(contentType);
-            expect(journey.identifier).toBe(undefined);
+          it('then has a milestone', (done) => {
+            (async () => {
+              const journey = (await unit.journey())[0];
+              expect(journey.category).toEqual('Content');
+              expect(journey.action).toEqual('Requested');
+              expect(journey.type).toEqual(contentType);
+              expect(journey.identifier).toBe(undefined);
+              done();
+            })();
           });
-          beforeEach(() => {
-            unit.contentRequested(contentType);
+          beforeEach((done) => {
+            (async () => {
+              ImmediatelyResolvePromise(30);
+              await unit.contentRequested(contentType);
+              done();
+            })();
           });
         });
       });
       describe('when contentSearched', () => {
         const contentType = 'Blog Post';
-        it('then has a milestone', () => {
-          const journey = unit.journey()[0];
-          expect(journey.category).toEqual('Content');
-          expect(journey.action).toEqual('Searched');
-          expect(journey.type).toEqual(contentType);
+        it('then has a milestone', (done) => {
+          (async () => {
+            const journey = (await unit.journey())[0];
+            expect(journey.category).toEqual('Content');
+            expect(journey.action).toEqual('Searched');
+            expect(journey.type).toEqual(contentType);
+            done();
+          })();
         });
-        beforeEach(() => {
-          unit.contentSearched(contentType);
+        beforeEach((done) => {
+          (async () => {
+            ImmediatelyResolvePromise(30);
+            await unit.contentSearched(contentType);
+            done();
+          })();
         });
       });
       describe('when pageLoadTime', () => {
         const loadTime = 0.31;
         const url = 'http://example.com';
-        it('then has a milestone', () => {
-          const journey = unit.journey()[0];
-          expect(journey.category).toEqual('Webpage Load Time');
-          expect(journey.time).toEqual('0.31');
-          expect(journey.identifier).toEqual(url);
+        it('then has a milestone', (done) => {
+          (async () => {
+            const journey = (await unit.journey())[0];
+            expect(journey.category).toEqual('Webpage Load Time');
+            expect(journey.time).toEqual('0.31');
+            expect(journey.identifier).toEqual(url);
+            done();
+          })();
         });
-        beforeEach(() => {
-          unit.pageLoadTime(loadTime, url);
+        beforeEach((done) => {
+          (async () => {
+            ImmediatelyResolvePromise(30);
+            await unit.pageLoadTime(loadTime, url);
+            done();
+          })();
         });
       });
       // Custom Milestones tests
@@ -1710,100 +2491,160 @@ describe('View SDK', () => {
         let name = 'Query Database';
         let detail = 'User Lookup';
         describe('when stock', () => {
-          it('then has a milestone', () => {
-            const journey = unit.journey()[0];
-            expect(journey.category).toEqual(category);
-            expect(journey.action).toEqual(operation);
-            expect(journey.name).toEqual(name);
-            expect(journey.details).toEqual(detail);
+          it('then has a milestone', (done) => {
+            (async () => {
+              const journey = (await unit.journey())[0];
+              expect(journey.category).toEqual(category);
+              expect(journey.action).toEqual(operation);
+              expect(journey.name).toEqual(name);
+              expect(journey.details).toEqual(detail);
+              done();
+            })();
           });
-          beforeEach(() => {
-            unit.milestone(category, operation, name, detail);
+          beforeEach((done) => {
+            (async () => {
+              ImmediatelyResolvePromise(11);
+              await unit.milestone(category, operation, name, detail);
+              done();
+            })();
           });
         });
         describe('when stock with url', () => {
           const url = "https://www.example.com";
-          it('then has a milestone', () => {
-            const journey = unit.journey()[0];
-            expect(journey.category).toEqual(category);
-            expect(journey.action).toEqual(operation);
-            expect(journey.name).toEqual(name);
-            expect(journey.details).toEqual(detail);
-            expect(journey.url).toEqual(url)
+          it('then has a milestone', (done) => {
+            (async () => {
+              const journey = (await unit.journey())[0];
+              expect(journey.category).toEqual(category);
+              expect(journey.action).toEqual(operation);
+              expect(journey.name).toEqual(name);
+              expect(journey.details).toEqual(detail);
+              expect(journey.url).toEqual(url)
+              done();
+            })();
           });
-          beforeEach(() => {
-            unit.pageURL(url);
-            unit.milestone(category, operation, name, detail);
+          beforeEach((done) => {
+            (async () => {
+              ImmediatelyResolvePromise(11);
+              unit.pageURL(url);
+              await unit.milestone(category, operation, name, detail);
+              done();
+            })();
           });
         });
       });
       // Internals
       describe('when adding duplicate feature', () => {
         const feature = 'duplicate';
-        it('then has a journey with a single event', () => {
-          const journey = unit.journey()[0];
-          expect(journey.count).toEqual(2);
-          expect(unit.journey().length).toEqual(1);
+        it('then has a journey with a single event', (done) => {
+          (async () => {
+            const journey = (await unit.journey());
+            expect(journey[0].count).toEqual(2);
+            expect(journey.length).toEqual(1);
+            done();
+          })();
         });
         describe('when adding third duplicate', () => {
-          it('then has a count of 3', () => {
-            const journey = unit.journey()[0];
-            expect(journey.count).toEqual(3);
-            expect(unit.journey().length).toEqual(1);
+          it('then has a count of 3', (done) => {
+            (async () => {
+              const journey = (await unit.journey());
+              expect(journey[0].count).toEqual(3);
+              expect(journey.length).toEqual(1);
+              done();
+            })();
           });
-          beforeEach(() => {
-            unit.featureAttempted(feature);
+          beforeEach((done) => {
+            (async () => {
+              ImmediatelyResolvePromise(20);
+              await unit.featureAttempted(feature);
+              done();
+            })();
           });
         });
         describe('when adding new milestone', () => {
-          it('then has a count of 2', () => {
-            const journey = unit.journey()[0];
-            expect(journey.count).toEqual(2);
-            expect(unit.journey().length).toEqual(2);
+          it('then has a count of 2', (done) => {
+            (async () => {
+              const journey = (await unit.journey());
+              expect(journey[0].count).toEqual(2);
+              expect(journey.length).toEqual(2);
+              done();
+            })();
           });
-          beforeEach(() => {
-            unit.milestone('category', 'operation', 'name', 'detail');
+          beforeEach((done) => {
+            (async () => {
+              ImmediatelyResolvePromise(20);
+              await unit.milestone('category', 'operation', 'name', 'detail');
+              done();
+            })();
           });
         });
-        beforeEach(() => {
-          unit.featureAttempted(feature);
-          unit.featureAttempted(feature);
+        beforeEach((done) => {
+          (async () => {
+            ImmediatelyResolvePromise(20);
+            await unit.featureAttempted(feature);
+            ImmediatelyResolvePromise(20);
+            await unit.featureAttempted(feature);
+            done();
+          })();
         });
       });
       describe('when adding duplicate content', () => {
         const name = 'duplicate';
-        it('then has a journey with a single event', () => {
-          const journey = unit.journey()[0];
-          expect(journey.count).toEqual(2);
-          expect(unit.journey().length).toEqual(1);
+        it('then has a journey with a single event', (done) => {
+          (async () => {
+            const journey = (await unit.journey());
+            expect(journey[0].count).toEqual(2);
+            expect(journey.length).toEqual(1);
+            done();
+          })();
         });
-        beforeEach(() => {
-          unit.contentSearched(name);
-          unit.contentSearched(name);
+        beforeEach((done) => {
+          (async () => {
+            ImmediatelyResolvePromise(20);
+            await unit.contentSearched(name);
+            ImmediatelyResolvePromise(20);
+            await unit.contentSearched(name);
+            done();
+          })();
         });
       });
       describe('when adding duplicate content with identifier', () => {
         const name = 'duplicate';
-        it('then has a journey with a single event', () => {
-          const journey = unit.journey()[0];
-          expect(journey.count).toEqual(2);
-          expect(unit.journey().length).toEqual(1);
+        it('then has a journey with a single event', (done) => {
+          (async () => {
+            const journey = (await unit.journey());
+            expect(journey[0].count).toEqual(2);
+            expect(journey.length).toEqual(1);
+            done();
+          })();
         });
-        beforeEach(() => {
-          unit.contentEdited(name, 'identifier');
-          unit.contentEdited(name, 'identifier');
+        beforeEach((done) => {
+          (async () => {
+            ImmediatelyResolvePromise(20);
+            await unit.contentEdited(name, 'identifier');
+            ImmediatelyResolvePromise(20);
+            await unit.contentEdited(name, 'identifier');
+            done();
+          })();
         });
       });
       describe('when adding duplicate content with detail', () => {
         const name = 'duplicate';
-        it('then has a journey with a single event', () => {
-          const journey = unit.journey()[0];
-          expect(journey.count).toEqual(2);
-          expect(unit.journey().length).toEqual(1);
+        it('then has a journey with a single event', (done) => {
+          (async () => {
+            const journey = (await unit.journey());
+            expect(journey[0].count).toEqual(2);
+            expect(journey.length).toEqual(1);
+            done();
+          })();
         });
-        beforeEach(() => {
-          unit.contentEdited(name, 'identifier', 'detail');
-          unit.contentEdited(name, 'identifier', 'detail');
+        beforeEach((done) => {
+          (async () => {
+            ImmediatelyResolvePromise(20);
+            await unit.contentEdited(name, 'identifier', 'detail');
+            ImmediatelyResolvePromise(20);
+            await unit.contentEdited(name, 'identifier', 'detail');
+            done();
+          })();
         });
       });
       describe('when adding duplicate milestone', () => {
@@ -1811,54 +2652,98 @@ describe('View SDK', () => {
         const operation = 'Called';
         const name = 'Query Database';
         const detail = 'User Lookup';
-        it('then has a journey with a single event', () => {
-          const journey = unit.journey()[0];
-          expect(journey.count).toEqual(2);
-          expect(unit.journey().length).toEqual(1);
+        it('then has a journey with a single event', (done) => {
+          (async () => {
+            const journey = (await unit.journey());
+            expect(journey[0].count).toEqual(2);
+            expect(journey.length).toEqual(1);
+            done();
+          })();
         });
-        beforeEach(() => {
-          unit.milestone(category, operation, name, detail);
-          unit.milestone(category, operation, name, detail);
+        beforeEach((done) => {
+          (async () => {
+            ImmediatelyResolvePromise(20);
+            await unit.milestone(category, operation, name, detail);
+            ImmediatelyResolvePromise(20);
+            await unit.milestone(category, operation, name, detail);
+            done();
+          })();
         });
       });
       describe('when adding almost duplicate feature', () => {
         const feature = 'almostDup';
-        it('then has a journey with a 2 events', () => {
-          expect(unit.journey().length).toEqual(2);
+        it('then has a journey with a 2 events', (done) => {
+          (async () => {
+            const journey = (await unit.journey());
+            expect(journey.length).toEqual(2);
+            done();
+          })();
         });
-        beforeEach(() => {
-          unit.featureAttempted(feature);
-          unit.featureCompleted(feature);
+        beforeEach((done) => {
+          (async () => {
+            ImmediatelyResolvePromise(20);
+            await unit.featureAttempted(feature);
+            ImmediatelyResolvePromise(20);
+            await unit.featureCompleted(feature);
+            done();
+          })();
         });
       });
       describe('when adding almost duplicate content', () => {
         const name = 'Scale Recipe';
-        it('then has a journey with a 2 events', () => {
-          expect(unit.journey().length).toEqual(2);
+        it('then has a journey with a 2 events', (done) => {
+          (async () => {
+            const journey = (await unit.journey());
+            expect(journey.length).toEqual(2);
+            done();
+          })();
         });
-        beforeEach(() => {
-          unit.contentViewed(name);
-          unit.contentSearched(name);
+        beforeEach((done) => {
+          (async () => {
+            ImmediatelyResolvePromise(20);
+            await unit.contentViewed(name);
+            ImmediatelyResolvePromise(20);
+            await unit.contentSearched(name);
+            done();
+          })();
         });
       });
       describe('when adding almost duplicate content with identifier', () => {
         const name = 'Scale Recipe';
-        it('then has a journey with a 2 events', () => {
-          expect(unit.journey().length).toEqual(2);
+        it('then has a journey with a 2 events', (done) => {
+          (async () => {
+            const journey = (await unit.journey());
+            expect(journey.length).toEqual(2);
+            done();
+          })();
         });
-        beforeEach(() => {
-          unit.contentEdited(name, 'identifier');
-          unit.contentEdited(name, 'identifier2');
+        beforeEach((done) => {
+          (async () => {
+            ImmediatelyResolvePromise(20);
+            await unit.contentEdited(name, 'identifier');
+            ImmediatelyResolvePromise(20);
+            await unit.contentEdited(name, 'identifier2');
+            done();
+          })();
         });
       });
       describe('when adding almost duplicate content with detail', () => {
         const name = 'Scale Recipe';
-        it('then has a journey with a 2 events', () => {
-          expect(unit.journey().length).toEqual(2);
+        it('then has a journey with a 2 events', (done) => {
+          (async () => {
+            const journey = (await unit.journey());
+            expect(journey.length).toEqual(2);
+            done();
+          })();
         });
-        beforeEach(() => {
-          unit.contentEdited(name, 'identifier', 'detail');
-          unit.contentEdited(name, 'identifier', 'detail2');
+        beforeEach((done) => {
+          (async () => {
+            ImmediatelyResolvePromise(20);
+            await unit.contentEdited(name, 'identifier', 'detail');
+            ImmediatelyResolvePromise(20);
+            await unit.contentEdited(name, 'identifier', 'detail2');
+            done();
+          })();
         });
       });
       describe('when adding almost duplicate milestone', () => {
@@ -1866,93 +2751,153 @@ describe('View SDK', () => {
         const operation = 'Called';
         const name = 'Query Database';
         const detail = 'User Lookup';
-        it('then has a journey with a single event', () => {
-          expect(unit.journey().length).toEqual(2);
+        it('then has a journey with a 2 events', (done) => {
+          (async () => {
+            const journey = (await unit.journey());
+            expect(journey.length).toEqual(2);
+            done();
+          })();
         });
-        beforeEach(() => {
-          unit.milestone(category, operation, name, detail);
-          unit.milestone(category, operation, name, detail + '2');
+        beforeEach((done) => {
+          (async () => {
+            ImmediatelyResolvePromise(20);
+            await unit.milestone(category, operation, name, detail);
+            ImmediatelyResolvePromise(20);
+            await unit.milestone(category, operation, name, detail + '2');
+            done();
+          })();
         });
       });
       describe('when resetting', () => {
         const feature = 'resetting';
         describe('when restoring', () => {
-          beforeEach(() => {
-            unit.restore();
+          beforeEach((done) => {
+            (async () => {
+              ImmediatelyResolvePromise(20);
+              await unit.restore();
+              done();
+            })();
           });
-          it('then has a journey with added event', () => {
-            expect(unit.journey().length).toEqual(1);
-            const journey = unit.journey()[0];
-            expect(journey.name).toEqual(feature + " 1st");
+          it('then has a journey with added event', (done) => {
+            (async () => {
+              const journey = (await unit.journey());
+              expect(journey.length).toEqual(1);
+              expect(journey[0].name).toEqual(feature + " 1st");
+              done();
+            })();
           });
         });
         describe('when restoring dulicates', () => {
-          beforeEach(() => {
-            unit.restore([{name: 'a', timestamp: 1}, {name: 'b', timestamp: 1}]);
+          beforeEach((done) => {
+            (async () => {
+              ImmediatelyResolvePromise(20);
+              await unit.restore([{name: 'a', timestamp: 1}, {name: 'b', timestamp: 1}]);
+              done();
+            })();
           });
-          it('then has a journey with added event', () => {
-            expect(unit.journey().length).toEqual(2);
-            const journey = unit.journey()[0];
-            expect(journey.name).toEqual("a");
+          it('then has a journey with added event', (done) => {
+            (async () => {
+              const journey = (await unit.journey());
+              expect(journey.length).toEqual(2);
+              expect(journey[0].name).toEqual("a");
+              done();
+            })();
           });
         });
         describe('when restoring after another event was added', () => {
           const anotherFeature = 'resetting2';
-          it('then adds new event at end of previous journey', () => {
-            expect(unit.journey().length).toEqual(2);
-            const journey = unit.journey()[1];
-            expect(journey.name).toEqual(anotherFeature);
+          it('then adds new event at end of previous journey', (done) => {
+            (async () => {
+              const journey = (await unit.journey());
+              expect(journey.length).toEqual(2);
+              expect(journey[1].name).toEqual(anotherFeature);
+              done();
+            })();
           });
-          beforeEach(() => {
-            unit.featureAttempted(anotherFeature);
-            unit.restore();
+          beforeEach((done) => {
+            (async () => {
+              ImmediatelyResolvePromise(20);
+              await unit.featureAttempted(anotherFeature);
+              ImmediatelyResolvePromise(20);
+              await unit.restore();
+              done();
+            })();
           });
         });
         describe('when restoring out of order', () => {
-          beforeEach(() => {
-            unit.restore()
-            const saveFirst = unit.reset();
-            const timestamp1 = saveFirst[0].timestamp;
-            unit.storeJourney([{
-              category: 'Feature',
-              action: 'Attempted',
-              name: feature + " 2nd",
-              timestamp: timestamp1 + 0.001
-            }]);
-            const saveSecond = unit.reset();
-            unit.storeJourney([{
-              category: 'Feature',
-              action: 'Attempted',
-              name: feature + " 3rd",
-              timestamp: timestamp1 + 0.002
-            }]);
-            const saveThird = unit.reset();
-            unit.restore(saveThird)
-            unit.restore(saveFirst)
-            unit.restore(saveSecond)
+          beforeEach((done) => {
+            (async () => {
+              ImmediatelyResolvePromise(20);
+              await unit.restore();
+              ImmediatelyResolvePromise(20);
+              const saveFirst = await unit.reset();
+              const timestamp1 = saveFirst[0].timestamp;
+              ImmediatelyResolvePromise(20);
+              await unit.storeJourney([{
+                category: 'Feature',
+                action: 'Attempted',
+                name: feature + " 2nd",
+                timestamp: timestamp1 + 0.001
+              }]);
+              ImmediatelyResolvePromise(20);
+              const saveSecond = await unit.reset();
+              ImmediatelyResolvePromise(20);
+              await unit.storeJourney([{
+                category: 'Feature',
+                action: 'Attempted',
+                name: feature + " 3rd",
+                timestamp: timestamp1 + 0.002
+              }]);
+              ImmediatelyResolvePromise(20);
+              const saveThird = await unit.reset();
+              ImmediatelyResolvePromise(20);
+              await unit.restore(saveThird);
+              ImmediatelyResolvePromise(20);
+              await unit.restore(saveFirst);
+              ImmediatelyResolvePromise(20);
+              await unit.restore(saveSecond);
+              done();
+            })();
           });
-          it('should restore inorder', () => {
-            expect(unit.journey().length).toEqual(3);
-            //console.log(unit.journey())
-            // const journey = unit.journey()[1];
-            // expect(journey.name).toEqual(anotherFeature);
+          it('should restore inorder', (done) => {
+            (async () => {
+              const journey = (await unit.journey());
+              expect(journey.length).toEqual(3);
+              const subjourney = journey[1];
+              expect(subjourney.name).toEqual('resetting 2nd');
+              done();
+            })();
           });
         })
-        beforeEach(() => {
-          unit.featureAttempted(feature + " 1st");
-          unit.reset();
+        beforeEach((done) => {
+          (async () => {
+            ImmediatelyResolvePromise(20);
+            await unit.featureAttempted(feature + " 1st");
+            ImmediatelyResolvePromise(20);
+            await unit.reset();
+            done();
+          })();
         });
       });
       describe('when adding an event after reset', () => {
         const feature = 'postreset';
-        it('then has a journey with only event', () => {
-          expect(unit.journey().length).toEqual(1);
-          const journey = unit.journey()[0];
-          expect(journey.name).toEqual(feature);
+        it('then has a journey with only event', (done) => {
+          (async () => {
+            const journey = (await unit.journey());
+            expect(journey.length).toEqual(1);
+            const subjourney = journey[0];
+            expect(subjourney.name).toEqual(feature);
+            done();
+          })();
         });
-        beforeEach(() => {
-          unit.reset();
-          unit.featureAttempted(feature);
+        beforeEach((done) => {
+          (async () => {
+            ImmediatelyResolvePromise(20);
+            await unit.reset();
+            ImmediatelyResolvePromise(20);
+            await unit.featureAttempted(feature);
+            done();
+          })();
         });
       });
       describe('isDuplicate', () => {
@@ -2038,244 +2983,416 @@ describe('View SDK', () => {
         });
         describe('when custom xenon attribution', () => {
           let filteredQuery = '';
-          it('then has tags', () => {
-            const tags = sessionStorage.getItem('view-tags');
-            expect(tags).toContain("email");
-            expect(tags).toContain("2024");
+          it('then has tags', (done) => {
+            (async () => {
+              ImmediatelyResolvePromise(2);
+              const tags = await retrieveSession('view-tags');
+              expect(tags).toContain("email");
+              expect(tags).toContain("2024");
+              done();
+            })();
           });
           it('then filters appropriately', () => {
             expect(filteredQuery).toEqual("");
           });
           describe('when repeated', () => {
-            it('then has same tags', () => {
-              const tags = sessionStorage.getItem('view-tags');
-              expect(tags).toContain("email");
-              expect(tags).toContain("2024");
+            it('then has same tags', (done) => {
+              (async () => {
+                ImmediatelyResolvePromise(2);
+                const tags = await retrieveSession('view-tags');
+                expect(tags).toContain("email");
+                expect(tags).toContain("2024");
+                done();
+              })();
             });
-            it('then has attribution', () => {
-              const attribution = retrieveSession('view-attribution');
-              expect(attribution).toEqual({leadSource: 'email', leadCampaign: '2024', leadGuid: null});
+            it('then has attribution', (done) => {
+              (async () => {
+                ImmediatelyResolvePromise(2);
+                const attribution = await retrieveSession('view-attribution');
+                expect(attribution).toEqual({leadSource: 'email', leadCampaign: '2024', leadGuid: null});
+                done();
+              })();
             })
-            beforeEach(() => {
-              sessionStorage.removeItem('view-attribution')
-              unit.autodiscoverLeadFrom('?xenonSrc=email&xenonId=2024');
+            beforeEach((done) => {
+              (async () => {
+                ImmediatelyResolvePromise(3);
+                await resetSession('view-attribution');
+                ImmediatelyResolvePromise(4);
+                await unit.autodiscoverLeadFrom('?xenonSrc=email&xenonId=2024');
+                done();
+              })();
             });
           });
-          beforeEach(() => {
-            filteredQuery = unit.autodiscoverLeadFrom('?xenonSrc=email&xenonId=2024');
+          beforeEach((done) => {
+            (async () => {
+              MockPromises.reset();
+              ImmediatelyResolvePromise(10);
+              countResolvePromise({"result": "success"});
+              filteredQuery = await unit.autodiscoverLeadFrom('?xenonSrc=email&xenonId=2024');
+              done();
+            })();
           });
         });
         describe('when custom xenon attribution with only source', () => {
           let filteredQuery = '';
-          it('then has tags', () => {
-            const tags = sessionStorage.getItem('view-tags');
-            expect(tags).toContain("email");
+          it('then has tags', (done) => {
+            (async () => {
+              ImmediatelyResolvePromise(2);
+              const tags = await retrieveSession('view-tags');
+              expect(tags).toContain("email");
+              done();
+            })();
           });
           it('then filters appropriately', () => {
             expect(filteredQuery).toEqual("");
           });
-          beforeEach(() => {
-            filteredQuery = unit.autodiscoverLeadFrom('?xenonSrc=email');
+          beforeEach((done) => {
+            (async () => {
+              MockPromises.reset();
+              ImmediatelyResolvePromise(10);
+              countResolvePromise({"result": "success"});
+              filteredQuery = await unit.autodiscoverLeadFrom('?xenonSrc=email');
+              done();
+            })();
           });
         });
         describe('when Cerebro attribution', () => {
           let filteredQuery = '';
-          it('then has tags', () => {
-            const tags = sessionStorage.getItem('view-tags');
-            expect(tags).toContain("Cerebro");
-            expect(tags).toContain("2024");
+          it('then has tags', (done) => {
+            (async () => {
+              ImmediatelyResolvePromise(2);
+              const tags = await retrieveSession('view-tags');
+              expect(tags).toContain("Cerebro");
+              expect(tags).toContain("2024");
+              done();
+            })();
           });
           it('then filters appropriately', () => {
             expect(filteredQuery).toEqual("?cr_campaignid=2024");
           });
-          beforeEach(() => {
-            filteredQuery = unit.autodiscoverLeadFrom('?cr_campaignid=2024');
+          beforeEach((done) => {
+            (async () => {
+              MockPromises.reset();
+              ImmediatelyResolvePromise(10);
+              countResolvePromise({"result": "success"});
+              filteredQuery = await unit.autodiscoverLeadFrom('?cr_campaignid=2024');
+              done();
+            })();
           });
           describe('when duplicate added', () => {
-            it('then has tags', () => {
-              const tags = retrieveSession('view-tags');
-              expect(tags).toContain("Cerebro");
-              expect(tags).toContain("2024");
+            it('then has tags', (done) => {
+              (async () => {
+                ImmediatelyResolvePromise(2);
+                const tags = await retrieveSession('view-tags');
+                expect(tags).toContain("Cerebro");
+                expect(tags).toContain("2024");
+                done();
+              })();
             });
             it('then filters appropriately', () => {
               expect(filteredQuery).toEqual("?cr_campaignid=2024");
             });
-            beforeEach(() => {
-              filteredQuery = unit.autodiscoverLeadFrom('?cr_campaignid=2024');
+            beforeEach((done) => {
+              (async () => {
+                ImmediatelyResolvePromise(3);
+                countResolvePromise({"result": "success"});
+                filteredQuery = await unit.autodiscoverLeadFrom('?cr_campaignid=2024');
+                done();
+              })();
             });
           });
         });
         describe('when Klaviyo attribution', () => {
           let filteredQuery = '';
-          it('then has tags', () => {
-            const tags = sessionStorage.getItem('view-tags');
-            expect(tags).toContain("Klaviyo");
-            expect(tags).toContain("2024");
+          it('then has tags', (done) => {
+            (async () => {
+              ImmediatelyResolvePromise(2);
+              const tags = await retrieveSession('view-tags');
+              expect(tags).toContain("Klaviyo");
+              expect(tags).toContain("2024");
+              done();
+            })();
           });
           it('then filters appropriately', () => {
             expect(filteredQuery).toEqual("?utm_source=klaviyo&utm_campaign=2024");
           });
-          beforeEach(() => {
-            filteredQuery = unit.autodiscoverLeadFrom('?utm_source=klaviyo&utm_campaign=2024');
+          beforeEach((done) => {
+            (async () => {
+              MockPromises.reset();
+              ImmediatelyResolvePromise(10);
+              countResolvePromise({"result": "success"});
+              filteredQuery = await unit.autodiscoverLeadFrom('?utm_source=klaviyo&utm_campaign=2024');
+              done();
+            })();
           });
         });
         describe('when Klaviyo with medium attribution', () => {
           let filteredQuery = '';
-          it('then has tags', () => {
-            const tags = sessionStorage.getItem('view-tags');
-            expect(tags).toContain("Klaviyo - email");
-            expect(tags).toContain("2024");
+          it('then has tags', (done) => {
+            (async () => {
+              ImmediatelyResolvePromise(2);
+              const tags = await retrieveSession('view-tags');
+              expect(tags).toContain("Klaviyo - email");
+              expect(tags).toContain("2024");
+              done();
+            })();
           });
           it('then filters appropriately', () => {
             expect(filteredQuery).toEqual("?utm_source=klaviyo&utm_campaign=2024&utm_medium=email");
           });
-          beforeEach(() => {
-            filteredQuery = unit.autodiscoverLeadFrom('?utm_source=klaviyo&utm_campaign=2024&utm_medium=email');
+          beforeEach((done) => {
+            (async () => {
+              MockPromises.reset();
+              ImmediatelyResolvePromise(10);
+              countResolvePromise({"result": "success"});
+              filteredQuery = await unit.autodiscoverLeadFrom('?utm_source=klaviyo&utm_campaign=2024&utm_medium=email');
+              done();
+            })();
           });
         });
         describe('when Google Ad', () => {
           let filteredQuery = '';
-          it('then has tags', () => {
-            const tags = sessionStorage.getItem('view-tags');
-            expect(tags).toContain("Google Ad");
-            expect(tags).toContain("2024");
+          it('then has tags', (done) => {
+            (async () => {
+              ImmediatelyResolvePromise(2);
+              const tags = await retrieveSession('view-tags');
+              expect(tags).toContain("Google Ad");
+              expect(tags).toContain("2024");
+              done();
+            })();
           });
           it('then filters appropriately', () => {
             expect(filteredQuery).toEqual("?g_campaignid=2024");
           });
-          beforeEach(() => {
-            filteredQuery = unit.autodiscoverLeadFrom('?g_campaignid=2024');
+          beforeEach((done) => {
+            (async () => {
+              MockPromises.reset();
+              ImmediatelyResolvePromise(10);
+              countResolvePromise({"result": "success"});
+              filteredQuery = await unit.autodiscoverLeadFrom('?g_campaignid=2024');
+              done();
+            })();
           });
         });
         describe('when Share-a-sale ads method 1', () => {
           let filteredQuery = '';
-          it('then has tags', () => {
-            const tags = sessionStorage.getItem('view-tags');
-            expect(tags).toContain("Share-a-sale");
-            expect(tags).toContain("2024");
+          it('then has tags', (done) => {
+            (async () => {
+              ImmediatelyResolvePromise(2);
+              const tags = await retrieveSession('view-tags');
+              expect(tags).toContain("Share-a-sale");
+              expect(tags).toContain("2024");
+              done();
+            })();
           });
           it('then filters appropriately', () => {
             expect(filteredQuery).toEqual("?utm_source=shareasale&sscid=2024");
           });
-          beforeEach(() => {
-            filteredQuery = unit.autodiscoverLeadFrom('?utm_source=shareasale&sscid=2024');
+          beforeEach((done) => {
+            (async () => {
+              ImmediatelyResolvePromise(10);
+              countResolvePromise({"result": "success"});
+              filteredQuery = await unit.autodiscoverLeadFrom('?utm_source=shareasale&sscid=2024');
+              done();
+            })();
           });
         });
         describe('when Share-a-sale ads method 2', () => {
           let filteredQuery = '';
-          it('then has tags', () => {
-            const tags = sessionStorage.getItem('view-tags');
-            expect(tags).toContain("Share-a-sale");
-            expect(tags).toContain("2024");
+          it('then has tags', (done) => {
+            (async () => {
+              ImmediatelyResolvePromise(2);
+              const tags = await retrieveSession('view-tags');
+              expect(tags).toContain("Share-a-sale");
+              expect(tags).toContain("2024");
+              done();
+            })();
           });
           it('then filters appropriately', () => {
             expect(filteredQuery).toEqual("?sscid=2024");
           });
-          beforeEach(() => {
-            filteredQuery = unit.autodiscoverLeadFrom('?sscid=2024');
+          beforeEach((done) => {
+            (async () => {
+              MockPromises.reset();
+              ImmediatelyResolvePromise(10);
+              countResolvePromise({"result": "success"});
+              filteredQuery = await unit.autodiscoverLeadFrom('?sscid=2024');
+              done();
+            })();
           });
         });
         describe('when Google Organic', () => {
           let filteredQuery = '';
-          it('then has tags', () => {
-            const tags = sessionStorage.getItem('view-tags');
-            expect(tags).toContain("Google Organic");
-            expect(tags).toContain("2024");
+          it('then has tags', (done) => {
+            (async () => {
+              ImmediatelyResolvePromise(2);
+              const tags = await retrieveSession('view-tags');
+              expect(tags).toContain("Google Organic");
+              expect(tags).toContain("2024");
+              done();
+            })();
           });
           it('then filters appropriately', () => {
             expect(filteredQuery).toEqual("?g_adtype=none&g_campaign=2024");
           });
-          beforeEach(() => {
-            filteredQuery = unit.autodiscoverLeadFrom('?g_adtype=none&g_campaign=2024');
+          beforeEach((done) => {
+            (async () => {
+              MockPromises.reset();
+              ImmediatelyResolvePromise(10);
+              countResolvePromise({"result": "success"});
+              filteredQuery = await unit.autodiscoverLeadFrom('?g_adtype=none&g_campaign=2024');
+              done();
+            })();
           });
         });
         describe('when Google Paid Search', () => {
           let filteredQuery = '';
-          it('then has tags', () => {
-            const tags = sessionStorage.getItem('view-tags');
-            expect(tags).toContain("Google Paid Search");
-            expect(tags).toContain("2024");
+          it('then has tags', (done) => {
+            (async () => {
+              ImmediatelyResolvePromise(2);
+              const tags = await retrieveSession('view-tags');
+              expect(tags).toContain("Google Paid Search");
+              expect(tags).toContain("2024");
+              done();
+            })();
           });
           it('then filters appropriately', () => {
             expect(filteredQuery).toEqual("?g_adtype=search&g_campaign=2024");
           });
-          beforeEach(() => {
-            filteredQuery = unit.autodiscoverLeadFrom('?g_adtype=search&g_campaign=2024');
+          beforeEach((done) => {
+            (async () => {
+              ImmediatelyResolvePromise(10);
+              countResolvePromise({"result": "success"});
+              filteredQuery = await unit.autodiscoverLeadFrom('?g_adtype=search&g_campaign=2024');
+              done();
+            })();
           });
         });
         describe('when Facebook Ad', () => {
           let filteredQuery = '';
-          it('then has tags', () => {
-            const tags = sessionStorage.getItem('view-tags');
-            expect(tags).toContain("Facebook Ad");
-            expect(tags).toContain("2024");
+          it('then has tags', (done) => {
+            (async () => {
+              ImmediatelyResolvePromise(2);
+              const tags = await retrieveSession('view-tags');
+              expect(tags).toContain("Facebook Ad");
+              expect(tags).toContain("2024");
+              done();
+            })();
           });
           it('then filters appropriately', () => {
             expect(filteredQuery).toEqual("?utm_source=facebook&utm_campaign=2024");
           });
-          beforeEach(() => {
-            filteredQuery = unit.autodiscoverLeadFrom('?utm_source=facebook&utm_campaign=2024');
+          beforeEach((done) => {
+            (async () => {
+              MockPromises.reset();
+              ImmediatelyResolvePromise(10);
+              countResolvePromise({"result": "success"});
+              filteredQuery = await unit.autodiscoverLeadFrom('?utm_source=facebook&utm_campaign=2024');
+              done();
+            })();
           });
         });
         describe('when Email', () => {
           let filteredQuery = '';
-          it('then has tags', () => {
-            const tags = sessionStorage.getItem('view-tags');
-            expect(tags).toContain("Email");
-            expect(tags).toContain("2024");
+          it('then has tags', (done) => {
+            (async () => {
+              ImmediatelyResolvePromise(2);
+              const tags = await retrieveSession('view-tags');
+              expect(tags).toContain("Email");
+              expect(tags).toContain("2024");
+              done();
+            })();
           });
           it('then filters appropriately', () => {
             expect(filteredQuery).toEqual("?utm_source=email-broadcast&utm_campaign=2024");
           });
-          beforeEach(() => {
-            filteredQuery = unit.autodiscoverLeadFrom('?utm_source=email-broadcast&utm_campaign=2024');
+          beforeEach((done) => {
+            (async () => {
+              ImmediatelyResolvePromise(10);
+              countResolvePromise({"result": "success"});
+              filteredQuery = await unit.autodiscoverLeadFrom('?utm_source=email-broadcast&utm_campaign=2024');
+              done();
+            })();
           });
         });
         describe('when YouTube', () => {
           let filteredQuery = '';
-          it('then has tags', () => {
-            const tags = sessionStorage.getItem('view-tags');
-            expect(tags).toContain("YouTube");
-            expect(tags).toContain("2024");
+          it('then has tags', (done) => {
+            (async () => {
+              ImmediatelyResolvePromise(2);
+              const tags = await retrieveSession('view-tags');
+              expect(tags).toContain("YouTube");
+              expect(tags).toContain("2024");
+              done();
+            })();
           });
           it('then filters appropriately', () => {
             expect(filteredQuery).toEqual("?utm_source=youtube&utm_campaign=2024");
           });
-          beforeEach(() => {
-            filteredQuery = unit.autodiscoverLeadFrom('?utm_source=youtube&utm_campaign=2024');
+          beforeEach((done) => {
+            (async () => {
+              ImmediatelyResolvePromise(10);
+              countResolvePromise({"result": "success"});
+              filteredQuery = await unit.autodiscoverLeadFrom('?utm_source=youtube&utm_campaign=2024');
+              done();
+            })();
           });
         });
         describe('when YouTube with previous variant', () => {
-          it('then has tags', () => {
-            const tags = sessionStorage.getItem('view-tags');
-            expect(tags).toContain("YouTube");
-            expect(tags).toContain("2024");
-            expect(tags).toContain("test");
+          it('then has tags', (done) => {
+            (async () => {
+              ImmediatelyResolvePromise(2);
+              const tags = await retrieveSession('view-tags');
+              expect(tags).toContain("YouTube");
+              expect(tags).toContain("2024");
+              expect(tags).toContain("test");
+              done();
+            })();
           });
-          beforeEach(() => {
-            unit.variant(['test'])
-            unit.autodiscoverLeadFrom('?utm_source=youtube&utm_campaign=2024');
+          beforeEach((done) => {
+            (async () => {
+              MockPromises.reset();
+              ImmediatelyResolvePromise(19);
+              countResolvePromise({"result": "success"});
+              await unit.variant(['test'])
+              await unit.autodiscoverLeadFrom('?utm_source=youtube&utm_campaign=2024');
+              done();
+            })();
           });
         });
         describe('when Other', () => {
           let filteredQuery = '';
-          it('then has tags', () => {
-            const tags = sessionStorage.getItem('view-tags');
-            expect(tags).toContain("instagram");
-            expect(tags).toContain("2024");
+          it('then has tags', (done) => {
+            (async () => {
+              ImmediatelyResolvePromise(2);
+              const tags = await retrieveSession('view-tags');
+              expect(tags).toContain("instagram");
+              expect(tags).toContain("2024");
+              done();
+            })();
           });
           it('then filters appropriately', () => {
             expect(filteredQuery).toEqual("?utm_source=instagram&utm_campaign=2024");
           });
-          beforeEach(() => {
-            filteredQuery = unit.autodiscoverLeadFrom('?utm_source=instagram&utm_campaign=2024');
+          beforeEach((done) => {
+            (async () => {
+              MockPromises.reset();
+              ImmediatelyResolvePromise(10);
+              countResolvePromise({"result": "success"});
+              filteredQuery = await unit.autodiscoverLeadFrom('?utm_source=instagram&utm_campaign=2024');
+              done();
+            })();
           });
         });
         describe('when None', () => {
           let filteredQuery = '';
-          it('then has tags', () => {
-            const tags = sessionStorage.getItem('view-tags');
-            expect(tags).toContain("Unattributed");
+          it('then has tags', (done) => {
+            (async () => {
+              ImmediatelyResolvePromise(2);
+              const tags = await retrieveSession('view-tags');
+              expect(tags).toContain("Unattributed");
+              done();
+            })();
           });
           it('then filters appropriately', () => {
             expect(filteredQuery).toEqual('');
@@ -2292,95 +3409,170 @@ describe('View SDK', () => {
               }
             });
           });
-          beforeEach(() => {
-            unit.autodiscoverLeadFrom('');
-            unit.autodiscoverLeadFrom('');
-            sessionStorage.removeItem('view-attribution')
-            filteredQuery = unit.autodiscoverLeadFrom('');
+          beforeEach((done) => {
+            (async () => {
+              MockPromises.reset();
+              ImmediatelyResolvePromise(10);
+              countResolvePromise({"result": "success"});
+              await unit.autodiscoverLeadFrom('');
+              ImmediatelyResolvePromise(6);
+              countResolvePromise({"result": "success"});
+              await unit.autodiscoverLeadFrom('');
+              await resetSession('view-attribution');
+              ImmediatelyResolvePromise(7);
+              countResolvePromise({"result": "success"});
+              filteredQuery = await unit.autodiscoverLeadFrom('');
+              done();
+            })();
           });
         });
         describe('when no Query', () => {
           let filteredQuery = '';
-          it('then has tags', () => {
-            const tags = sessionStorage.getItem('view-tags');
-            expect(tags).toContain("Unattributed");
+          it('then has tags', (done) => {
+            (async () => {
+              ImmediatelyResolvePromise(2);
+              const tags = await retrieveSession('view-tags');
+              expect(tags).toContain("Unattributed");
+              done();
+            })();
           });
           it('then filters appropriately', () => {
             expect(filteredQuery).toEqual('?hello=world');
           });
-          beforeEach(() => {
-            filteredQuery = unit.autodiscoverLeadFrom('?hello=world');
+          beforeEach((done) => {
+            (async () => {
+              MockPromises.reset();
+              ImmediatelyResolvePromise(10);
+              countResolvePromise({"result": "success"});
+              filteredQuery = await unit.autodiscoverLeadFrom('?hello=world');
+              done();
+            })();
           });
         });
         describe('when None previous variant', () => {
-          it('then has tags', () => {
-            const tags = sessionStorage.getItem('view-tags');
-            expect(tags).toContain('test', "unattributed");
+          it('then has tags', (done) => {
+            (async () => {
+              ImmediatelyResolvePromise(2);
+              const tags = await retrieveSession('view-tags');
+              expect(tags).toContain('test', "unattributed");
+              done();
+            })();
           });
-          beforeEach(() => {
-            unit.variant(['test'])
-            unit.autodiscoverLeadFrom('');
+          beforeEach((done) => {
+            (async () => {
+              MockPromises.reset();
+              ImmediatelyResolvePromise(19);
+              countResolvePromise({"result": "success"});
+              await unit.variant(['test'])
+              await unit.autodiscoverLeadFrom('');
+              done();
+            })();
           });
         });
         describe('when other query and previous variant', () => {
-          it('then has tags', () => {
-            const tags = sessionStorage.getItem('view-tags');
-            expect(tags).toContain('test', "unattributed");
-            expect(tags).not.toContain(null);
+          it('then has tags', (done) => {
+            (async () => {
+              ImmediatelyResolvePromise(2);
+              const tags = await retrieveSession('view-tags');
+              expect(tags).toContain('test', "unattributed");
+              expect(tags).not.toContain(null);
+              done();
+            })();
           });
-          beforeEach(() => {
-            unit.variant(['test'])
-            unit.autodiscoverLeadFrom('?abc=123');
+          beforeEach((done) => {
+            (async () => {
+              MockPromises.reset();
+              ImmediatelyResolvePromise(19);
+              countResolvePromise({"result": "success"});
+              await unit.variant(['test'])
+              await unit.autodiscoverLeadFrom('?abc=123');
+              done();
+            })();
           });
         });
         afterEach(() => {
           localStorage.clear();
           sessionStorage.clear();
+          ImmediatelyResolvePromise(0);
         });
       });
       // API Communication tests
       describe('when committing a journey', () => {
         const feature = 'committing';
         describe('when default', () => {
-          let resolvePromise = null;
-          let rejectPromise = null;
+          let resolveCommitPromise = null;
+          let rejectCommitPromise = null;
           let caughtError = null;
           let capturedValue = null;
+          let commitPromise;
           describe('when normal', () => {
-            it('then calls the view journey API', () => {
-              expect(JourneyApi).toHaveBeenCalledWith(apiUrl);
-              expect(journeyApi.fetch).toHaveBeenCalledWith({
-                data: {
-                  id: jasmine.any(String),
-                  journey: [
-                    {category: 'Feature', action: 'Attempted', name: feature, timestamp: jasmine.any(Number)}
-                  ],
-                  token: apiKey,
-                  timestamp: jasmine.any(Number)
-                }
+            describe('when API passes', () => {
+              beforeEach((done) => {
+                commitPromise = new Promise(function (resolve, reject) {
+                  resolveCommitPromise = resolve;
+                  rejectCommitPromise = reject;
+                });
+                (async () => {
+                  resolveCommitPromise({"result": "success"});
+                  await commitPromise
+                  UnblockPromises();
+                  ImmediatelyResolvePromise(30);
+                  unit.commit()
+                  done();
+                })();
               });
-            });
-            it('then resets journey', () => {
-              expect(unit.journey()).toEqual([]);
+              it('then calls the view journey API', () => {
+                expect(JourneyApi).toHaveBeenCalledWith(apiUrl);
+                expect(journeyApi.fetch).toHaveBeenCalledWith({
+                  data: {
+                    id: jasmine.any(String),
+                    journey: [
+                      {category: 'Feature', action: 'Attempted', name: feature, timestamp: jasmine.any(Number)}
+                    ],
+                    token: apiKey,
+                    timestamp: jasmine.any(Number)
+                  }
+                });
+              });
+              it('then resets journey', (done) => {
+                (async () => {
+                  expect(await unit.journey()).toEqual([]);
+                  done();
+                })();
+              });
             });
             describe('when API fails', () => {
-              it('then restores journey', () => {
-                expect(unit.journey().length).toEqual(1);
-                const journey = unit.journey()[0];
-                expect(journey.name).toEqual(feature);
+              it('then restores journey', (done) => {
+                (async () => {
+                  const journey = await unit.journey();
+                  expect(journey.length).toEqual(1);
+                  const subjourney = journey[0];
+                  expect(subjourney.name).toEqual(feature);
+                  done();
+                })();
               });
-              beforeEach(() => {
-                rejectPromise(new Error('failure'));
-                UnblockPromises();
+              beforeEach((done) => {
+                commitPromise = new Promise(function (resolve, reject) {
+                  resolveCommitPromise = resolve;
+                  rejectCommitPromise = reject;
+                });
+                (async () => {
+                  try {
+                    rejectCommitPromise(new Error("Failure"));
+                    await commitPromise
+                  } catch (e) {
+                  }
+                  UnblockPromises();
+                  ImmediatelyResolvePromise(30);
+                  unit.commit()
+                  done();
+                })();
               });
             });
             beforeEach(() => {
-              let promise = new Promise(function (resolve, reject) {
-                resolvePromise = resolve;
-                rejectPromise = reject;
+              journeyApi.fetch.and.callFake(() => {
+                return commitPromise
               });
-              journeyApi.fetch.and.returnValue(promise);
-              unit.commit();
             });
           });
           describe('when surfacing', () => {
@@ -2388,27 +3580,51 @@ describe('View SDK', () => {
               it('then rethrows', () => {
                 expect(caughtError.toString()).toEqual('Error: failure');
               });
-              beforeEach(() => {
-                rejectPromise(new Error('failure'));
-                UnblockPromises();
+              beforeEach((done) => {
+                commitPromise = new Promise(function (resolve, reject) {
+                  resolveCommitPromise = resolve;
+                  rejectCommitPromise = reject;
+                });
+                (async () => {
+                  try {
+                    rejectCommitPromise(new Error("failure"));
+                    await commitPromise
+                  } catch (e) {
+                  }
+                  UnblockPromises();
+                  ImmediatelyResolvePromise(30);
+                  try {
+                    await unit.commit(true)
+                  } catch (e) {
+                    caughtError = e.toString();
+                  }
+                  done();
+                })();
               });
             });
             describe('when API succeeds', () => {
               it('then gets success', () => {
                 expect(capturedValue.toString()).toEqual('success');
               });
-              beforeEach(() => {
-                resolvePromise("success");
-                UnblockPromises();
+              beforeEach((done) => {
+                commitPromise = new Promise(function (resolve, reject) {
+                  resolveCommitPromise = resolve;
+                  rejectCommitPromise = reject;
+                });
+                (async () => {
+                  resolveCommitPromise("success");
+                  await commitPromise
+                  UnblockPromises();
+                  ImmediatelyResolvePromise(30);
+                  capturedValue = await unit.commit(true)
+                  done();
+                })();
               });
             });
             beforeEach(() => {
-              let promise = new Promise(function (resolve, reject) {
-                resolvePromise = resolve;
-                rejectPromise = reject;
+              journeyApi.fetch.and.callFake(() => {
+                return commitPromise
               });
-              journeyApi.fetch.and.returnValue(promise);
-              unit.commit(true).then((value) => capturedValue = value).catch((err) => caughtError = err);
             });
           });
         });
@@ -2426,19 +3642,35 @@ describe('View SDK', () => {
               }
             });
           });
-          beforeEach(() => {
-            let promise = new Promise(function (resolve, reject) {
-            });
-            journeyApi.fetch.and.returnValue(promise);
-            unit.init(customKey);
-            unit.commit();
+          beforeEach((done) => {
+            (async () => {
+              let resolveCommitPromise;
+              let promise = new Promise(function (resolve, reject) {
+                resolveCommitPromise = resolve;
+              });
+              journeyApi.fetch.and.returnValue(promise);
+              ImmediatelyResolvePromise(30);
+              await unit.init(customKey);
+              ImmediatelyResolvePromise(30);
+              resolveCommitPromise({"result": "success"});
+              await unit.commit();
+              done();
+            })();
           });
-          afterEach(() => {
-            unit.init(apiKey);
+          afterEach((done) => {
+            (async () => {
+              ImmediatelyResolvePromise(30);
+              await unit.init(apiKey);
+              done();
+            })();
           });
         });
-        beforeEach(() => {
-          unit.featureAttempted(feature);
+        beforeEach((done) => {
+          (async () => {
+            ImmediatelyResolvePromise(30);
+            await unit.featureAttempted(feature);
+            done();
+          })();
         });
       });
       describe('when heartbeating', () => {
@@ -2447,44 +3679,71 @@ describe('View SDK', () => {
           let resolvePromise = null;
           let rejectPromise = null;
           let caughtError = null;
-          describe('when default failure', () => {
-            it('then calls the view heartbeat API', () => {
-              expect(HeartbeatApi).toHaveBeenCalledWith(apiUrl);
-              expect(heartbeatApi.fetch).toHaveBeenCalledWith({
-                data: {
-                  id: jasmine.any(String),
-                  journey: [
-                    {category: 'Feature', action: 'Attempted', name: feature, timestamp: jasmine.any(Number)}
-                  ],
-                  token: apiKey,
-                  tags: [],
-                  platform: {},
-                  timestamp: jasmine.any(Number)
-                }
+          describe('when default api call', () => {
+            describe('when API Successful', () => {
+              it('then calls the view heartbeat API', () => {
+                expect(HeartbeatApi).toHaveBeenCalledWith(apiUrl);
+                expect(heartbeatApi.fetch).toHaveBeenCalledWith({
+                  data: {
+                    id: jasmine.any(String),
+                    journey: [
+                      {category: 'Feature', action: 'Attempted', name: feature, timestamp: jasmine.any(Number)}
+                    ],
+                    token: apiKey,
+                    tags: [],
+                    platform: {},
+                    timestamp: jasmine.any(Number)
+                  }
+                });
+              });
+              it('then resets journey', (done) => {
+                (async () => {
+                  expect(await unit.journey()).toEqual([]);
+                  done();
+                })();
+              });
+              beforeEach((done) => {
+                (async () => {
+                  let promise = new Promise(function (resolve, reject) {
+                    resolvePromise = resolve;
+                    rejectPromise = reject;
+                  });
+                  heartbeatApi.fetch.and.returnValue(promise);
+                  resolvePromise({"Result": "Success"});
+                  await promise;
+                  UnblockPromises();
+                  await unit.heartbeat();
+                  done();
+                })();
               });
             });
-            it('then resets journey', () => {
-              expect(unit.journey()).toEqual([]);
-            });
-
             describe('when API fails', () => {
-              it('then restores journey', () => {
-                expect(unit.journey().length).toEqual(1);
-                const journey = unit.journey()[0];
-                expect(journey.name).toEqual(feature);
+              it('then restores journey', (done) => {
+                (async () => {
+                  const journey = await unit.journey();
+                  expect(journey.length).toEqual(1);
+                  const subjourney = journey[0];
+                  expect(subjourney.name).toEqual(feature);
+                  done();
+                })();
               });
-              beforeEach(() => {
-                rejectPromise(new Error('failure'));
-                UnblockPromises();
+              beforeEach((done) => {
+                (async () => {
+                  let promise = new Promise(function (resolve, reject) {
+                    resolvePromise = resolve;
+                    rejectPromise = reject;
+                  });
+                  heartbeatApi.fetch.and.returnValue(promise);
+                  try {
+                    rejectPromise(new Error('failure'));
+                    await promise;
+                  } catch (e) {
+                  }
+                  UnblockPromises();
+                  await unit.heartbeat();
+                  done();
+                })();
               });
-            });
-            beforeEach(() => {
-              let promise = new Promise(function (resolve, reject) {
-                resolvePromise = resolve;
-                rejectPromise = reject;
-              });
-              heartbeatApi.fetch.and.returnValue(promise);
-              unit.heartbeat();
             });
           });
           describe('when surface errors', () => {
@@ -2492,20 +3751,28 @@ describe('View SDK', () => {
               it('then rethrows', () => {
                 expect(caughtError.toString()).toEqual('Error: failure');
               });
-              beforeEach(() => {
-                rejectPromise(new Error('failure'));
-                UnblockPromises();
-              });
             });
-            beforeEach(() => {
+            beforeEach((done) => {
               let promise = new Promise(function (resolve, reject) {
                 resolvePromise = resolve;
                 rejectPromise = reject;
               });
               heartbeatApi.fetch.and.returnValue(promise);
-              unit.heartbeat(true).catch((err) => {
-                caughtError = err
-              })
+              (async () => {
+                try {
+                  rejectPromise(new Error("failure"));
+                  await promise
+                } catch (e) {
+                }
+                UnblockPromises();
+                ImmediatelyResolvePromise(30);
+                try {
+                  await unit.heartbeat(true)
+                } catch (e) {
+                  caughtError = e.toString();
+                }
+                done();
+              })();
             });
           });
         });
@@ -2527,14 +3794,20 @@ describe('View SDK', () => {
           });
           let resolvePromise = null;
           let rejectPromise = null;
-          beforeEach(() => {
-            let promise = new Promise(function (resolve, reject) {
-              resolvePromise = resolve;
-              rejectPromise = reject;
-            });
-            heartbeatApi.fetch.and.returnValue(promise);
-            unit.variant(['tag']);
-            unit.heartbeat();
+          beforeEach((done) => {
+            (async () => {
+              let promise = new Promise(function (resolve, reject) {
+                resolvePromise = resolve;
+                rejectPromise = reject;
+              });
+              heartbeatApi.fetch.and.returnValue(promise);
+              resolvePromise({"Result": "Success"});
+              await promise;
+              UnblockPromises();
+              await unit.variant(['tag']);
+              await unit.heartbeat();
+              done();
+            })();
           });
         });
         describe('when platform', () => {
@@ -2560,26 +3833,37 @@ describe('View SDK', () => {
           });
           let resolvePromise = null;
           let rejectPromise = null;
-          beforeEach(() => {
-            let promise = new Promise(function (resolve, reject) {
-              resolvePromise = resolve;
-              rejectPromise = reject;
-            });
-            heartbeatApi.fetch.and.returnValue(promise);
-            unit.platform('a', 'b', 'c', 'd');
-            unit.heartbeat();
+          beforeEach((done) => {
+            (async () => {
+              let promise = new Promise(function (resolve, reject) {
+                resolvePromise = resolve;
+                rejectPromise = reject;
+              });
+              heartbeatApi.fetch.and.returnValue(promise);
+              resolvePromise({"Result": "Success"});
+              await promise;
+              UnblockPromises();
+              await unit.platform('a', 'b', 'c', 'd');
+              await unit.heartbeat();
+              done();
+            })();
           });
         });
         describe('when ecom abandonment', () => {
           let resolvePromise = null;
           let rejectPromise = null;
-          beforeEach(() => {
-            let promise = new Promise(function (resolve, reject) {
+          let heartbeatPromise;
+          beforeEach((done) => {
+            heartbeatPromise = new Promise(function (resolve, reject) {
               resolvePromise = resolve;
               rejectPromise = reject;
             });
-            heartbeatApi.fetch.and.returnValue(promise);
-            unit.ecomAbandonment();
+            heartbeatApi.fetch.and.returnValue(heartbeatPromise);
+            (async () => {
+              ImmediatelyResolvePromise(30);
+              await unit.ecomAbandonment();
+              done();
+            })();
           });
           describe('when ecom stage 0', () => {
             it('then calls the view heartbeat API', () => {
@@ -2601,11 +3885,24 @@ describe('View SDK', () => {
                 }
               })
             });
-            beforeEach(() => {
-              unit.heartbeat();
+            beforeEach((done) => {
+              (async () => {
+                countResolvePromise({"result": "success"});
+                sampleResolvePromise({sample: true});
+                resolvePromise({"Result": "Success"});
+                await heartbeatPromise;
+                UnblockPromises();
+                ImmediatelyResolvePromise(30);
+                await unit.heartbeat();
+                done();
+              })();
             });
-            afterEach(() => {
-              unit.reset();
+            afterEach((done) => {
+              (async () => {
+                ImmediatelyResolvePromise(30);
+                await unit.reset();
+                done();
+              })();
             })
           });
           describe('when ecom stage 1', () => {
@@ -2634,12 +3931,26 @@ describe('View SDK', () => {
                 }
               })
             });
-            beforeEach(() => {
-              unit.productAddedToCart("product");
-              unit.heartbeat();
+            beforeEach((done) => {
+              (async () => {
+                ImmediatelyResolvePromise(30);
+                countResolvePromise({"result": "success"});
+                await unit.productAddedToCart("product")
+                resolvePromise({"Result": "Success"});
+                await heartbeatPromise;
+                sampleResolvePromise({sample: true});
+                UnblockPromises();
+                ImmediatelyResolvePromise(30);
+                await unit.heartbeat();
+                done();
+              })();
             });
-            afterEach(() => {
-              unit.reset();
+            afterEach((done) => {
+              (async () => {
+                ImmediatelyResolvePromise(30);
+                await unit.reset();
+                done();
+              })();
             })
           });
           describe('when ecom stage 2', () => {
@@ -2668,15 +3979,27 @@ describe('View SDK', () => {
                 }
               })
             });
-            beforeEach(() => {
-              unit.checkOut();
-              unit.heartbeat();
-              resolvePromise();
-              UnblockPromises();
+            beforeEach((done) => {
+              (async () => {
+                ImmediatelyResolvePromise(30);
+                countResolvePromise({"result": "success"});
+                await unit.checkOut();
+                resolvePromise({"Result": "Success"});
+                await heartbeatPromise;
+                sampleResolvePromise({sample: true});
+                UnblockPromises();
+                ImmediatelyResolvePromise(30);
+                await unit.heartbeat();
+                done();
+              })();
             });
-            afterEach(() => {
-              unit.reset();
-            })
+            afterEach((done) => {
+              (async () => {
+                ImmediatelyResolvePromise(30);
+                await unit.reset();
+                done();
+              })();
+            });
           });
           describe('when ecom stage 3', () => {
             it('then calls the view heartbeat API', () => {
@@ -2704,40 +4027,61 @@ describe('View SDK', () => {
                 }
               })
             });
-            it('then resets heartbeat state', () => {
-              const type = retrieveLocal('heartbeat_type');
-              const outcome = retrieveLocal('heartbeat_outcome');
-              const stage = retrieveLocal('heartbeat_stage');
-              expect(type).toBeNull();
-              expect(outcome).toBeNull();
-              expect(stage).toBeNull();
+            it('then resets heartbeat state', (done) => {
+              (async () => {
+                const type = await retrieveLocal('heartbeat_type');
+                const outcome = await retrieveLocal('heartbeat_outcome');
+                const stage = await retrieveLocal('heartbeat_stage');
+                expect(type).toBeNull();
+                expect(outcome).toBeNull();
+                expect(stage).toBeNull();
+                done();
+              })();
             });
-            beforeEach(() => {
-              unit.purchase(['SKU']);
-              unit.heartbeat();
-              resolvePromise();
-              UnblockPromises();
+            beforeEach((done) => {
+              (async () => {
+                ImmediatelyResolvePromise(30);
+                countResolvePromise({"result": "success"});
+                await unit.purchase(['SKU']);
+                resolvePromise({"Result": "Success"});
+                await heartbeatPromise;
+                sampleResolvePromise({sample: true});
+                UnblockPromises();
+                ImmediatelyResolvePromise(30);
+                await unit.heartbeat();
+                done();
+              })();
             });
-
+            afterEach((done) => {
+              (async () => {
+                ImmediatelyResolvePromise(30);
+                await unit.reset();
+                done();
+              })();
+            });
           });
         });
         describe('when custom abandonment', () => {
           let resolvePromise = null;
           let rejectPromise = null;
-          beforeEach(() => {
-            let promise = new Promise(function (resolve, reject) {
-              resolvePromise = resolve;
-              rejectPromise = reject;
-            });
-            heartbeatApi.fetch.and.returnValue(promise);
-            unit.customAbandonment({
-              expires_in_seconds: 600,
-              if_abandoned: {
-                superOutcome: 'Custom',
-                outcome: 'Abandoned',
-                result: 'fail'
-              }
-            });
+          let heartbeatPromise;
+          beforeEach((done) => {
+            (async () => {
+              heartbeatPromise = new Promise(function (resolve, reject) {
+                resolvePromise = resolve;
+                rejectPromise = reject;
+              });
+              heartbeatApi.fetch.and.returnValue(heartbeatPromise);
+              await unit.customAbandonment({
+                expires_in_seconds: 600,
+                if_abandoned: {
+                  superOutcome: 'Custom',
+                  outcome: 'Abandoned',
+                  result: 'fail'
+                }
+              });
+              done();
+            })();
           });
           describe('when called', () => {
             it('then calls the view heartbeat API', () => {
@@ -2759,24 +4103,43 @@ describe('View SDK', () => {
                 }
               })
             });
-            beforeEach(() => {
-              unit.heartbeat();
+            beforeEach((done) => {
+              (async () => {
+                ImmediatelyResolvePromise(30);
+                countResolvePromise({"result": "success"});
+                resolvePromise({"Result": "Success"});
+                await heartbeatPromise;
+                sampleResolvePromise({sample: true});
+                UnblockPromises();
+                ImmediatelyResolvePromise(30);
+                await unit.heartbeat();
+                done();
+              })();
             });
-            afterEach(() => {
-              unit.reset();
-            })
+            afterEach((done) => {
+              (async () => {
+                ImmediatelyResolvePromise(30);
+                await unit.reset();
+                done();
+              })();
+            });
           });
         });
         describe('when canceling abandonment', () => {
           let resolvePromise = null;
           let rejectPromise = null;
-          beforeEach(() => {
-            let promise = new Promise(function (resolve, reject) {
+          let heartbeatPromise;
+          beforeEach((done) => {
+            heartbeatPromise = new Promise(function (resolve, reject) {
               resolvePromise = resolve;
               rejectPromise = reject;
             });
-            heartbeatApi.fetch.and.returnValue(promise);
-            unit.cancelAbandonment();
+            heartbeatApi.fetch.and.returnValue(heartbeatPromise);
+            (async () => {
+              ImmediatelyResolvePromise(30);
+              await unit.cancelAbandonment();
+              done();
+            })();
           });
           describe('when called', () => {
             it('then calls the view heartbeat API', () => {
@@ -2797,26 +4160,45 @@ describe('View SDK', () => {
                 }
               })
             });
-            it('then resets heartbeat state', () => {
-              const type = retrieveLocal('heartbeat_type');
-              const outcome = retrieveLocal('heartbeat_outcome');
-              const stage = retrieveLocal('heartbeat_stage');
-              expect(type).toBeNull();
-              expect(outcome).toBeNull();
-              expect(stage).toBeNull();
+            it('then resets heartbeat state', (done) => {
+              (async () => {
+                const type = await retrieveLocal('heartbeat_type');
+                const outcome = await retrieveLocal('heartbeat_outcome');
+                const stage = await retrieveLocal('heartbeat_stage');
+                expect(type).toBeNull();
+                expect(outcome).toBeNull();
+                expect(stage).toBeNull();
+                done();
+              })();
             });
-            beforeEach(() => {
-              unit.heartbeat();
-              resolvePromise();
-              UnblockPromises();
+            beforeEach((done) => {
+              (async () => {
+                ImmediatelyResolvePromise(30);
+                countResolvePromise({"result": "success"});
+                resolvePromise({"Result": "Success"});
+                await heartbeatPromise;
+                sampleResolvePromise({sample: true});
+                UnblockPromises();
+                ImmediatelyResolvePromise(30);
+                await unit.heartbeat();
+                done();
+              })();
             });
-            afterEach(() => {
-              unit.reset();
-            })
+            afterEach((done) => {
+              (async () => {
+                ImmediatelyResolvePromise(30);
+                await unit.reset();
+                done();
+              })();
+            });
           });
         });
-        beforeEach(() => {
-          unit.featureAttempted(feature);
+        beforeEach((done) => {
+          (async () => {
+            ImmediatelyResolvePromise(30);
+            await unit.featureAttempted(feature);
+            done();
+          })();
         });
       });
       describe('when deanonymizing', () => {
@@ -2833,11 +4215,30 @@ describe('View SDK', () => {
               }
             });
           });
-          beforeEach(() => {
-            let promise = new Promise(function (resolve, reject) {
-            });
-            deanonApi.fetch.and.returnValue(promise);
-            unit.deanonymize(person);
+          beforeEach((done) => {
+            (async () => {
+              let resolvePromise;
+              let promise = new Promise(function (resolve, reject) {
+                resolvePromise = resolve;
+              });
+              deanonApi.fetch.and.returnValue(promise);
+              ImmediatelyResolvePromise(30);
+              countResolvePromise({"result": "success"});
+              resolvePromise({"Result": "Success"});
+              await promise;
+              sampleResolvePromise({sample: true});
+              UnblockPromises();
+              ImmediatelyResolvePromise(30);
+              await unit.deanonymize(person);
+              done();
+            })();
+          });
+          afterEach((done) => {
+            (async () => {
+              ImmediatelyResolvePromise(30);
+              await unit.init(apiKey);
+              done();
+            })();
           });
         });
         describe('when custom', () => {
@@ -2852,15 +4253,31 @@ describe('View SDK', () => {
               }
             });
           });
-          beforeEach(() => {
-            let promise = new Promise(function (resolve, reject) {
-            });
-            deanonApi.fetch.and.returnValue(promise);
-            unit.init(customKey);
-            unit.deanonymize(person);
+          beforeEach((done) => {
+            (async () => {
+              let resolvePromise;
+              let promise = new Promise(function (resolve, reject) {
+                resolvePromise = resolve;
+              });
+              deanonApi.fetch.and.returnValue(promise);
+              ImmediatelyResolvePromise(30);
+              countResolvePromise({"result": "success"});
+              resolvePromise({"Result": "Success"});
+              await promise;
+              sampleResolvePromise({sample: true});
+              UnblockPromises();
+              ImmediatelyResolvePromise(30);
+              await unit.init(customKey);
+              await unit.deanonymize(person);
+              done();
+            })();
           });
-          afterEach(() => {
-            unit.init(apiKey);
+          afterEach((done) => {
+            (async () => {
+              ImmediatelyResolvePromise(30);
+              await unit.init(apiKey);
+              done();
+            })();
           });
         });
       });
@@ -2868,86 +4285,222 @@ describe('View SDK', () => {
         let capturedError = null;
         let capturedValue = null;
         describe('when capturing', () => {
-          it('then calls the view count API', () => {
-            expect(CountApi).toHaveBeenCalledWith(countApiUrl);
-            expect(countApi.fetch).toHaveBeenCalledWith({
-              data: {
-                uid: jasmine.any(String),
-                token: apiKey,
-                timestamp: jasmine.any(Number),
-                outcome: '<outcome>',
-                content: {leadSource: 'Unattributed', leadGuid: null},
-                value: 0.0
-              }
-            });
-          });
-          describe('it fails', () => {
-            it('should surface error', () => {
-              expect(capturedError.toString()).toEqual('Error: failure');
-            });
-            it('should capture a replay', () => {
-              const replay = retrieveSession('view-count-replay');
-              expect(replay).toEqual([{
+          describe('it passes', () => {
+            it('then calls the view count API', () => {
+              expect(CountApi).toHaveBeenCalledWith(countApiUrl);
+              expect(countApi.fetch).toHaveBeenCalledWith({
                 data: {
                   uid: jasmine.any(String),
-                  token: '<token>',
-                  timestamp: jasmine.any(Number),
-                  outcome: 'Attribution',
-                  content: {leadSource: 'Unattributed', leadGuid: null},
-                  value: 0
-                }
-              }, {
-                data: {
-                  uid: jasmine.any(String),
-                  token: '<token>',
+                  token: apiKey,
                   timestamp: jasmine.any(Number),
                   outcome: '<outcome>',
                   content: {leadSource: 'Unattributed', leadGuid: null},
-                  value: 0
+                  value: 0.0
                 }
-              }]);
-            });
-            describe('it is called after failure', () => {
-              it('should make calls with replays', () => {
-                expect(countApi.fetch).toHaveBeenCalledTimes(3);
-              })
-              beforeEach(() => {
-                resetCalls();
-                unit.count("<outcome2>", 0.0, false);
               });
             });
-            beforeEach(() => {
-              countRejectPromise(new Error('failure'));
-              UnblockPromises();
+            beforeEach((done) => {
+              (async () => {
+                ImmediatelyResolvePromise(30);
+                capturedValue = await unit.count("<outcome>", 0.0, true);
+                done();
+              })();
             });
           });
-          beforeEach(() => {
-            unit.autodiscoverLeadFrom("?hello=world");
-            unit.count("<outcome>", 0.0, true).catch((err) => capturedError = err);
+          describe('it fails on second count call', () => {
+            it('should surface error', () => {
+              expect(capturedError.toString()).toEqual('Error: failure');
+            });
+            it('should capture a replay', (done) => {
+              (async () => {
+                const replay = await retrieveSession('view-count-replay');
+                expect(replay).toEqual([{
+                  data: {
+                    uid: jasmine.any(String),
+                    token: '<token>',
+                    timestamp: jasmine.any(Number),
+                    outcome: '<outcome>',
+                    content: {leadSource: 'Unattributed', leadGuid: null},
+                    value: 0
+                  }
+                }]);
+                done();
+              })();
+            });
+            describe('it fails consecutively', () => {
+              it('should surface error', () => {
+                expect(capturedError.toString()).toEqual('Error: failure');
+              });
+              it('should capture a replay', (done) => {
+                (async () => {
+                  const replay = await retrieveSession('view-count-replay');
+                  expect(replay).toEqual([{
+                    data: {
+                      uid: jasmine.any(String),
+                      token: '<token>',
+                      timestamp: jasmine.any(Number),
+                      outcome: '<outcome>',
+                      content: {leadSource: 'Unattributed', leadGuid: null},
+                      value: 0
+                    }
+                  }, {
+                    data: {
+                      uid: jasmine.any(String),
+                      token: '<token>',
+                      timestamp: jasmine.any(Number),
+                      outcome: '<outcome2>',
+                      content: {leadSource: 'Unattributed', leadGuid: null},
+                      value: 0
+                    }
+                  }]);
+                  done();
+                })();
+              });
+              beforeEach((done) => {
+                (async () => {
+                  countPromise = new Promise(function (resolve, reject) {
+                    countResolvePromise = resolve;
+                    countRejectPromise = reject;
+                  });
+                  countApi.fetch.and.returnValue(countPromise);
+                  try {
+                    countRejectPromise(new Error('failure'));
+                    await countPromise;
+                  } catch (e) {
+                  }
+                  UnblockPromises();
+                  resetCalls();
+                  ImmediatelyResolvePromise(30);
+                  try {
+                    capturedValue = await unit.count("<outcome2>", 0.0, true);
+                  } catch (e) {
+                    capturedError = e;
+                  }
+                  done();
+                })();
+              });
+            });
+            describe('it is called successfully after failure', () => {
+              it('should make calls with replays', () => {
+                expect(countApi.fetch).toHaveBeenCalledTimes(2);
+              });
+              beforeEach((done) => {
+                (async () => {
+                  countPromise = new Promise(function (resolve, reject) {
+                    countResolvePromise = resolve;
+                    countRejectPromise = reject;
+                  });
+                  countApi.fetch.and.returnValue(countPromise);
+                  try {
+                    countResolvePromise({"result": "success"});
+                    await countPromise;
+                  } catch (e) {
+                  }
+                  UnblockPromises();
+                  resetCalls();
+                  ImmediatelyResolvePromise(30);
+                  try {
+                    capturedValue = await unit.count("<outcome2>", 0.0, true);
+                  } catch (e) {
+                    capturedError = e;
+                  }
+                  done();
+                })();
+              });
+            });
+            beforeEach((done) => {
+              (async () => {
+                countPromise = new Promise(function (resolve, reject) {
+                  countResolvePromise = resolve;
+                  countRejectPromise = reject;
+                });
+                countApi.fetch.and.returnValue(countPromise);
+                ImmediatelyResolvePromise(1);
+                try {
+                  countRejectPromise(new Error('failure'));
+                  await countPromise;
+                } catch (e) {
+                }
+                UnblockPromises();
+                resetCalls();
+                ImmediatelyResolvePromise(8);
+                try {
+                  capturedValue = await unit.count("<outcome>", 0.0, true);
+                } catch (e) {
+                  capturedError = e;
+                }
+                done();
+              })();
+            });
+          });
+          beforeEach((done) => {
+            (async () => {
+              MockPromises.reset();
+              countResolvePromise({"result": "success"});
+              await countPromise;
+              UnblockPromises();
+              ImmediatelyResolvePromise(22);
+              await unit.autodiscoverLeadFrom("?hello=world");
+              done();
+            })();
           });
         });
-        describe('when not capturing', () => {
-          describe('it fails', () => {
+        describe('when not capturing and first count call successful', () => {
+          describe('second call fails', () => {
             it('should not surface error', () => {
               expect(capturedError).toBeNull();
             });
-            beforeEach(() => {
-              countRejectPromise(new Error('failure'));
-              UnblockPromises();
+            beforeEach((done) => {
+              (async () => {
+                countPromise = new Promise(function (resolve, reject) {
+                  countResolvePromise = resolve;
+                  countRejectPromise = reject;
+                });
+                countApi.fetch.and.returnValue(countPromise);
+                try {
+                  countRejectPromise(new Error('failure'));
+                  await countPromise;
+                } catch (e) {
+                }
+                UnblockPromises();
+                resetCalls();
+                ImmediatelyResolvePromise(30);
+                try {
+                  capturedValue = await unit.count("<outcome>", 0.0);
+                } catch (e) {
+                  capturedError = e;
+                }
+                done();
+              })();
             });
           });
-          beforeEach(() => {
-            unit.autodiscoverLeadFrom("?hello=world");
-            unit.count("<outcome>").catch((err) => capturedError = err);
+          beforeEach((done) => {
+            (async () => {
+              countResolvePromise({"result": "success"});
+              UnblockPromises();
+              ImmediatelyResolvePromise(30);
+              await unit.autodiscoverLeadFrom("?hello=world");
+              done();
+            })();
           });
         });
         describe('when not capturing and no previous attribution', () => {
           it('should not have values', () => {
             expect(capturedError).toBeNull();
-            expect(capturedValue).toBeNull();
+            expect(capturedValue).toBeTrue();
           });
-          beforeEach(() => {
-            unit.count("<outcome>").then((value) => capturedValue = value).catch((err) => capturedError = err);
+          beforeEach((done) => {
+            (async () => {
+              countResolvePromise({"result": "success"});
+              UnblockPromises();
+              ImmediatelyResolvePromise(30);
+              try {
+                capturedValue = await unit.count("<outcome>", 0.0);
+              } catch (e) {
+                capturedError = e;
+              }
+              done();
+            })();
           });
         });
         beforeEach(() => {
@@ -2975,27 +4528,47 @@ describe('View SDK', () => {
           });
         });
       });
-      beforeEach(() => {
+      beforeEach((done) => {
         sampleResolvePromise({sample: true});
         UnblockPromises();
+        (async () => {
+          ImmediatelyResolvePromise(47);
+          await unit.init(apiKey, apiUrl);
+          await unit2.init(apiKey, apiUrl);
+          done();
+        })();
       });
     });
     describe('when unable to sample', () => {
-      it('then calls the view sample API', () => {
-        expect(sampleApi.fetch).toHaveBeenCalledWith({
-          data: {
-            id: jasmine.any(String),
-            token: apiKey
-          }
+      describe('when adding value', () => {
+        it('should have the set sample decision', (done) => {
+          (async () => {
+            MockPromises.reset();
+            ImmediatelyResolvePromise(9);
+            expect(await unit.sampleDecision(false)).toBeFalse();
+            expect(await unit.sampleDecision(true)).toBeTrue();
+            done();
+          })();
         });
       });
-      it('then has a negative sample decision', () => {
-        expect(unit.sampleDecision()).toBeFalse()
-      });
-      describe('when committing a journey', () => {
-        const feature = 'committing';
-        describe('when default', () => {
-          describe('when normal', () => {
+      describe('when api returns no sampling', () => {
+        it('then calls the view sample API', () => {
+          expect(sampleApi.fetch).toHaveBeenCalledWith({
+            data: {
+              id: jasmine.any(String),
+              token: apiKey
+            }
+          });
+        });
+        it('then has a negative sample decision', (done) => {
+          (async () => {
+            expect(await unit.sampleDecision()).toBeFalse()
+            done();
+          })();
+        });
+        describe('when committing a journey', () => {
+          const feature = 'committing';
+          describe('when default', () => {
             it('then never calls the view journey API', () => {
               expect(JourneyApi).not.toHaveBeenCalledWith(apiUrl);
               expect(journeyApi.fetch).not.toHaveBeenCalledWith({
@@ -3009,25 +4582,32 @@ describe('View SDK', () => {
                 }
               });
             });
-            it('then never resets journey', () => {
-              expect(unit.journey()).toEqual([{
-                category: 'Feature', action: 'Attempted', name: feature, timestamp: jasmine.any(Number)
-              }]);
+            it('then never resets journey', (done) => {
+              (async () => {
+                expect(await unit.journey()).toEqual([{
+                  category: 'Feature', action: 'Attempted', name: feature, timestamp: jasmine.any(Number)
+                }]);
+                done();
+              })();
             });
-            beforeEach(() => {
-              resetCalls();
-              unit.commit();
+            beforeEach((done) => {
+              (async () => {
+                resetCalls();
+                await unit.commit();
+                done();
+              })();
             });
           });
+          beforeEach((done) => {
+            (async () => {
+              await unit.featureAttempted(feature);
+              done();
+            })();
+          });
         });
-        beforeEach(() => {
-          unit.featureAttempted(feature);
-        });
-      });
-      describe('when heartbeating', () => {
-        const feature = 'heartbeating';
-        describe('when default', () => {
-          describe('when normal', () => {
+        describe('when heartbeating', () => {
+          const feature = 'heartbeating';
+          describe('when default', () => {
             it('then never calls the view heartbeat API', () => {
               expect(HeartbeatApi).not.toHaveBeenCalledWith(apiUrl);
               expect(heartbeatApi.fetch).not.toHaveBeenCalledWith({
@@ -3041,43 +4621,53 @@ describe('View SDK', () => {
                 }
               });
             });
-            it('then never resets journey', () => {
-              expect(unit.journey()).toEqual([{
-                category: 'Feature', action: 'Attempted', name: feature, timestamp: jasmine.any(Number)
-              }]);
+            it('then never resets journey', (done) => {
+              (async () => {
+                expect(await unit.journey()).toEqual([{
+                  category: 'Feature', action: 'Attempted', name: feature, timestamp: jasmine.any(Number)
+                }]);
+                done();
+              })();
             });
-            beforeEach(() => {
-              resetCalls();
-              unit.heartbeat();
+            beforeEach((done) => {
+              (async () => {
+                resetCalls();
+                await unit.heartbeat();
+                done();
+              })();
+            });
+          });
+          beforeEach((done) => {
+            (async () => {
+              await unit.featureAttempted(feature);
+              done();
+            })();
+          });
+        });
+        describe('when deanonymizing', () => {
+          let person = {name: 'Test User', email: 'test@example.com'};
+          describe('when default', () => {
+            it('then never calls the view deanon API', () => {
+              expect(DeanonApi).not.toHaveBeenCalledWith(apiUrl);
+              expect(deanonApi.fetch).not.toHaveBeenCalledWith({
+                data: {
+                  id: jasmine.any(String),
+                  person: person,
+                  token: apiKey,
+                  timestamp: jasmine.any(Number)
+                }
+              });
+            });
+            beforeEach((done) => {
+              (async () => {
+                resetCalls();
+                await unit.deanonymize(person);
+                done();
+              })();
             });
           });
         });
-        beforeEach(() => {
-          unit.featureAttempted(feature);
-        });
-      });
-      describe('when deanonymizing', () => {
-        let person = {name: 'Test User', email: 'test@example.com'};
-        describe('when default', () => {
-          it('then never calls the view deanon API', () => {
-            expect(DeanonApi).not.toHaveBeenCalledWith(apiUrl);
-            expect(deanonApi.fetch).not.toHaveBeenCalledWith({
-              data: {
-                id: jasmine.any(String),
-                person: person,
-                token: apiKey,
-                timestamp: jasmine.any(Number)
-              }
-            });
-          });
-          beforeEach(() => {
-            resetCalls();
-            unit.deanonymize(person);
-          });
-        });
-      });
-      describe('when recording errors', () => {
-        describe('when default', () => {
+        describe('when recording errors', () => {
           const log = ["<line>"]
           it('then never calls the view error log API', () => {
             expect(ErrorLogApi).not.toHaveBeenCalledWith(apiUrl);
@@ -3088,62 +4678,126 @@ describe('View SDK', () => {
               }
             });
           });
-          beforeEach(() => {
-            resetCalls();
-            unit.recordError(log);
+          beforeEach((done) => {
+            (async () => {
+              resetCalls();
+              await unit.recordError(log);
+              done();
+            })();
           });
         });
-      });
-      beforeEach(() => {
-        sampleResolvePromise({sample: false});
-        UnblockPromises();
+        beforeEach((done) => {
+          (async () => {
+            sampleResolvePromise({sample: false});
+            UnblockPromises();
+            ImmediatelyResolvePromise(60);
+            await unit.init(apiKey, apiUrl);
+            done();
+          })();
+        });
       });
     });
-    describe('when api errors', () => {
+    describe('when sample api errors', () => {
       describe('when generic error', () => {
-        it('then has a positive sample decision', () => {
-          localStorage.clear();
-          sessionStorage.clear();
-          ImmediatelyResolvePromise(2);
-          expect(unit.sampleDecision()).toBeTrue();
+        it('then has a positive sample decision', (done) => {
+          (async () => {
+            ImmediatelyResolvePromise(30);
+            expect(await unit.sampleDecision()).toBeTrue();
+            done();
+          })();
         });
-        beforeEach(() => {
-          sampleRejectPromise(new Error('{"result": "failed"}'));
-          UnblockPromises();
+        beforeEach((done) => {
+          ImmediatelyResolvePromise(2);
+          (async () => {
+            localStorage.clear();
+            sessionStorage.clear();
+            try {
+              sampleRejectPromise(new Error('{"result": "failed"}'));
+              await samplePromise;
+            } catch (e) {
+            }
+            UnblockPromises();
+            ImmediatelyResolvePromise(60);
+            await unit.init(apiKey, apiUrl);
+            done();
+          })();
         });
       });
       describe('when authentication error', () => {
-        it('then has a positive sample decision', () => {
-          let called = false;
-          localStorage.clear();
-          sessionStorage.clear();
-          unit.sampleDecision(null, (_) => {
-            called = true;
-          });
-          UnblockPromises();
-          expect(called).toBeTrue();
+        it('then has a positive sample decision', (done) => {
+          (async () => {
+            ImmediatelyResolvePromise(30);
+            expect(await unit.sampleDecision()).toBeTrue();
+            done();
+          })();
         });
-        beforeEach(() => {
-          const error = new Error('{"result": "no-auth"}');
-          error.authIssue = true;
-          sampleRejectPromise(error);
-          UnblockPromises();
+        beforeEach((done) => {
+          ImmediatelyResolvePromise(2);
+          (async () => {
+            localStorage.clear();
+            sessionStorage.clear();
+            try {
+              const error = new Error('{"result": "no-auth"}');
+              error.authIssue = true;
+              sampleRejectPromise(error);
+              await samplePromise;
+            } catch (e) {
+            }
+            UnblockPromises();
+            ImmediatelyResolvePromise(60);
+            await unit.init(apiKey, apiUrl);
+            done();
+          })();
+        });
+      });
+      describe('when authentication error with callback', () => {
+        let captureError = null;
+        const callback = (error) => {
+          captureError = error;
+        }
+        it('then has a positive sample decision', (done) => {
+          (async () => {
+            ImmediatelyResolvePromise(30);
+            expect(await unit.sampleDecision()).toBeTrue();
+            done();
+          })();
+        });
+        it('should have captured error', () => {
+          expect(captureError.toString()).toEqual('Error: {"result": "no-auth"}');
+        });
+        beforeEach((done) => {
+          ImmediatelyResolvePromise(2);
+          (async () => {
+            localStorage.clear();
+            sessionStorage.clear();
+            try {
+              const error = new Error('{"result": "no-auth"}');
+              error.authIssue = true;
+              sampleRejectPromise(error);
+              await samplePromise;
+            } catch (e) {
+            }
+            UnblockPromises();
+            ImmediatelyResolvePromise(60);
+            await unit.init(apiKey, apiUrl, callback);
+            done();
+          })();
         });
       });
     });
     beforeEach(() => {
       localStorage.clear();
       sessionStorage.clear();
-      let promise = new Promise(function (resolve, reject) {
+      samplePromise = new Promise(function (resolve, reject) {
         sampleResolvePromise = resolve;
         sampleRejectPromise = reject;
       });
-      sampleApi.fetch.and.returnValue(promise);
-      let promise2 = new Promise(function (resolve, reject) {
+      sampleApi.fetch.and.returnValue(samplePromise);
+      countPromise = new Promise(function (resolve, reject) {
         countResolvePromise = resolve;
         countRejectPromise = reject;
       });
-      countApi.fetch.and.returnValue(promise2);
+      countApi.fetch.and.returnValue(countPromise);
       unit = new _Xenon(apiKey, apiUrl, countApiUrl, JourneyApi, DeanonApi, HeartbeatApi, SampleApi, CountApi, ErrorLogApi);
       unit2 = new _Xenon(apiKey, apiUrl, countApiUrl, JourneyApi, DeanonApi, HeartbeatApi, SampleApi, CountApi, ErrorLogApi);
     });
@@ -3157,24 +4811,35 @@ describe('View SDK', () => {
   });
   describe('when decision previously and unable to sample', () => {
     let unit3;
-    it('then unable to sample', () => {
-      expect(unit3.sampleDecision()).toBeFalse()
+    it('then unable to sample', (done) => {
+      (async () => {
+        ImmediatelyResolvePromise(3);
+        expect(await unit3.sampleDecision()).toBeFalse();
+        done();
+      })();
     });
-    beforeEach(() => {
-      localStorage.clear();
-      sessionStorage.clear();
-      let promise = new Promise(function (resolve, reject) {
-        sampleResolvePromise = resolve;
-        sampleRejectPromise = reject;
-      });
-      sampleApi.fetch.and.returnValue(promise);
-      storeSession('xenon-will-sample', false);
-      unit3 = new _Xenon(apiKey, apiUrl, countApiUrl, JourneyApi, DeanonApi, HeartbeatApi, SampleApi, CountApi);
+    beforeEach((done) => {
+      (async () => {
+        MockPromises.reset();
+        localStorage.clear();
+        sessionStorage.clear();
+        samplePromise = new Promise(function (resolve, reject) {
+          sampleResolvePromise = resolve;
+          sampleRejectPromise = reject;
+        });
+        sampleApi.fetch.and.returnValue(samplePromise);
+        ImmediatelyResolvePromise(2);
+        await storeSession('xenon-will-sample', false);
+        unit3 = new _Xenon(apiKey, apiUrl, countApiUrl, JourneyApi, DeanonApi, HeartbeatApi, SampleApi, CountApi);
+        done();
+      })();
     });
     afterEach(() => {
       localStorage.clear();
       sessionStorage.clear();
       resetCalls();
+      MockPromises.reset();
     });
   });
-});
+})
+;
