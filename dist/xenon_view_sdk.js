@@ -1012,7 +1012,7 @@ var Xenon = (function () {
               }
 
               version() {
-                return 'v0.1.40.0';
+                return 'v0.2.0.1';
               }
 
               async init(apiKey, apiUrl = 'https://app.xenonview.com', onApiKeyFailure = null) {
