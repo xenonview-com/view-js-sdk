@@ -45,7 +45,7 @@
     "dist"
   ],
   "name": "xenon-view-sdk",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Javascript access to Xenon View.",
   "homepage": "https://github.com/xenonview-com/view-js-sdk",
   "keywords": [
