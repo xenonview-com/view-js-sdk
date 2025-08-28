@@ -35,7 +35,7 @@ export class _Xenon {
   }
 
   version() {
-    return 'v0.2.0.1';
+    return 'v0.2.1';
   }
 
   async init(apiKey, apiUrl = 'https://app.xenonview.com', onApiKeyFailure = null) {
@@ -381,7 +381,7 @@ export class _Xenon {
     }
     await this.outcomeAdd(content);
     await this.heartbeatState(1);
-    await this.count("Add To Cart", price);
+    await this.count("Add To Cart", price, [product]);
   }
 
   async productNotAddedToCart(product) {
@@ -405,7 +405,7 @@ export class _Xenon {
       price = 0.0;
     }
     await this.outcomeAdd(content);
-    await this.count("Upsell", price);
+    await this.count("Upsell", price, [product]);
   }
 
   async upsellDismissed(product, price = null) {
@@ -466,6 +466,11 @@ export class _Xenon {
       purchaseSting = "Purchase:" + member
     }
 
+    if (!Array.isArray(SKUs)) {
+      const SKUsString = SKUs.toString();
+      SKUs = SKUsString.split(",").map(item => item.trim());
+    }
+
     const content = {
       superOutcome: 'Customer Purchase',
       outcome: outcome,
@@ -486,7 +491,7 @@ export class _Xenon {
 
     await this.outcomeAdd(content);
     await this.heartbeatState(3);
-    await this.count(purchaseSting, price);
+    await this.count(purchaseSting, price, SKUs);
   }
 
   async purchaseCancel(SKUs = null, price = null) {
@@ -683,9 +688,10 @@ export class _Xenon {
 
   // API Communication:
 
-  async count(outcome, value = 0.0, surfaceErrors = false) {
+  async count(outcome, value = 0.0, skus = null, surfaceErrors = false) {
     const attribution = await retrieveSession('view-attribution');
     if (!attribution) return Promise.resolve(true);
+    const platform = await retrieveSession('view-platform');
     let params = {
       data: {
         uid: await this.id(),
@@ -693,6 +699,8 @@ export class _Xenon {
         timestamp: (new Date()).getTime() / 1000,
         outcome: outcome,
         content: attribution,
+        platform: platform ? platform : null,
+        skus: skus,
         value: value
       }
     };

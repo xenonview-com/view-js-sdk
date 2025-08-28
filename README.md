@@ -45,6 +45,7 @@ The Xenon View JavaScript SDK is the JavaScript SDK to interact with [XenonView]
 <br/>
 
 ## What's New <a id='whats-new'></a>
+* v0.2.1  - Counts now include SKUs and Platforms
 * v0.2.0  - Full async support
 * v0.1.48 - support running in Shopify web pixel
 * v0.1.47 - support running in Shopify web pixel
@@ -364,7 +365,7 @@ More are provided for each function.
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <script src="https://cdn.jsdelivr.net/gh/xenonview-com/view-js-sdk@v0.2.0/dist/xenon_view_sdk.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/gh/xenonview-com/view-js-sdk@v0.2.1/dist/xenon_view_sdk.min.js"></script>
   <script>
     Xenon.init('<API KEY>')
   </script>
@@ -422,7 +423,7 @@ export default function Home() {
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <script src="https://cdn.jsdelivr.net/gh/xenonview-com/view-js-sdk@v0.2.0/dist/xenon_view_sdk.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/gh/xenonview-com/view-js-sdk@v0.2.1/dist/xenon_view_sdk.min.js"></script>
   <script>
     Xenon.init('<API KEY>')
   </script>
@@ -2832,7 +2833,7 @@ Use this function to indicate a view of specific content.
 2. After load completes:
 ```html
 <head>
-    <script src="https://cdn.jsdelivr.net/gh/xenonview-com/view-js-sdk@v0.2.0/dist/xenon_view_sdk.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/xenonview-com/view-js-sdk@v0.2.1/dist/xenon_view_sdk.min.js"></script>
     <script>
         document.addEventListener("DOMContentLoaded", function(){
             const loadTime = timestamp() - startTime
@@ -3376,7 +3377,7 @@ export default function Home() {
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <script src="https://cdn.jsdelivr.net/gh/xenonview-com/view-js-sdk@v0.2.0/dist/xenon_view_sdk.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/xenonview-com/view-js-sdk@v0.2.1/dist/xenon_view_sdk.min.js"></script>
     <script>
         Xenon.init('<API KEY>')
         Xenon.ecomAbandonment()
@@ -3460,7 +3461,7 @@ export default function Home() {
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <script src="https://cdn.jsdelivr.net/gh/xenonview-com/view-js-sdk@v0.2.0/dist/xenon_view_sdk.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/gh/xenonview-com/view-js-sdk@v0.2.1/dist/xenon_view_sdk.min.js"></script>
   <script>
     Xenon.init('<API KEY>')
     const softwareVersion = '5.1.5'
@@ -3515,7 +3516,7 @@ export default function Home() {
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <script src="https://cdn.jsdelivr.net/gh/xenonview-com/view-js-sdk@v0.2.0/dist/xenon_view_sdk.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/gh/xenonview-com/view-js-sdk@v0.2.1/dist/xenon_view_sdk.min.js"></script>
   <script>
     Xenon.init('<API KEY>')
     Xenon.variant(['subscription-variant-A'])

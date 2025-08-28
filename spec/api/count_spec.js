@@ -22,6 +22,7 @@ describe('CountApi', () => {
     (async () => {
       MockPromises.reset();
       subject = new CountApi(apiUrl);
+      ImmediatelyResolvePromise(0);
       subject.fetch({data}).then(() => done(), () => done());
       const request = jasmine.Ajax.requests.mostRecent();
       const response = [{'result': 'success'}];

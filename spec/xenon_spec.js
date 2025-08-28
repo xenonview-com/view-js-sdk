@@ -421,6 +421,8 @@ describe('View SDK', () => {
                 timestamp: jasmine.any(Number),
                 outcome: 'Attribution',
                 content: {leadSource: 'Attributed', leadCampaign: null, leadGuid: null},
+                platform: null,
+                skus: null,
                 value: 0
               }
             });
@@ -432,7 +434,7 @@ describe('View SDK', () => {
                 leadCampaign: null,
                 leadGuid: null
               });
-              ImmediatelyResolvePromise(7);
+              ImmediatelyResolvePromise(8);
               countResolvePromise({"result": "success"});
               await unit.leadAttributed(source, identifier)
               done();
@@ -448,6 +450,8 @@ describe('View SDK', () => {
                 timestamp: jasmine.any(Number),
                 outcome: 'Attribution',
                 content: {leadSource: 'Attributed', leadCampaign: null, leadGuid: null},
+                platform: null,
+                skus: null,
                 value: 0
               }
             });
@@ -459,7 +463,7 @@ describe('View SDK', () => {
                 leadCampaign: null,
                 leadGuid: null
               });
-              ImmediatelyResolvePromise(7);
+              ImmediatelyResolvePromise(8);
               countResolvePromise({"result": "success"});
               await unit.leadAttributed(source)
               done();
@@ -476,6 +480,8 @@ describe('View SDK', () => {
               timestamp: jasmine.any(Number),
               outcome: 'Attribution',
               content: {leadSource: 'Unattributed', leadCampaign: null, leadGuid: null},
+              platform: null,
+              skus: null,
               value: 0
             }
           });
@@ -487,7 +493,7 @@ describe('View SDK', () => {
               leadCampaign: null,
               leadGuid: null
             });
-            ImmediatelyResolvePromise(7);
+            ImmediatelyResolvePromise(8);
             countResolvePromise({"result": "success"});
             await unit.leadUnattributed()
             done();
@@ -1409,6 +1415,8 @@ describe('View SDK', () => {
                 timestamp: jasmine.any(Number),
                 outcome: 'Add To Cart',
                 content: {leadSource: null, leadCampaign: null, leadGuid: null},
+                platform: null,
+                skus: ['Dell XPS'],
                 value: 0
               }
             });
@@ -1446,6 +1454,8 @@ describe('View SDK', () => {
                 timestamp: jasmine.any(Number),
                 outcome: 'Add To Cart',
                 content: {leadSource: null, leadCampaign: null, leadGuid: null},
+                platform: null,
+                skus: [laptop],
                 value: price
               }
             });
@@ -1509,6 +1519,8 @@ describe('View SDK', () => {
                 timestamp: jasmine.any(Number),
                 outcome: 'Upsell',
                 content: {leadSource: null, leadCampaign: null, leadGuid: null},
+                platform: null,
+                skus: [laptop],
                 value: 25
               }
             });
@@ -1545,6 +1557,8 @@ describe('View SDK', () => {
                 timestamp: jasmine.any(Number),
                 outcome: 'Upsell',
                 content: {leadSource: null, leadCampaign: null, leadGuid: null},
+                platform: null,
+                skus: [laptop],
                 value: 0
               }
             });
@@ -1624,6 +1638,8 @@ describe('View SDK', () => {
                 timestamp: jasmine.any(Number),
                 outcome: 'Check Out',
                 content: {leadSource: null, leadCampaign: null, leadGuid: null},
+                platform: null,
+                skus: null,
                 value: 0
               }
             });
@@ -1655,6 +1671,8 @@ describe('View SDK', () => {
                 timestamp: jasmine.any(Number),
                 outcome: 'Checkout:Guest',
                 content: {leadSource: null, leadCampaign: null, leadGuid: null},
+                platform: null,
+                skus: null,
                 value: 0
               }
             });
@@ -1724,7 +1742,7 @@ describe('View SDK', () => {
               const journey = (await unit.journey())[0];
               expect(journey.superOutcome).toEqual('Customer Purchase');
               expect(journey.outcome).toEqual('Purchase');
-              expect(journey.skus).toEqual(SKUs);
+              expect(journey.skus).toEqual(['12345', '6789-b']);
               expect(journey.result).toEqual('success');
               expect(journey.price).toEqual(price);
               done();
@@ -1738,6 +1756,8 @@ describe('View SDK', () => {
                 timestamp: jasmine.any(Number),
                 outcome: 'Purchase',
                 content: {leadSource: null, leadCampaign: null, leadGuid: null},
+                platform: null,
+                skus: ['12345', '6789-b'],
                 value: price
               }
             });
@@ -1756,13 +1776,53 @@ describe('View SDK', () => {
             })();
           });
         });
+        describe('when price and skus as array', () => {
+          it('then creates journey with outcome', (done) => {
+            (async () => {
+              const journey = (await unit.journey())[0];
+              expect(journey.superOutcome).toEqual('Customer Purchase');
+              expect(journey.outcome).toEqual('Purchase');
+              expect(journey.skus).toEqual(['12345', '6789-b']);
+              expect(journey.result).toEqual('success');
+              expect(journey.price).toEqual(price);
+              done();
+            })();
+          });
+          it('then counts', () => {
+            expect(countApi.fetch).toHaveBeenCalledWith({
+              data: {
+                uid: jasmine.any(String),
+                token: '<token>',
+                timestamp: jasmine.any(Number),
+                outcome: 'Purchase',
+                content: {leadSource: null, leadCampaign: null, leadGuid: null},
+                platform: null,
+                skus: ['12345', '6789-b'],
+                value: price
+              }
+            });
+          });
+          beforeEach((done) => {
+            (async () => {
+              await storeSession('view-attribution', {
+                leadSource: null,
+                leadCampaign: null,
+                leadGuid: null
+              })
+              ImmediatelyResolvePromise(7);
+              countResolvePromise({"result": "success"});
+              unit.purchase(['12345', '6789-b'], price);
+              done();
+            })();
+          });
+        });
         describe('when price plus shipping', () => {
           it('then creates journey with outcome', (done) => {
             (async () => {
               const journey = (await unit.journey())[0];
               expect(journey.superOutcome).toEqual('Customer Purchase');
               expect(journey.outcome).toEqual('Purchase');
-              expect(journey.skus).toEqual(SKUs);
+              expect(journey.skus).toEqual(['12345', '6789-b']);
               expect(journey.result).toEqual('success');
               expect(journey.price).toEqual(price);
               expect(journey.shipping).toEqual(shipping);
@@ -1777,6 +1837,8 @@ describe('View SDK', () => {
                 timestamp: jasmine.any(Number),
                 outcome: 'Purchase',
                 content: {leadSource: null, leadCampaign: null, leadGuid: null},
+                platform: null,
+                skus: ['12345', '6789-b'],
                 value: price
               }
             });
@@ -1801,7 +1863,7 @@ describe('View SDK', () => {
               const journey = (await unit.journey())[0];
               expect(journey.superOutcome).toEqual('Customer Purchase');
               expect(journey.outcome).toEqual('Purchase - Guest');
-              expect(journey.skus).toEqual(SKUs);
+              expect(journey.skus).toEqual(['12345', '6789-b']);
               expect(journey.result).toEqual('success');
               done();
             })();
@@ -1814,6 +1876,8 @@ describe('View SDK', () => {
                 timestamp: jasmine.any(Number),
                 outcome: 'Purchase:Guest',
                 content: {leadSource: null, leadCampaign: null, leadGuid: null},
+                platform: null,
+                skus: ['12345', '6789-b'],
                 value: price
               }
             });
@@ -1838,7 +1902,7 @@ describe('View SDK', () => {
               const journey = (await unit.journey())[0];
               expect(journey.superOutcome).toEqual('Customer Purchase');
               expect(journey.outcome).toEqual('Purchase');
-              expect(journey.skus).toEqual(SKUs);
+              expect(journey.skus).toEqual(['12345', '6789-b']);
               expect(journey.result).toEqual('success');
               expect(journey.price).toEqual(price);
               expect(journey.discount).toEqual(discount);
@@ -1853,6 +1917,8 @@ describe('View SDK', () => {
                 timestamp: jasmine.any(Number),
                 outcome: 'Purchase',
                 content: {leadSource: null, leadCampaign: null, leadGuid: null},
+                platform: null,
+                skus: ['12345', '6789-b'],
                 value: price
               }
             });
@@ -1877,7 +1943,7 @@ describe('View SDK', () => {
               const journey = (await unit.journey())[0];
               expect(journey.superOutcome).toEqual('Customer Purchase');
               expect(journey.outcome).toEqual('Purchase');
-              expect(journey.skus).toEqual(SKUs);
+              expect(journey.skus).toEqual(['12345', '6789-b']);
               expect(journey.result).toEqual('success');
               done();
             })();
@@ -1890,6 +1956,8 @@ describe('View SDK', () => {
                 timestamp: jasmine.any(Number),
                 outcome: 'Purchase',
                 content: {leadSource: null, leadCampaign: null, leadGuid: null},
+                platform: null,
+                skus: ['12345', '6789-b'],
                 value: 0
               }
             });
@@ -3026,7 +3094,7 @@ describe('View SDK', () => {
           beforeEach((done) => {
             (async () => {
               MockPromises.reset();
-              ImmediatelyResolvePromise(10);
+              ImmediatelyResolvePromise(11);
               countResolvePromise({"result": "success"});
               filteredQuery = await unit.autodiscoverLeadFrom('?xenonSrc=email&xenonId=2024');
               done();
@@ -3049,7 +3117,7 @@ describe('View SDK', () => {
           beforeEach((done) => {
             (async () => {
               MockPromises.reset();
-              ImmediatelyResolvePromise(10);
+              ImmediatelyResolvePromise(11);
               countResolvePromise({"result": "success"});
               filteredQuery = await unit.autodiscoverLeadFrom('?xenonSrc=email');
               done();
@@ -3073,7 +3141,7 @@ describe('View SDK', () => {
           beforeEach((done) => {
             (async () => {
               MockPromises.reset();
-              ImmediatelyResolvePromise(10);
+              ImmediatelyResolvePromise(11);
               countResolvePromise({"result": "success"});
               filteredQuery = await unit.autodiscoverLeadFrom('?cr_campaignid=2024');
               done();
@@ -3119,7 +3187,7 @@ describe('View SDK', () => {
           beforeEach((done) => {
             (async () => {
               MockPromises.reset();
-              ImmediatelyResolvePromise(10);
+              ImmediatelyResolvePromise(11);
               countResolvePromise({"result": "success"});
               filteredQuery = await unit.autodiscoverLeadFrom('?utm_source=klaviyo&utm_campaign=2024');
               done();
@@ -3143,7 +3211,7 @@ describe('View SDK', () => {
           beforeEach((done) => {
             (async () => {
               MockPromises.reset();
-              ImmediatelyResolvePromise(10);
+              ImmediatelyResolvePromise(11);
               countResolvePromise({"result": "success"});
               filteredQuery = await unit.autodiscoverLeadFrom('?utm_source=klaviyo&utm_campaign=2024&utm_medium=email');
               done();
@@ -3167,7 +3235,7 @@ describe('View SDK', () => {
           beforeEach((done) => {
             (async () => {
               MockPromises.reset();
-              ImmediatelyResolvePromise(10);
+              ImmediatelyResolvePromise(11);
               countResolvePromise({"result": "success"});
               filteredQuery = await unit.autodiscoverLeadFrom('?g_campaignid=2024');
               done();
@@ -3190,7 +3258,7 @@ describe('View SDK', () => {
           });
           beforeEach((done) => {
             (async () => {
-              ImmediatelyResolvePromise(10);
+              ImmediatelyResolvePromise(11);
               countResolvePromise({"result": "success"});
               filteredQuery = await unit.autodiscoverLeadFrom('?utm_source=shareasale&sscid=2024');
               done();
@@ -3214,7 +3282,7 @@ describe('View SDK', () => {
           beforeEach((done) => {
             (async () => {
               MockPromises.reset();
-              ImmediatelyResolvePromise(10);
+              ImmediatelyResolvePromise(11);
               countResolvePromise({"result": "success"});
               filteredQuery = await unit.autodiscoverLeadFrom('?sscid=2024');
               done();
@@ -3238,7 +3306,7 @@ describe('View SDK', () => {
           beforeEach((done) => {
             (async () => {
               MockPromises.reset();
-              ImmediatelyResolvePromise(10);
+              ImmediatelyResolvePromise(11);
               countResolvePromise({"result": "success"});
               filteredQuery = await unit.autodiscoverLeadFrom('?g_adtype=none&g_campaign=2024');
               done();
@@ -3261,7 +3329,7 @@ describe('View SDK', () => {
           });
           beforeEach((done) => {
             (async () => {
-              ImmediatelyResolvePromise(10);
+              ImmediatelyResolvePromise(11);
               countResolvePromise({"result": "success"});
               filteredQuery = await unit.autodiscoverLeadFrom('?g_adtype=search&g_campaign=2024');
               done();
@@ -3285,7 +3353,7 @@ describe('View SDK', () => {
           beforeEach((done) => {
             (async () => {
               MockPromises.reset();
-              ImmediatelyResolvePromise(10);
+              ImmediatelyResolvePromise(11);
               countResolvePromise({"result": "success"});
               filteredQuery = await unit.autodiscoverLeadFrom('?utm_source=facebook&utm_campaign=2024');
               done();
@@ -3308,7 +3376,7 @@ describe('View SDK', () => {
           });
           beforeEach((done) => {
             (async () => {
-              ImmediatelyResolvePromise(10);
+              ImmediatelyResolvePromise(11);
               countResolvePromise({"result": "success"});
               filteredQuery = await unit.autodiscoverLeadFrom('?utm_source=email-broadcast&utm_campaign=2024');
               done();
@@ -3331,7 +3399,7 @@ describe('View SDK', () => {
           });
           beforeEach((done) => {
             (async () => {
-              ImmediatelyResolvePromise(10);
+              ImmediatelyResolvePromise(11);
               countResolvePromise({"result": "success"});
               filteredQuery = await unit.autodiscoverLeadFrom('?utm_source=youtube&utm_campaign=2024');
               done();
@@ -3352,7 +3420,7 @@ describe('View SDK', () => {
           beforeEach((done) => {
             (async () => {
               MockPromises.reset();
-              ImmediatelyResolvePromise(19);
+              ImmediatelyResolvePromise(20);
               countResolvePromise({"result": "success"});
               await unit.variant(['test'])
               await unit.autodiscoverLeadFrom('?utm_source=youtube&utm_campaign=2024');
@@ -3377,7 +3445,7 @@ describe('View SDK', () => {
           beforeEach((done) => {
             (async () => {
               MockPromises.reset();
-              ImmediatelyResolvePromise(10);
+              ImmediatelyResolvePromise(11);
               countResolvePromise({"result": "success"});
               filteredQuery = await unit.autodiscoverLeadFrom('?utm_source=instagram&utm_campaign=2024');
               done();
@@ -3405,6 +3473,8 @@ describe('View SDK', () => {
                 timestamp: jasmine.any(Number),
                 outcome: 'Attribution',
                 content: {leadSource: 'Unattributed', leadCampaign: null, leadGuid: null},
+                platform: null,
+                skus: null,
                 value: 0
               }
             });
@@ -3412,7 +3482,7 @@ describe('View SDK', () => {
           beforeEach((done) => {
             (async () => {
               MockPromises.reset();
-              ImmediatelyResolvePromise(10);
+              ImmediatelyResolvePromise(11);
               countResolvePromise({"result": "success"});
               await unit.autodiscoverLeadFrom('');
               ImmediatelyResolvePromise(6);
@@ -3442,7 +3512,7 @@ describe('View SDK', () => {
           beforeEach((done) => {
             (async () => {
               MockPromises.reset();
-              ImmediatelyResolvePromise(10);
+              ImmediatelyResolvePromise(11);
               countResolvePromise({"result": "success"});
               filteredQuery = await unit.autodiscoverLeadFrom('?hello=world');
               done();
@@ -3461,7 +3531,7 @@ describe('View SDK', () => {
           beforeEach((done) => {
             (async () => {
               MockPromises.reset();
-              ImmediatelyResolvePromise(19);
+              ImmediatelyResolvePromise(20);
               countResolvePromise({"result": "success"});
               await unit.variant(['test'])
               await unit.autodiscoverLeadFrom('');
@@ -3482,7 +3552,7 @@ describe('View SDK', () => {
           beforeEach((done) => {
             (async () => {
               MockPromises.reset();
-              ImmediatelyResolvePromise(19);
+              ImmediatelyResolvePromise(20);
               countResolvePromise({"result": "success"});
               await unit.variant(['test'])
               await unit.autodiscoverLeadFrom('?abc=123');
@@ -4295,14 +4365,77 @@ describe('View SDK', () => {
                   timestamp: jasmine.any(Number),
                   outcome: '<outcome>',
                   content: {leadSource: 'Unattributed', leadGuid: null},
+                  platform: null,
+                  skus: null,
                   value: 0.0
                 }
               });
             });
             beforeEach((done) => {
               (async () => {
-                ImmediatelyResolvePromise(30);
-                capturedValue = await unit.count("<outcome>", 0.0, true);
+                resetCalls();
+                ImmediatelyResolvePromise(8);
+                capturedValue = await unit.count("<outcome>", 0.0, null, true);
+                done();
+              })();
+            });
+          });
+          describe('it passes with a platform', () => {
+            const platform = {
+              softwareVersion: 1.0,
+              deviceModel: 'test-browser',
+              operatingSystemName: 'any',
+              operatingSystemVersion: '1.0'
+            };
+            it('then calls the view count API', () => {
+              expect(countApi.fetch).toHaveBeenCalledWith({
+                data: {
+                  uid: jasmine.any(String),
+                  token: apiKey,
+                  timestamp: jasmine.any(Number),
+                  outcome: '<outcome>',
+                  content: {leadSource: 'Unattributed', leadGuid: null},
+                  platform: platform,
+                  skus: [],
+                  value: 0.0
+                }
+              });
+            });
+            beforeEach((done) => {
+              (async () => {
+                resetCalls();
+                ImmediatelyResolvePromise(9);
+                await storeSession('view-platform', platform);
+                capturedValue = await unit.count("<outcome>", 0.0, [], true);
+                done();
+              })();
+            });
+            afterEach(() => {
+              sessionStorage.clear();
+              ImmediatelyResolvePromise(0);
+            });
+          });
+          describe('it passes with SKUS', () => {
+            it('then calls the view count API', () => {
+              expect(CountApi).toHaveBeenCalledWith(countApiUrl);
+              expect(countApi.fetch).toHaveBeenCalledWith({
+                data: {
+                  uid: jasmine.any(String),
+                  token: apiKey,
+                  timestamp: jasmine.any(Number),
+                  outcome: '<outcome>',
+                  content: {leadSource: 'Unattributed', leadGuid: null},
+                  platform: null,
+                  skus: ["aSku"],
+                  value: 0.0
+                }
+              });
+            });
+            beforeEach((done) => {
+              (async () => {
+                ImmediatelyResolvePromise(8);
+                resetCalls();
+                capturedValue = await unit.count("<outcome>", 0.0, ["aSku"], true);
                 done();
               })();
             });
@@ -4321,6 +4454,8 @@ describe('View SDK', () => {
                     timestamp: jasmine.any(Number),
                     outcome: '<outcome>',
                     content: {leadSource: 'Unattributed', leadGuid: null},
+                    platform: null,
+                    skus: [],
                     value: 0
                   }
                 }]);
@@ -4341,6 +4476,8 @@ describe('View SDK', () => {
                       timestamp: jasmine.any(Number),
                       outcome: '<outcome>',
                       content: {leadSource: 'Unattributed', leadGuid: null},
+                      platform: null,
+                      skus: [],
                       value: 0
                     }
                   }, {
@@ -4350,6 +4487,8 @@ describe('View SDK', () => {
                       timestamp: jasmine.any(Number),
                       outcome: '<outcome2>',
                       content: {leadSource: 'Unattributed', leadGuid: null},
+                      platform: null,
+                      skus: [],
                       value: 0
                     }
                   }]);
@@ -4372,7 +4511,7 @@ describe('View SDK', () => {
                   resetCalls();
                   ImmediatelyResolvePromise(30);
                   try {
-                    capturedValue = await unit.count("<outcome2>", 0.0, true);
+                    capturedValue = await unit.count("<outcome2>", 0.0, [], true);
                   } catch (e) {
                     capturedError = e;
                   }
@@ -4398,9 +4537,9 @@ describe('View SDK', () => {
                   }
                   UnblockPromises();
                   resetCalls();
-                  ImmediatelyResolvePromise(30);
+                  ImmediatelyResolvePromise(9);
                   try {
-                    capturedValue = await unit.count("<outcome2>", 0.0, true);
+                    capturedValue = await unit.count("<outcome2>", 0.0, [], true);
                   } catch (e) {
                     capturedError = e;
                   }
@@ -4425,7 +4564,7 @@ describe('View SDK', () => {
                 resetCalls();
                 ImmediatelyResolvePromise(8);
                 try {
-                  capturedValue = await unit.count("<outcome>", 0.0, true);
+                  capturedValue = await unit.count("<outcome>", 0.0, [], true);
                 } catch (e) {
                   capturedError = e;
                 }
