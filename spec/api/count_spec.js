@@ -16,6 +16,8 @@ describe('CountApi', () => {
       leadCampaign: "<identifier>",
       leadGuid: null
     },
+    platform: "<platform",
+    skus: ["sku"],
     value: 123.31
   };
   beforeEach((done) => {
@@ -41,6 +43,8 @@ describe('CountApi', () => {
       leadSource: '<source>',
       leadCampaign: '<identifier>',
       leadGuid: null,
+      platform: "<platform",
+      skus: ["sku"],
       value: 123.31
     });
   });

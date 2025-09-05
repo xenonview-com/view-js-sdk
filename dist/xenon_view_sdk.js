@@ -2325,7 +2325,7 @@ var Xenon = (function () {
        super(props);
      }
      params(data) {
-       const {uid, timestamp, outcome, content, value} = data;
+       const {uid, timestamp, outcome, content, value, skus, platform} = data;
        const {leadSource, leadCampaign, leadGuid} = content;
        let params = {};
        params.uid = uid;
@@ -2335,6 +2335,8 @@ var Xenon = (function () {
        params.leadCampaign = leadCampaign;
        params.leadGuid = leadGuid;
        params.value = value;
+       params.platform = platform;
+       params.skus = skus;
        return params;
      }
    }
