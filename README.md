@@ -39,12 +39,14 @@ The Xenon View JavaScript SDK is the JavaScript SDK to interact with [XenonView]
         * [(Optional) Lead Attribution Autodiscovery](#lead-auto-discovery)
         * [(Optional) Augment Calls with URL](#augment-calls)
         * [(Utility) DOM Hierarchy Searching](#dom-hierarchy)
+        * [(Optional) Set Platform Via User Agent](#ua-set-platform)
 * [License](#license)
 * [FAQ-Next.Js](#faq)
 
 <br/>
 
 ## What's New <a id='whats-new'></a>
+* v0.2.2  - Set platform via user agent
 * v0.2.1  - Counts now include SKUs and Platforms
 * v0.2.0  - Full async support
 * v0.1.48 - support running in Shopify web pixel
@@ -365,7 +367,7 @@ More are provided for each function.
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <script src="https://cdn.jsdelivr.net/gh/xenonview-com/view-js-sdk@v0.2.1/dist/xenon_view_sdk.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/gh/xenonview-com/view-js-sdk@v0.2.2/dist/xenon_view_sdk.min.js"></script>
   <script>
     Xenon.init('<API KEY>')
   </script>
@@ -423,7 +425,7 @@ export default function Home() {
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <script src="https://cdn.jsdelivr.net/gh/xenonview-com/view-js-sdk@v0.2.1/dist/xenon_view_sdk.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/gh/xenonview-com/view-js-sdk@v0.2.2/dist/xenon_view_sdk.min.js"></script>
   <script>
     Xenon.init('<API KEY>')
   </script>
@@ -2833,7 +2835,7 @@ Use this function to indicate a view of specific content.
 2. After load completes:
 ```html
 <head>
-    <script src="https://cdn.jsdelivr.net/gh/xenonview-com/view-js-sdk@v0.2.1/dist/xenon_view_sdk.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/xenonview-com/view-js-sdk@v0.2.2/dist/xenon_view_sdk.min.js"></script>
     <script>
         document.addEventListener("DOMContentLoaded", function(){
             const loadTime = timestamp() - startTime
@@ -3377,7 +3379,7 @@ export default function Home() {
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <script src="https://cdn.jsdelivr.net/gh/xenonview-com/view-js-sdk@v0.2.1/dist/xenon_view_sdk.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/xenonview-com/view-js-sdk@v0.2.2/dist/xenon_view_sdk.min.js"></script>
     <script>
         Xenon.init('<API KEY>')
         Xenon.ecomAbandonment()
@@ -3461,7 +3463,7 @@ export default function Home() {
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <script src="https://cdn.jsdelivr.net/gh/xenonview-com/view-js-sdk@v0.2.1/dist/xenon_view_sdk.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/gh/xenonview-com/view-js-sdk@v0.2.2/dist/xenon_view_sdk.min.js"></script>
   <script>
     Xenon.init('<API KEY>')
     const softwareVersion = '5.1.5'
@@ -3516,7 +3518,7 @@ export default function Home() {
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <script src="https://cdn.jsdelivr.net/gh/xenonview-com/view-js-sdk@v0.2.1/dist/xenon_view_sdk.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/gh/xenonview-com/view-js-sdk@v0.2.2/dist/xenon_view_sdk.min.js"></script>
   <script>
     Xenon.init('<API KEY>')
     Xenon.variant(['subscription-variant-A'])
@@ -3990,6 +3992,41 @@ function facilitates that.
 ```
 
 <br/>
+[back to top](#contents)
+<br/>
+
+
+#### Set Platform Via User Agent <a id='ua-set-platform'></a>
+
+Given a user agent string, we can set the platform automatically. Use the function as outlined below:
+
+<br/>
+
+##### `pageURL()`
+###### Framework example:
+```javascript
+import Xenon from 'xenon-view-sdk';
+
+const userAgent = 'Mozilla/5.0 (X11; U; Linux armv7l; en-GB; rv:1.9.2a1pre) Gecko/20090928 Firefox/3.5 Maemo Browser 1.4.1.22 RX-51 N900'
+Xenon.setPlatformByUserAgent(userAgent, "v0.1.0");
+// const platform = {
+//   softwareVersion: '5.1.5', 
+//   deviceModel: 'Maemo Browser:1.4.1.22', 
+//   operatingSystemName: 'Maemo', 
+//   operatingSystemVersion: undefined
+// };
+```
+###### HTML example:
+```html
+<script>
+  function setPlatform() {
+      Xenon.setPlatformByUserAgent(navigator.userAgent, "v0.1.0");
+  }
+  setPlatform()
+</script>
+
+```
+<br/>
 
 [back to top](#contents)
 
@@ -4116,7 +4153,6 @@ export default function Page1() {
 ```javascript
 export function Page1() {
 ```
-
 
 [back to top](#contents)
 

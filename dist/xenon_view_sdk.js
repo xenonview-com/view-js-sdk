@@ -1,2118 +1,3585 @@
 var Xenon = (function () {
-            'use strict';
-
-            var global$1 = (typeof global !== "undefined" ? global :
-                        typeof self !== "undefined" ? self :
-                        typeof window !== "undefined" ? window : {});
-
-            /* eslint-disable no-prototype-builtins */
-            var g =
-              (typeof globalThis !== 'undefined' && globalThis) ||
-              (typeof self !== 'undefined' && self) ||
-              // eslint-disable-next-line no-undef
-              (typeof global$1 !== 'undefined' && global$1) ||
-              {};
-
-            var support = {
-              searchParams: 'URLSearchParams' in g,
-              iterable: 'Symbol' in g && 'iterator' in Symbol,
-              blob:
-                'FileReader' in g &&
-                'Blob' in g &&
-                (function() {
-                  try {
-                    new Blob();
-                    return true
-                  } catch (e) {
-                    return false
-                  }
-                })(),
-              formData: 'FormData' in g,
-              arrayBuffer: 'ArrayBuffer' in g
-            };
-
-            function isDataView(obj) {
-              return obj && DataView.prototype.isPrototypeOf(obj)
-            }
-
-            if (support.arrayBuffer) {
-              var viewClasses = [
-                '[object Int8Array]',
-                '[object Uint8Array]',
-                '[object Uint8ClampedArray]',
-                '[object Int16Array]',
-                '[object Uint16Array]',
-                '[object Int32Array]',
-                '[object Uint32Array]',
-                '[object Float32Array]',
-                '[object Float64Array]'
-              ];
-
-              var isArrayBufferView =
-                ArrayBuffer.isView ||
-                function(obj) {
-                  return obj && viewClasses.indexOf(Object.prototype.toString.call(obj)) > -1
-                };
-            }
-
-            function normalizeName(name) {
-              if (typeof name !== 'string') {
-                name = String(name);
-              }
-              if (/[^a-z0-9\-#$%&'*+.^_`|~!]/i.test(name) || name === '') {
-                throw new TypeError('Invalid character in header field name: "' + name + '"')
-              }
-              return name.toLowerCase()
-            }
-
-            function normalizeValue(value) {
-              if (typeof value !== 'string') {
-                value = String(value);
-              }
-              return value
-            }
-
-            // Build a destructive iterator for the value list
-            function iteratorFor(items) {
-              var iterator = {
-                next: function() {
-                  var value = items.shift();
-                  return {done: value === undefined, value: value}
-                }
-              };
-
-              if (support.iterable) {
-                iterator[Symbol.iterator] = function() {
-                  return iterator
-                };
-              }
-
-              return iterator
-            }
-
-            function Headers(headers) {
-              this.map = {};
-
-              if (headers instanceof Headers) {
-                headers.forEach(function(value, name) {
-                  this.append(name, value);
-                }, this);
-              } else if (Array.isArray(headers)) {
-                headers.forEach(function(header) {
-                  if (header.length != 2) {
-                    throw new TypeError('Headers constructor: expected name/value pair to be length 2, found' + header.length)
-                  }
-                  this.append(header[0], header[1]);
-                }, this);
-              } else if (headers) {
-                Object.getOwnPropertyNames(headers).forEach(function(name) {
-                  this.append(name, headers[name]);
-                }, this);
-              }
-            }
-
-            Headers.prototype.append = function(name, value) {
-              name = normalizeName(name);
-              value = normalizeValue(value);
-              var oldValue = this.map[name];
-              this.map[name] = oldValue ? oldValue + ', ' + value : value;
-            };
-
-            Headers.prototype['delete'] = function(name) {
-              delete this.map[normalizeName(name)];
-            };
-
-            Headers.prototype.get = function(name) {
-              name = normalizeName(name);
-              return this.has(name) ? this.map[name] : null
-            };
-
-            Headers.prototype.has = function(name) {
-              return this.map.hasOwnProperty(normalizeName(name))
-            };
-
-            Headers.prototype.set = function(name, value) {
-              this.map[normalizeName(name)] = normalizeValue(value);
-            };
-
-            Headers.prototype.forEach = function(callback, thisArg) {
-              for (var name in this.map) {
-                if (this.map.hasOwnProperty(name)) {
-                  callback.call(thisArg, this.map[name], name, this);
-                }
-              }
-            };
-
-            Headers.prototype.keys = function() {
-              var items = [];
-              this.forEach(function(value, name) {
-                items.push(name);
-              });
-              return iteratorFor(items)
-            };
-
-            Headers.prototype.values = function() {
-              var items = [];
-              this.forEach(function(value) {
-                items.push(value);
-              });
-              return iteratorFor(items)
-            };
-
-            Headers.prototype.entries = function() {
-              var items = [];
-              this.forEach(function(value, name) {
-                items.push([name, value]);
-              });
-              return iteratorFor(items)
-            };
-
-            if (support.iterable) {
-              Headers.prototype[Symbol.iterator] = Headers.prototype.entries;
-            }
-
-            function consumed(body) {
-              if (body._noBody) return
-              if (body.bodyUsed) {
-                return Promise.reject(new TypeError('Already read'))
-              }
-              body.bodyUsed = true;
-            }
-
-            function fileReaderReady(reader) {
-              return new Promise(function(resolve, reject) {
-                reader.onload = function() {
-                  resolve(reader.result);
-                };
-                reader.onerror = function() {
-                  reject(reader.error);
-                };
-              })
-            }
-
-            function readBlobAsArrayBuffer(blob) {
-              var reader = new FileReader();
-              var promise = fileReaderReady(reader);
-              reader.readAsArrayBuffer(blob);
-              return promise
-            }
-
-            function readBlobAsText(blob) {
-              var reader = new FileReader();
-              var promise = fileReaderReady(reader);
-              var match = /charset=([A-Za-z0-9_-]+)/.exec(blob.type);
-              var encoding = match ? match[1] : 'utf-8';
-              reader.readAsText(blob, encoding);
-              return promise
-            }
-
-            function readArrayBufferAsText(buf) {
-              var view = new Uint8Array(buf);
-              var chars = new Array(view.length);
-
-              for (var i = 0; i < view.length; i++) {
-                chars[i] = String.fromCharCode(view[i]);
-              }
-              return chars.join('')
-            }
-
-            function bufferClone(buf) {
-              if (buf.slice) {
-                return buf.slice(0)
-              } else {
-                var view = new Uint8Array(buf.byteLength);
-                view.set(new Uint8Array(buf));
-                return view.buffer
-              }
-            }
-
-            function Body() {
-              this.bodyUsed = false;
-
-              this._initBody = function(body) {
-                /*
-                  fetch-mock wraps the Response object in an ES6 Proxy to
-                  provide useful test harness features such as flush. However, on
-                  ES5 browsers without fetch or Proxy support pollyfills must be used;
-                  the proxy-pollyfill is unable to proxy an attribute unless it exists
-                  on the object before the Proxy is created. This change ensures
-                  Response.bodyUsed exists on the instance, while maintaining the
-                  semantic of setting Request.bodyUsed in the constructor before
-                  _initBody is called.
-                */
-                // eslint-disable-next-line no-self-assign
-                this.bodyUsed = this.bodyUsed;
-                this._bodyInit = body;
-                if (!body) {
-                  this._noBody = true;
-                  this._bodyText = '';
-                } else if (typeof body === 'string') {
-                  this._bodyText = body;
-                } else if (support.blob && Blob.prototype.isPrototypeOf(body)) {
-                  this._bodyBlob = body;
-                } else if (support.formData && FormData.prototype.isPrototypeOf(body)) {
-                  this._bodyFormData = body;
-                } else if (support.searchParams && URLSearchParams.prototype.isPrototypeOf(body)) {
-                  this._bodyText = body.toString();
-                } else if (support.arrayBuffer && support.blob && isDataView(body)) {
-                  this._bodyArrayBuffer = bufferClone(body.buffer);
-                  // IE 10-11 can't handle a DataView body.
-                  this._bodyInit = new Blob([this._bodyArrayBuffer]);
-                } else if (support.arrayBuffer && (ArrayBuffer.prototype.isPrototypeOf(body) || isArrayBufferView(body))) {
-                  this._bodyArrayBuffer = bufferClone(body);
-                } else {
-                  this._bodyText = body = Object.prototype.toString.call(body);
-                }
-
-                if (!this.headers.get('content-type')) {
-                  if (typeof body === 'string') {
-                    this.headers.set('content-type', 'text/plain;charset=UTF-8');
-                  } else if (this._bodyBlob && this._bodyBlob.type) {
-                    this.headers.set('content-type', this._bodyBlob.type);
-                  } else if (support.searchParams && URLSearchParams.prototype.isPrototypeOf(body)) {
-                    this.headers.set('content-type', 'application/x-www-form-urlencoded;charset=UTF-8');
-                  }
-                }
-              };
-
-              if (support.blob) {
-                this.blob = function() {
-                  var rejected = consumed(this);
-                  if (rejected) {
-                    return rejected
-                  }
-
-                  if (this._bodyBlob) {
-                    return Promise.resolve(this._bodyBlob)
-                  } else if (this._bodyArrayBuffer) {
-                    return Promise.resolve(new Blob([this._bodyArrayBuffer]))
-                  } else if (this._bodyFormData) {
-                    throw new Error('could not read FormData body as blob')
-                  } else {
-                    return Promise.resolve(new Blob([this._bodyText]))
-                  }
-                };
-              }
-
-              this.arrayBuffer = function() {
-                if (this._bodyArrayBuffer) {
-                  var isConsumed = consumed(this);
-                  if (isConsumed) {
-                    return isConsumed
-                  } else if (ArrayBuffer.isView(this._bodyArrayBuffer)) {
-                    return Promise.resolve(
-                      this._bodyArrayBuffer.buffer.slice(
-                        this._bodyArrayBuffer.byteOffset,
-                        this._bodyArrayBuffer.byteOffset + this._bodyArrayBuffer.byteLength
-                      )
-                    )
-                  } else {
-                    return Promise.resolve(this._bodyArrayBuffer)
-                  }
-                } else if (support.blob) {
-                  return this.blob().then(readBlobAsArrayBuffer)
-                } else {
-                  throw new Error('could not read as ArrayBuffer')
-                }
-              };
-
-              this.text = function() {
-                var rejected = consumed(this);
-                if (rejected) {
-                  return rejected
-                }
-
-                if (this._bodyBlob) {
-                  return readBlobAsText(this._bodyBlob)
-                } else if (this._bodyArrayBuffer) {
-                  return Promise.resolve(readArrayBufferAsText(this._bodyArrayBuffer))
-                } else if (this._bodyFormData) {
-                  throw new Error('could not read FormData body as text')
-                } else {
-                  return Promise.resolve(this._bodyText)
-                }
-              };
-
-              if (support.formData) {
-                this.formData = function() {
-                  return this.text().then(decode)
-                };
-              }
-
-              this.json = function() {
-                return this.text().then(JSON.parse)
-              };
-
-              return this
-            }
-
-            // HTTP methods whose capitalization should be normalized
-            var methods = ['CONNECT', 'DELETE', 'GET', 'HEAD', 'OPTIONS', 'PATCH', 'POST', 'PUT', 'TRACE'];
-
-            function normalizeMethod(method) {
-              var upcased = method.toUpperCase();
-              return methods.indexOf(upcased) > -1 ? upcased : method
-            }
-
-            function Request(input, options) {
-              if (!(this instanceof Request)) {
-                throw new TypeError('Please use the "new" operator, this DOM object constructor cannot be called as a function.')
-              }
-
-              options = options || {};
-              var body = options.body;
-
-              if (input instanceof Request) {
-                if (input.bodyUsed) {
-                  throw new TypeError('Already read')
-                }
-                this.url = input.url;
-                this.credentials = input.credentials;
-                if (!options.headers) {
-                  this.headers = new Headers(input.headers);
-                }
-                this.method = input.method;
-                this.mode = input.mode;
-                this.signal = input.signal;
-                if (!body && input._bodyInit != null) {
-                  body = input._bodyInit;
-                  input.bodyUsed = true;
-                }
-              } else {
-                this.url = String(input);
-              }
-
-              this.credentials = options.credentials || this.credentials || 'same-origin';
-              if (options.headers || !this.headers) {
-                this.headers = new Headers(options.headers);
-              }
-              this.method = normalizeMethod(options.method || this.method || 'GET');
-              this.mode = options.mode || this.mode || null;
-              this.signal = options.signal || this.signal || (function () {
-                if ('AbortController' in g) {
-                  var ctrl = new AbortController();
-                  return ctrl.signal;
-                }
-              }());
-              this.referrer = null;
-
-              if ((this.method === 'GET' || this.method === 'HEAD') && body) {
-                throw new TypeError('Body not allowed for GET or HEAD requests')
-              }
-              this._initBody(body);
-
-              if (this.method === 'GET' || this.method === 'HEAD') {
-                if (options.cache === 'no-store' || options.cache === 'no-cache') {
-                  // Search for a '_' parameter in the query string
-                  var reParamSearch = /([?&])_=[^&]*/;
-                  if (reParamSearch.test(this.url)) {
-                    // If it already exists then set the value with the current time
-                    this.url = this.url.replace(reParamSearch, '$1_=' + new Date().getTime());
-                  } else {
-                    // Otherwise add a new '_' parameter to the end with the current time
-                    var reQueryString = /\?/;
-                    this.url += (reQueryString.test(this.url) ? '&' : '?') + '_=' + new Date().getTime();
-                  }
-                }
-              }
-            }
-
-            Request.prototype.clone = function() {
-              return new Request(this, {body: this._bodyInit})
-            };
-
-            function decode(body) {
-              var form = new FormData();
-              body
-                .trim()
-                .split('&')
-                .forEach(function(bytes) {
-                  if (bytes) {
-                    var split = bytes.split('=');
-                    var name = split.shift().replace(/\+/g, ' ');
-                    var value = split.join('=').replace(/\+/g, ' ');
-                    form.append(decodeURIComponent(name), decodeURIComponent(value));
-                  }
-                });
-              return form
-            }
-
-            function parseHeaders(rawHeaders) {
-              var headers = new Headers();
-              // Replace instances of \r\n and \n followed by at least one space or horizontal tab with a space
-              // https://tools.ietf.org/html/rfc7230#section-3.2
-              var preProcessedHeaders = rawHeaders.replace(/\r?\n[\t ]+/g, ' ');
-              // Avoiding split via regex to work around a common IE11 bug with the core-js 3.6.0 regex polyfill
-              // https://github.com/github/fetch/issues/748
-              // https://github.com/zloirock/core-js/issues/751
-              preProcessedHeaders
-                .split('\r')
-                .map(function(header) {
-                  return header.indexOf('\n') === 0 ? header.substr(1, header.length) : header
-                })
-                .forEach(function(line) {
-                  var parts = line.split(':');
-                  var key = parts.shift().trim();
-                  if (key) {
-                    var value = parts.join(':').trim();
-                    try {
-                      headers.append(key, value);
-                    } catch (error) {
-                      console.warn('Response ' + error.message);
-                    }
-                  }
-                });
-              return headers
-            }
-
-            Body.call(Request.prototype);
-
-            function Response(bodyInit, options) {
-              if (!(this instanceof Response)) {
-                throw new TypeError('Please use the "new" operator, this DOM object constructor cannot be called as a function.')
-              }
-              if (!options) {
-                options = {};
-              }
-
-              this.type = 'default';
-              this.status = options.status === undefined ? 200 : options.status;
-              if (this.status < 200 || this.status > 599) {
-                throw new RangeError("Failed to construct 'Response': The status provided (0) is outside the range [200, 599].")
-              }
-              this.ok = this.status >= 200 && this.status < 300;
-              this.statusText = options.statusText === undefined ? '' : '' + options.statusText;
-              this.headers = new Headers(options.headers);
-              this.url = options.url || '';
-              this._initBody(bodyInit);
-            }
-
-            Body.call(Response.prototype);
-
-            Response.prototype.clone = function() {
-              return new Response(this._bodyInit, {
-                status: this.status,
-                statusText: this.statusText,
-                headers: new Headers(this.headers),
-                url: this.url
-              })
-            };
-
-            Response.error = function() {
-              var response = new Response(null, {status: 200, statusText: ''});
-              response.ok = false;
-              response.status = 0;
-              response.type = 'error';
-              return response
-            };
-
-            var redirectStatuses = [301, 302, 303, 307, 308];
-
-            Response.redirect = function(url, status) {
-              if (redirectStatuses.indexOf(status) === -1) {
-                throw new RangeError('Invalid status code')
-              }
-
-              return new Response(null, {status: status, headers: {location: url}})
-            };
-
-            var DOMException = g.DOMException;
-            try {
-              new DOMException();
-            } catch (err) {
-              DOMException = function(message, name) {
-                this.message = message;
-                this.name = name;
-                var error = Error(message);
-                this.stack = error.stack;
-              };
-              DOMException.prototype = Object.create(Error.prototype);
-              DOMException.prototype.constructor = DOMException;
-            }
-
-            function fetch$1(input, init) {
-              return new Promise(function(resolve, reject) {
-                var request = new Request(input, init);
-
-                if (request.signal && request.signal.aborted) {
-                  return reject(new DOMException('Aborted', 'AbortError'))
-                }
-
-                var xhr = new XMLHttpRequest();
-
-                function abortXhr() {
-                  xhr.abort();
-                }
-
-                xhr.onload = function() {
-                  var options = {
-                    statusText: xhr.statusText,
-                    headers: parseHeaders(xhr.getAllResponseHeaders() || '')
-                  };
-                  // This check if specifically for when a user fetches a file locally from the file system
-                  // Only if the status is out of a normal range
-                  if (request.url.indexOf('file://') === 0 && (xhr.status < 200 || xhr.status > 599)) {
-                    options.status = 200;
-                  } else {
-                    options.status = xhr.status;
-                  }
-                  options.url = 'responseURL' in xhr ? xhr.responseURL : options.headers.get('X-Request-URL');
-                  var body = 'response' in xhr ? xhr.response : xhr.responseText;
-                  setTimeout(function() {
-                    resolve(new Response(body, options));
-                  }, 0);
-                };
-
-                xhr.onerror = function() {
-                  setTimeout(function() {
-                    reject(new TypeError('Network request failed'));
-                  }, 0);
-                };
-
-                xhr.ontimeout = function() {
-                  setTimeout(function() {
-                    reject(new TypeError('Network request timed out'));
-                  }, 0);
-                };
-
-                xhr.onabort = function() {
-                  setTimeout(function() {
-                    reject(new DOMException('Aborted', 'AbortError'));
-                  }, 0);
-                };
-
-                function fixUrl(url) {
-                  try {
-                    return url === '' && g.location.href ? g.location.href : url
-                  } catch (e) {
-                    return url
-                  }
-                }
-
-                xhr.open(request.method, fixUrl(request.url), true);
-
-                if (request.credentials === 'include') {
-                  xhr.withCredentials = true;
-                } else if (request.credentials === 'omit') {
-                  xhr.withCredentials = false;
-                }
-
-                if ('responseType' in xhr) {
-                  if (support.blob) {
-                    xhr.responseType = 'blob';
-                  } else if (
-                    support.arrayBuffer
-                  ) {
-                    xhr.responseType = 'arraybuffer';
-                  }
-                }
-
-                if (init && typeof init.headers === 'object' && !(init.headers instanceof Headers || (g.Headers && init.headers instanceof g.Headers))) {
-                  var names = [];
-                  Object.getOwnPropertyNames(init.headers).forEach(function(name) {
-                    names.push(normalizeName(name));
-                    xhr.setRequestHeader(name, normalizeValue(init.headers[name]));
-                  });
-                  request.headers.forEach(function(value, name) {
-                    if (names.indexOf(name) === -1) {
-                      xhr.setRequestHeader(name, value);
-                    }
-                  });
-                } else {
-                  request.headers.forEach(function(value, name) {
-                    xhr.setRequestHeader(name, value);
-                  });
-                }
-
-                if (request.signal) {
-                  request.signal.addEventListener('abort', abortXhr);
-
-                  xhr.onreadystatechange = function() {
-                    // DONE (success or failure)
-                    if (xhr.readyState === 4) {
-                      request.signal.removeEventListener('abort', abortXhr);
-                    }
-                  };
-                }
-
-                xhr.send(typeof request._bodyInit === 'undefined' ? null : request._bodyInit);
-              })
-            }
-
-            fetch$1.polyfill = true;
-
-            if (!g.fetch) {
-              g.fetch = fetch$1;
-              g.Headers = Headers;
-              g.Request = Request;
-              g.Response = Response;
-            }
-
-            // the whatwg-fetch polyfill installs the fetch() function
-            // on the global object (window or self)
-            //
-            // Return that as the export for use in Webpack, Browserify etc.
-
-            self.fetch.bind(self);
-
-            async function checkStatus(response) {
-              if (response.status >= 200 && response.status < 400) {
-                return response;
-              }
-              if (response.status >= 400 && response.status < 500) {
-                const details = await response.json();
-                const error = new Error(details.error_message);
-                error.response = response;
-                error.details = details;
-                error.authIssue = true;
-                return Promise.reject(error);
-              }
-              const error = new Error(response.statusText);
-              error.response = response;
-              return Promise.reject(error);
-            }
-
-            function fetchJson(url, {accessToken, headers, ...options} = {}) {
-              const acceptHeaders = {accept: 'application/json'};
-              const authorizationHeaders = accessToken ? {authorization: `Bearer ${accessToken}`} : {};
-              options = {credentials: 'same-origin', keepalive: true, headers:
-                    {...acceptHeaders, ...authorizationHeaders, ...headers}, ...options};
-              return fetch(url, options)
-                .then(checkStatus)
-                .then((response) => {
-                  return [204, 304].includes(response.status) ? {} : response.json();
-                })
-                .catch((error) =>{
-                  if (error instanceof TypeError) {
-                    const newError = new Error('Your internet connection appears to have gone down.');
-                    newError.noNet = true;
-                    return Promise.reject(newError);
-                  }
-                  return Promise.reject(error);
-                });
-            }
-
-            const apiHost = 'app.xenonview.com';
-            const apiUrl_ = `https://${apiHost}`;
-
-
-            class ApiBase {
-              constructor(props = {}) {
-                const {name, method, headers, url: path, skipName, authenticated, apiUrl} = props;
-                this.authenticated = (authenticated) ? authenticated : false;
-                this.skipName = (skipName) ? skipName : false;
-                this.name = (name) ? name : 'ApiBase';
-                this.method = (method) ? method : 'POST';
-                this.headers = (headers) ? headers : {
-                  'content-type': 'application/json'
-                };
-                this.apiUrl = (apiUrl || apiUrl != undefined) ? apiUrl : apiUrl_;
-                this.path_ = (path) ? path : '';
-              }
-
-              params(data) {
-                return {};
-              };
-
-              path(data){
-                return this.path_;
-              }
-
-              fetch({data} = {}) {
-                let parameters = {};
-                try {
-                  parameters = this.params(data);
-                } catch (error) {
-                  return Promise.reject(error);
-                }
-                let fetchParameters = {
-                  method: this.method,
-                  headers: this.headers,
-                };
-
-                if (Object.keys(parameters).length || !this.skipName) {
-                  let bodyObject = {
-                    parameters: parameters
-                  };
-                  if (!this.skipName) bodyObject.name = this.name;
-                  const body = JSON.stringify(bodyObject);
-                  fetchParameters.body = body;
-                }
-
-                if (this.authenticated) {
-                  const {token} = data;
-                  if (token) fetchParameters.accessToken = token;
-                  else return Promise.reject(new Error("No token and authenticated!"))
-                }
-                const fetchUrl = `${this.apiUrl}/${this.path(data)}`;
-                return fetchJson(fetchUrl, fetchParameters);
-              }
-            }
-
-            function journeyParams(data) {
-              const {journey: journey} = data;
-              if (journey) return { journey: journey};
-              return {};
-            }
-
-            class journeyApi extends ApiBase {
-              constructor(apiUrl) {
-                let props = {
-                  name: 'ApiJourney',
-                  url: 'journey',
-                  apiUrl: apiUrl,
-                  authenticated: true
-                };
-                super(props);
-              }
-              params(data) {
-                let params = journeyParams(data);
-                const {id, timestamp} = data;
-                params.uuid = id;
-                params.timestamp = timestamp;
-                return params;
-              }
-            }
-
-            function JourneyApi(apiUrl){
-              return new journeyApi(apiUrl);
-            }
-
-            function heartbeatParams(data) {
-              const {journey: journey} = data;
-              if (journey) return { journey: journey};
-              return {};
-            }
-
-            class heartbeatApi extends ApiBase {
-              constructor(apiUrl) {
-                let props = {
-                  name: 'ApiHeartbeat',
-                  url: 'heartbeat',
-                  apiUrl: apiUrl,
-                  authenticated: true
-                };
-                super(props);
-              }
-              params(data) {
-                let params = heartbeatParams(data);
-                const {id, tags, platform, timestamp, watchdog} = data;
-                params.uuid = id;
-                params.timestamp = timestamp;
-                params.tags = tags;
-                params.platform = platform;
-                if (watchdog) {
-                  params.watchdog = watchdog;
-                }
-                return params;
-              }
-            }
-
-            function HeartbeatApi(apiUrl){
-              return new heartbeatApi(apiUrl);
-            }
-
-            class deanonApi extends ApiBase {
-              constructor(apiUrl) {
-                let props = {
-                  name: 'ApiDeanonymize',
-                  url: 'deanonymize',
-                  apiUrl: apiUrl,
-                  authenticated: true
-                };
-                super(props);
-              }
-              params(data) {
-                const {id, person, timestamp} = data;
-                if (!person) throw new Error("No person data received.")
-                let params = {};
-                params.uuid = id;
-                params.person = person;
-                params.timestamp = timestamp;
-                return params;
-              }
-            }
-            function DeanonApi(apiUrl){
-              return new deanonApi(apiUrl);
-            }
-
-            class sampleApi extends ApiBase {
-              constructor(apiUrl) {
-                let props = {
-                  name: 'ApiSample',
-                  url: 'sample',
-                  apiUrl: apiUrl,
-                  authenticated: true
-                };
-                super(props);
-              }
-              params(data) {
-                const {id} = data;
-                let params = {};
-                params.uuid = id;
-                return params;
-              }
-            }
-            function SampleApi(apiUrl){
-              return new sampleApi(apiUrl);
-            }
-
-            class countApi extends ApiBase {
-              constructor(apiUrl) {
-                let props = {
-                  name: 'ApiIncrementCount',
-                  url: 'increment_count',
-                  apiUrl: apiUrl,
-                  authenticated: true
-                };
-                super(props);
-              }
-              params(data) {
-                const {uid, timestamp, outcome, content, value} = data;
-                const {leadSource, leadCampaign, leadGuid} = content;
-                let params = {};
-                params.uid = uid;
-                params.timestamp = timestamp;
-                params.outcome = outcome;
-                params.leadSource = leadSource;
-                params.leadCampaign = leadCampaign;
-                params.leadGuid = leadGuid;
-                params.value = value;
-                return params;
-              }
-            }
-            function CountApi(apiUrl){
-              return new countApi(apiUrl);
-            }
-
-            class errorLogApi extends ApiBase {
-              constructor(apiUrl) {
-                let props = {
-                  name: 'ApiErrorLog',
-                  url: 'error_log',
-                  apiUrl: apiUrl,
-                  authenticated: true
-                };
-                super(props);
-              }
-              params(data) {
-                const {log} = data;
-                let params = {};
-                params.log = log;
-                return params;
-              }
-            }
-            function ErrorLogApi(apiUrl){
-              return new errorLogApi(apiUrl);
-            }
-
-            const _defaultSessionStorage = {};
-            const _sessionStorage = {
-              setItem: (key, value) => _defaultSessionStorage[key] = value,
-              getItem: (key) => _defaultSessionStorage[key],
-              removeItem: (key) => delete _defaultSessionStorage[key],
-            };
-
-            const _defaultLocalStorage = {};
-            const _localStorage = {
-              setItem: (key, value) => _defaultLocalStorage[key] = value,
-              getItem: (key) => _defaultLocalStorage[key],
-              removeItem: (key) => delete _defaultLocalStorage[key],
-            };
-
-            class ShopifyStorage{
-              constructor(underlying) {
-                this._underlying = underlying;
-              }
-              async setItem(key, value){
-                await this._underlying.setItem(key, value);
-              }
-              async getItem(key){
-                return await this._underlying.getItem(key);
-              }
-              async removeItem(key){
-                await this._underlying.removeItem(key);
-              }
-            }
-
-            function getLocalStorage(){
-              if (typeof window != 'undefined' && window !== undefined && window && window.localStorage) return window.localStorage;
-              const browser_ = typeof self != 'undefined' && self.browser ? self.browser : null;
-              if (typeof browser_ != 'undefined' && browser_ !== undefined && browser_ && browser_.localStorage)
-                  return new ShopifyStorage(browser_.localStorage);
-              return _localStorage;
-            }
-            function getSessionStorage(){
-              if (typeof window != 'undefined' && window !== undefined && window && window.sessionStorage) return window.sessionStorage;
-              const browser_ = typeof self != 'undefined' && self.browser ? self.browser : null;
-              if (typeof browser_ != 'undefined' && browser_ !== undefined && browser_ && browser_.sessionStorage)
-                return new ShopifyStorage(browser_.sessionStorage);
-              return _sessionStorage;
-            }
-
-            async function storeLocal(name, objectToStore) {
-              const ls = getLocalStorage();
-              await ls.setItem(name, JSON.stringify(objectToStore));
-            }
-
-            async function retrieveLocal(name) {
-              const ls = getLocalStorage();
-              const value = await ls.getItem(name);
-              return (value) ? JSON.parse(value) : null;
-            }
-
-            async function resetLocal(name) {
-              const ls = getLocalStorage();
-              await ls.removeItem(name);
-            }
-
-            async function storeSession(name, objectToStore) {
-              const ss = getSessionStorage();
-              await ss.setItem(name, JSON.stringify(objectToStore));
-            }
-
-            async function retrieveSession(name) {
-              const ss = getSessionStorage();
-              const value = await ss.getItem(name);
-              return (value) ? JSON.parse(value) : null;
-            }
-
-            async function resetSession(name) {
-              const ss = getSessionStorage();
-              await ss.removeItem(name);
-            }
-
-            /**
-             * Created by lwoydziak on 09/27/21.
-             */
-            /**
-             * xenon.js
-             *
-             * SDK for interacting with the Xenon View service.
-             *
-             */
-
-            class _Xenon {
-              constructor(apiKey = null, apiUrl = 'https://app.xenonview.com',
-                          countApiUrl = 'https://counts.xenonlab.ai',
-                          journeyApi = JourneyApi, deanonApi = DeanonApi, heartbeatApi = HeartbeatApi,
-                          sampleApi = SampleApi, countApi = CountApi, errorLogApi = ErrorLogApi) {
-                this.JourneyApi = journeyApi;
-                this.DeanonApi = deanonApi;
-                this.HeartbeatApi = heartbeatApi;
-                this.SampleApi = sampleApi;
-                this.CountApi = countApi;
-                this.ErrorLogApi = errorLogApi;
-                this.pageURL_ = null;
-                this.restoreJourney = [];
-                this.apiCallPending = false;
-                this.apiUrl = apiUrl;
-                this.countApiUrl = countApiUrl;
-
-              }
-
-              version() {
-                return 'v0.2.1';
-              }
-
-              async init(apiKey, apiUrl = 'https://app.xenonview.com', onApiKeyFailure = null) {
-                this.apiUrl = apiUrl;
-                this.apiKey = apiKey;
-                await this.id();
-                let journey = await this.journey();
-                if (!journey) {
-                  await this.storeJourney([]);
-                }
-                await this.sampleDecision(null, onApiKeyFailure);
-                this.apiCallPending = false;
-              }
-
-              async ecomAbandonment() {
-                await storeLocal('heartbeat_type', 'ecom');
-                await this.heartbeatState(0);
-              }
-
-              async customAbandonment(outcome) {
-                await storeLocal('heartbeat_type', 'custom');
-                await storeLocal('heartbeat_outcome', outcome);
-                await this.heartbeatState(0);
-              }
-
-              async cancelAbandonment() {
-                await storeLocal('heartbeat_type', 'custom');
-                await storeLocal('heartbeat_outcome', {
-                  remove: true
-                });
-                await this.heartbeatState(0);
-              }
-
-              async platform(softwareVersion, deviceModel, operatingSystemName, operatingSystemVersion) {
-                const platform = {
-                  softwareVersion: softwareVersion,
-                  deviceModel: deviceModel,
-                  operatingSystemName: operatingSystemName,
-                  operatingSystemVersion: operatingSystemVersion
-                };
-                await storeSession('view-platform', platform);
-              }
-
-              async removePlatform() {
-                await resetSession('view-platform');
-              }
-
-              async variant(variantNames) {
-                await storeSession('view-tags', variantNames);
-              }
-
-              async resetVariants() {
-                await resetSession('view-tags');
-              }
-
-              async startVariant(variantName) {
-                let variantNames = await retrieveSession('view-tags');
-                if (!variantNames || !variantNames.includes(variantName)) {
-                  await this.resetVariants();
-                  await this.variant([variantName]);
-                }
-              }
-
-              async addVariant(variantName) {
-                let variantNames = await retrieveSession('view-tags');
-                if (!variantNames || !variantNames.includes(variantName)) {
-                  (variantNames) ? variantNames.push(variantName) : variantNames = [variantName];
-                  await this.variant(variantNames);
-                }
-              }
-
-              // Stock Business Outcomes:
-              async leadAttributed(source, identifier = null) {
-                await this.count("Attribution");
-              }
-
-              async leadUnattributed() {
-                await this.count("Attribution");
-              }
-
-              async leadCaptured(specifier) {
-                const content = {
-                  superOutcome: 'Lead Capture',
-                  outcome: specifier,
-                  result: 'success'
-                };
-                await this.outcomeAdd(content);
-              }
-
-              async leadCaptureDeclined(specifier) {
-                const content = {
-                  superOutcome: 'Lead Capture',
-                  outcome: specifier,
-                  result: 'fail'
-                };
-                await this.outcomeAdd(content);
-              }
-
-              async accountSignup(specifier) {
-                const content = {
-                  superOutcome: 'Account Signup',
-                  outcome: specifier,
-                  result: 'success'
-                };
-                await this.outcomeAdd(content);
-              }
-
-              async accountSignupDeclined(specifier) {
-                const content = {
-                  superOutcome: 'Account Signup',
-                  outcome: specifier,
-                  result: 'fail'
-                };
-                await this.outcomeAdd(content);
-              }
-
-              async applicationInstalled() {
-                let content = {
-                  superOutcome: 'Application Installation',
-                  outcome: 'Installed',
-                  result: 'success'
-                };
-                await this.outcomeAdd(content);
-              }
-
-              async applicationNotInstalled() {
-                const content = {
-                  superOutcome: 'Application Installation',
-                  outcome: 'Not Installed',
-                  result: 'fail'
-                };
-                await this.outcomeAdd(content);
-              }
-
-              async initialSubscription(tier, method = null, price = null, term = null) {
-                const content = {
-                  superOutcome: 'Initial Subscription',
-                  outcome: 'Subscribe - ' + tier,
-                  result: 'success'
-                };
-                if (method) {
-                  content['method'] = method;
-                }
-                if (price) {
-                  content['price'] = price;
-                }
-                if (term) {
-                  content['term'] = term;
-                }
-                await this.outcomeAdd(content);
-              }
-
-              async subscriptionDeclined(tier, method = null, price = null, term = null) {
-                const content = {
-                  superOutcome: 'Initial Subscription',
-                  outcome: 'Decline - ' + tier,
-                  result: 'fail'
-                };
-                if (method) {
-                  content['method'] = method;
-                }
-                if (price) {
-                  content['price'] = price;
-                }
-                if (term) {
-                  content['term'] = term;
-                }
-                await this.outcomeAdd(content);
-              }
-
-              async subscriptionRenewed(tier, method = null, price = null, term = null) {
-                const content = {
-                  superOutcome: 'Subscription Renewal',
-                  outcome: 'Renew - ' + tier,
-                  result: 'success'
-                };
-                if (method) {
-                  content['method'] = method;
-                }
-                if (price) {
-                  content['price'] = price;
-                }
-                if (term) {
-                  content['term'] = term;
-                }
-                await this.outcomeAdd(content);
-              }
-
-              async subscriptionPaused(tier, method = null, price = null, term = null) {
-                const content = {
-                  superOutcome: 'Subscription Renewal',
-                  outcome: 'Paused - ' + tier,
-                  result: 'fail'
-                };
-                if (method) {
-                  content['method'] = method;
-                }
-                if (price) {
-                  content['price'] = price;
-                }
-                if (term) {
-                  content['term'] = term;
-                }
-                await this.outcomeAdd(content);
-              }
-
-              async subscriptionCanceled(tier, method = null, price = null, term = null) {
-                const content = {
-                  superOutcome: 'Subscription Renewal',
-                  outcome: 'Cancel - ' + tier,
-                  result: 'fail'
-                };
-                if (method) {
-                  content['method'] = method;
-                }
-                if (price) {
-                  content['price'] = price;
-                }
-                if (term) {
-                  content['term'] = term;
-                }
-                await this.outcomeAdd(content);
-              }
-
-              async subscriptionUpsold(tier, method = null, price = null, term = null) {
-                const content = {
-                  superOutcome: 'Subscription Upsold',
-                  outcome: 'Upsold - ' + tier,
-                  result: 'success'
-                };
-                if (method) {
-                  content['method'] = method;
-                }
-                if (price) {
-                  content['price'] = price;
-                }
-                if (term) {
-                  content['term'] = term;
-                }
-                await this.outcomeAdd(content);
-              }
-
-              async subscriptionUpsellDeclined(tier, method = null, price = null, term = null) {
-                const content = {
-                  superOutcome: 'Subscription Upsold',
-                  outcome: 'Declined - ' + tier,
-                  result: 'fail'
-                };
-                if (method) {
-                  content['method'] = method;
-                }
-                if (price) {
-                  content['price'] = price;
-                }
-                if (term) {
-                  content['term'] = term;
-                }
-                await this.outcomeAdd(content);
-              }
-
-              async subscriptionDownsell(tier, method = null, price = null, term = null) {
-                const content = {
-                  superOutcome: 'Subscription Upsold',
-                  outcome: 'Downsell - ' + tier,
-                  result: 'fail'
-                };
-                if (method) {
-                  content['method'] = method;
-                }
-                if (price) {
-                  content['price'] = price;
-                }
-                if (term) {
-                  content['term'] = term;
-                }
-                await this.outcomeAdd(content);
-              }
-
-              async adClicked(provider, id = null, price = null) {
-                const content = {
-                  superOutcome: 'Advertisement',
-                  outcome: 'Ad Click - ' + provider,
-                  result: 'success'
-                };
-                if (id) {
-                  content['id'] = id;
-                }
-                if (price) {
-                  content['price'] = price;
-                }
-                await this.outcomeAdd(content);
-              }
-
-              async adIgnored(provider, id = null, price = null) {
-                const content = {
-                  superOutcome: 'Advertisement',
-                  outcome: 'Ad Ignored - ' + provider,
-                  result: 'fail'
-                };
-                if (id) {
-                  content['id'] = id;
-                }
-                if (price) {
-                  content['price'] = price;
-                }
-                await this.outcomeAdd(content);
-              }
-
-              async referral(kind, detail = null) {
-                const content = {
-                  superOutcome: 'Referral',
-                  outcome: 'Referred - ' + kind,
-                  result: 'success'
-                };
-                if (detail) {
-                  content['details'] = detail;
-                }
-                await this.outcomeAdd(content);
-              }
-
-              async referralDeclined(kind, detail = null) {
-                const content = {
-                  superOutcome: 'Referral',
-                  outcome: 'Declined - ' + kind,
-                  result: 'fail'
-                };
-                if (detail) {
-                  content['details'] = detail;
-                }
-                await this.outcomeAdd(content);
-              }
-
-              async productAddedToCart(product, price = null) {
-                const content = {
-                  superOutcome: 'Add Product To Cart',
-                  outcome: 'Add - ' + product,
-                  result: 'success'
-                };
-                if (price) {
-                  content['price'] = price;
-                } else {
-                  price = 0.0;
-                }
-                await this.outcomeAdd(content);
-                await this.heartbeatState(1);
-                await this.count("Add To Cart", price, [product]);
-              }
-
-              async productNotAddedToCart(product) {
-                const content = {
-                  superOutcome: 'Add Product To Cart',
-                  outcome: 'Ignore - ' + product,
-                  result: 'fail'
-                };
-                await this.outcomeAdd(content);
-              }
-
-              async upsold(product, price = null) {
-                const content = {
-                  superOutcome: 'Upsold Product',
-                  outcome: 'Upsold - ' + product,
-                  result: 'success'
-                };
-                if (price) {
-                  content['price'] = price;
-                } else {
-                  price = 0.0;
-                }
-                await this.outcomeAdd(content);
-                await this.count("Upsell", price, [product]);
-              }
-
-              async upsellDismissed(product, price = null) {
-                const content = {
-                  superOutcome: 'Upsold Product',
-                  outcome: 'Dismissed - ' + product,
-                  result: 'fail'
-                };
-                if (price) {
-                  content['price'] = price;
-                }
-                await this.outcomeAdd(content);
-              }
-
-              async checkOut(member = null) {
-                let outcome = "Check Out";
-                let countSting = "Check Out";
-
-                if (member != null) {
-                  outcome = "Check Out - " + member;
-                  countSting = "Checkout:" + member;
-                }
-
-                const content = {
-                  superOutcome: 'Customer Checkout',
-                  outcome: outcome,
-                  result: 'success'
-                };
-                await this.outcomeAdd(content);
-                await this.heartbeatState(2);
-                await this.count(countSting);
-              }
-
-              async checkoutCanceled() {
-                const content = {
-                  superOutcome: 'Customer Checkout',
-                  outcome: 'Canceled',
-                  result: 'fail'
-                };
-                await this.outcomeAdd(content);
-              }
-
-              async productRemoved(product) {
-                const content = {
-                  superOutcome: 'Customer Checkout',
-                  outcome: 'Product Removed - ' + product,
-                  result: 'fail'
-                };
-                await this.outcomeAdd(content);
-              }
-
-              async purchase(SKUs, price = null, discount = null, shipping = null, member = null) {
-                let outcome = "Purchase";
-                let purchaseSting = "Purchase";
-
-                if (member != null) {
-                  outcome = "Purchase - " + member;
-                  purchaseSting = "Purchase:" + member;
-                }
-
-                if (!Array.isArray(SKUs)) {
-                  const SKUsString = SKUs.toString();
-                  SKUs = SKUsString.split(",").map(item => item.trim());
-                }
-
-                const content = {
-                  superOutcome: 'Customer Purchase',
-                  outcome: outcome,
-                  skus: SKUs,
-                  result: 'success'
-                };
-                if (price) {
-                  content['price'] = price;
-                } else {
-                  price = 0.0;
-                }
-                if (discount) {
-                  content['discount'] = discount;
-                }
-                if (shipping) {
-                  content['shipping'] = shipping;
-                }
-
-                await this.outcomeAdd(content);
-                await this.heartbeatState(3);
-                await this.count(purchaseSting, price, SKUs);
-              }
-
-              async purchaseCancel(SKUs = null, price = null) {
-                const outcome = 'Canceled' + (SKUs ? ' - ' + SKUs : '');
-                const content = {
-                  superOutcome: 'Customer Purchase',
-                  outcome: outcome,
-                  result: 'fail'
-                };
-                if (price) {
-                  content['price'] = price;
-                }
-                await this.outcomeAdd(content);
-              }
-
-              async promiseFulfilled() {
-                const content = {
-                  superOutcome: 'Promise Fulfillment',
-                  outcome: 'Fulfilled',
-                  result: 'success'
-                };
-                await this.outcomeAdd(content);
-              }
-
-              async promiseUnfulfilled() {
-                const content = {
-                  superOutcome: 'Promise Fulfillment',
-                  outcome: 'Unfulfilled',
-                  result: 'fail'
-                };
-                await this.outcomeAdd(content);
-              }
-
-              async productKept(product) {
-                const content = {
-                  superOutcome: 'Product Disposition',
-                  outcome: 'Kept - ' + product,
-                  result: 'success'
-                };
-                await this.outcomeAdd(content);
-              }
-
-              async productReturned(product) {
-                const content = {
-                  superOutcome: 'Product Disposition',
-                  outcome: 'Returned - ' + product,
-                  result: 'fail'
-                };
-                await this.outcomeAdd(content);
-              }
-
-            // Stock Milestones:
-
-              async featureAttempted(name, detail = null) {
-                const event = {
-                  category: 'Feature',
-                  action: 'Attempted',
-                  name: name
-                };
-                if (detail) {
-                  event['details'] = detail;
-                }
-                await this.journeyAdd(event);
-              }
-
-              async featureCompleted(name, detail = null) {
-                const event = {
-                  category: 'Feature',
-                  action: 'Completed',
-                  name: name
-                };
-                if (detail) {
-                  event['details'] = detail;
-                }
-                await this.journeyAdd(event);
-              }
-
-              async featureFailed(name, detail = null) {
-                const event = {
-                  category: 'Feature',
-                  action: 'Failed',
-                  name: name
-                };
-                if (detail) {
-                  event['details'] = detail;
-                }
-                await this.journeyAdd(event);
-              }
-
-              async contentViewed(contentType, identifier = null) {
-                const event = {
-                  category: 'Content',
-                  action: 'Viewed',
-                  type: contentType,
-                };
-                if (identifier) {
-                  event['identifier'] = identifier;
-                }
-                await this.journeyAdd(event);
-              }
-
-              async contentEdited(contentType, identifier = null, detail = null) {
-                const event = {
-                  category: 'Content',
-                  action: 'Edited',
-                  type: contentType,
-                };
-                if (identifier) {
-                  event['identifier'] = identifier;
-                }
-                if (detail) {
-                  event['details'] = detail;
-                }
-                await this.journeyAdd(event);
-              }
-
-              async contentCreated(contentType, identifier = null) {
-                const event = {
-                  category: 'Content',
-                  action: 'Created',
-                  type: contentType,
-                };
-                if (identifier) {
-                  event['identifier'] = identifier;
-                }
-                await this.journeyAdd(event);
-              }
-
-              async contentDeleted(contentType, identifier = null) {
-                const event = {
-                  category: 'Content',
-                  action: 'Deleted',
-                  type: contentType,
-                };
-                if (identifier) {
-                  event['identifier'] = identifier;
-                }
-                await this.journeyAdd(event);
-              }
-
-              async contentArchived(contentType, identifier = null) {
-                const event = {
-                  category: 'Content',
-                  action: 'Archived',
-                  type: contentType,
-                };
-                if (identifier) {
-                  event['identifier'] = identifier;
-                }
-                await this.journeyAdd(event);
-              }
-
-              async contentRequested(contentType, identifier = null) {
-                const event = {
-                  category: 'Content',
-                  action: 'Requested',
-                  type: contentType,
-                };
-                if (identifier) {
-                  event['identifier'] = identifier;
-                }
-                await this.journeyAdd(event);
-              }
-
-              async contentSearched(contentType) {
-                const event = {
-                  category: 'Content',
-                  action: 'Searched',
-                  type: contentType,
-                };
-                await this.journeyAdd(event);
-              }
-
-              async pageLoadTime(loadTime, url) {
-                const event = {
-                  category: 'Webpage Load Time',
-                  time: loadTime.toString(),
-                  identifier: url,
-                };
-                await this.journeyAdd(event);
-              }
-
-              // Custom Milestones
-
-              async milestone(category, operation, name, detail) {
-                const event = {
-                  category: category,
-                  action: operation,
-                  name: name,
-                  details: detail
-                };
-                await this.journeyAdd(event);
-              }
-
-              // API Communication:
-
-              async count(outcome, value = 0.0, skus = null, surfaceErrors = false) {
-                const attribution = await retrieveSession('view-attribution');
-                if (!attribution) return Promise.resolve(true);
-                const platform = await retrieveSession('view-platform');
-                let params = {
-                  data: {
-                    uid: await this.id(),
-                    token: this.apiKey,
-                    timestamp: (new Date()).getTime() / 1000,
-                    outcome: outcome,
-                    content: attribution,
-                    platform: platform ? platform : null,
-                    skus: skus,
-                    value: value
-                  }
-                };
-                let replayLog = await retrieveSession('view-count-replay');
-                if (replayLog) {
-                  replayLog.push(params);
-                } else {
-                  replayLog = [params];
-                }
-                await storeSession('view-count-replay', replayLog);
-                try {
-                  let result = null;
-                  while (replayLog.length > 0) {
-                    const params = replayLog.shift();
-                    result = await this.CountApi(this.countApiUrl).fetch(params);
-                    await storeSession('view-count-replay', replayLog);
-                  }
-                  return result;
-                } catch (error) {
-                  return (surfaceErrors ? Promise.reject(error) : Promise.resolve(true));
-                }
-              }
-
-              async heartbeatState(stage = null) {
-                const previousStage = await retrieveLocal('heartbeat_stage');
-                if (stage && stage > previousStage) {
-                  await storeLocal('heartbeat_stage', stage);
-                }
-                if (!stage && !previousStage) {
-                  await storeLocal('heartbeat_stage', 0);
-                }
-                return Number(await retrieveLocal('heartbeat_stage'));
-              }
-
-              async commit(surfaceErrors = false) {
-                if (!await this.sampleDecision() || this.apiCallPending) {
-                  return Promise.resolve(true);
-                }
-                this.apiCallPending = true;
-                let params = {
-                  data: {
-                    id: await this.id(),
-                    journey: await this.journey(),
-                    token: this.apiKey,
-                    timestamp: (new Date()).getTime() / 1000
-                  }
-                };
-                const saved = await this.reset();
-                try {
-                  const value = await this.JourneyApi(this.apiUrl).fetch(params);
-                  this.apiCallPending = false;
-                  return Promise.resolve(value);
-                } catch (error) {
-                  await this.restore(saved);
-                  this.apiCallPending = false;
-                  return (surfaceErrors ? Promise.reject(error) : Promise.resolve(true));
-                }
-              }
-
-              async heartbeatMessage(type) {
-                const stage = await this.heartbeatState();
-                const messages = {
-                  ecom: {
-                    0: {
-                      expires_in_seconds: 600,
-                      if_abandoned: {
-                        superOutcome: 'Add Product To Cart',
-                        outcome: 'Abandoned',
-                        result: 'fail'
-                      }
-                    },
-                    1: {
-                      expires_in_seconds: 600,
-                      if_abandoned: {
-                        superOutcome: 'Customer Checkout',
-                        outcome: 'Abandoned',
-                        result: 'fail'
-                      }
-                    },
-                    2: {
-                      expires_in_seconds: 600,
-                      if_abandoned: {
-                        superOutcome: 'Customer Purchase',
-                        outcome: 'Abandoned',
-                        result: 'fail'
-                      }
-                    },
-                    3: {
-                      remove: true
-                    },
-                  }
-                };
-                if (Object.keys(messages).includes(type)) {
-                  return messages[type][stage];
-                }
-                return await retrieveLocal('heartbeat_outcome')
-              }
-
-              async heartbeat(surfaceErrors = false) {
-                const platform = await retrieveSession('view-platform');
-                const tags = await retrieveSession('view-tags');
-                let params = {
-                  data: {
-                    id: await this.id(),
-                    journey: await this.journey(),
-                    token: this.apiKey,
-                    platform: platform ? platform : {},
-                    tags: tags ? tags : [],
-                    timestamp: (new Date()).getTime() / 1000
-                  }
-                };
-
-                const heartbeatType = await retrieveLocal('heartbeat_type');
-                if (heartbeatType) {
-                  params.data['watchdog'] = await this.heartbeatMessage(heartbeatType);
-                }
-
-                if (!await this.sampleDecision() || this.apiCallPending) {
-                  return Promise.resolve(true);
-                }
-                this.apiCallPending = true;
-
-                const saved = await this.reset();
-                try {
-                  const value = await this.HeartbeatApi(this.apiUrl).fetch(params);
-                  if (heartbeatType && Object.keys(params.data['watchdog']).includes('remove')) {
-                    await resetLocal('heartbeat_stage');
-                    await resetLocal('heartbeat_type');
-                    await resetLocal('heartbeat_outcome');
-                  }
-                  this.apiCallPending = false;
-                  return Promise.resolve(value);
-                } catch (error) {
-                  await this.restore(saved);
-                  this.apiCallPending = false;
-                  return (surfaceErrors ? Promise.reject(error) : Promise.resolve(true));
-                }
-              }
-
-              async deanonymize(person) {
-                if (!await this.sampleDecision()) {
-                  return Promise.resolve(true);
-                }
-
-                let params = {
-                  data: {
-                    id: await this.id(),
-                    person: person,
-                    token: this.apiKey,
-                    timestamp: (new Date()).getTime() / 1000
-                  }
-                };
-                return await this.DeanonApi(this.apiUrl).fetch(params);
-              }
-
-              async recordError(log) {
-                if (!await this.sampleDecision()) {
-                  return Promise.resolve(true);
-                }
-
-                let params = {
-                  data: {
-                    log: log,
-                    token: this.apiKey,
-                  }
-                };
-                return await this.ErrorLogApi(this.apiUrl).fetch(params);
-              }
-
-              // Internals:
-
-              async id(id) {
-                if (id) {
-                  await storeSession('xenon-view', id);
-                }
-                id = await retrieveSession('xenon-view');
-                if (!id || id === '') {
-                  return await this.newId();
-                }
-                return id;
-              }
-
-              async newId() {
-                await storeSession('xenon-view', crypto.randomUUID());
-                return await retrieveSession('xenon-view');
-              }
-
-              async sampleDecision(decision = null, onApiKeyFailure = null) {
-                if (decision !== null) {
-                  await storeSession('xenon-will-sample', decision);
-                }
-                decision = await retrieveSession('xenon-will-sample');
-                if (decision === null || decision === '') {
-                  let params = {data: {id: await this.id(), token: this.apiKey}};
-                  try {
-                    const json = await this.SampleApi(this.apiUrl).fetch(params);
-                    decision = await this.sampleDecision(json['sample'], onApiKeyFailure);
-                  } catch (error) {
-                    if (error.authIssue && onApiKeyFailure) {
-                      onApiKeyFailure(error);
-                      return;
-                    }
-                    decision = await this.sampleDecision(true, onApiKeyFailure);
-                  }
-                }
-                decision = Boolean(decision);
-                return decision;
-              }
-
-              async outcomeAdd(content) {
-                let platform = await retrieveSession('view-platform');
-                if (platform) content['platform'] = platform;
-                let tags = await retrieveSession('view-tags');
-                if (tags) content['tags'] = tags;
-                await this.journeyAdd(content);
-              }
-
-              async journeyAdd(content) {
-                let journey = await this.journey();
-                content.timestamp = (new Date()).getTime() / 1000;
-                if (this.pageURL_) {
-                  content.url = this.pageURL_;
-                }
-                if (journey && journey.length) {
-                  let last = journey[journey.length - 1];
-                  if (this.isDuplicate(last, content)) {
-                    let count = last.hasOwnProperty('count') ? last.count : 1;
-                    last.count = count + 1;
-                  } else {
-                    journey.push(content);
-                  }
-                } else {
-                  journey = [content];
-                }
-                await this.storeJourney(journey);
-              }
-
-
-              isDuplicate(last, content) {
-                const lastKeys = Object.keys(last);
-                const contentKeys = Object.keys(content);
-                const isSuperset = (set, subset) => {
-                  for (const elem of subset) {
-                    if (!set.has(elem)) {
-                      return false;
-                    }
-                  }
-                  return true;
-                };
-                if (!isSuperset(new Set(lastKeys), new Set(contentKeys))) return false;
-                if (!contentKeys.includes('category') || !lastKeys.includes('category')) return false;
-                if (content.category !== last.category) return false;
-                if (!contentKeys.includes('action') || !lastKeys.includes('action')) return false;
-                if (content.action !== last.action) return false;
-                return (this.duplicateFeature(last, content, lastKeys, contentKeys) ||
-                  this.duplicateContent(last, content, lastKeys, contentKeys) ||
-                  this.duplicateMilestone(last, content, lastKeys, contentKeys));
-              }
-
-              duplicateFeature(last, content, lastKeys, contentKeys) {
-                if (content.category !== 'Feature' || last.category !== 'Feature') return false;
-                return content.name === last.name;
-              }
-
-              duplicateContent(last, content, lastKeys, contentKeys) {
-                if (content.category !== 'Content' || last.category !== 'Content') return false;
-                if (!contentKeys.includes('type') && !lastKeys.includes('type')) return true;
-                if (content.type !== last.type) return false;
-                if (!contentKeys.includes('identifier') && !lastKeys.includes('identifier')) return true;
-                if (content.identifier !== last.identifier) return false;
-                if (!contentKeys.includes('details') && !lastKeys.includes('details')) return true;
-                return content.details === last.details;
-              }
-
-              duplicateMilestone(last, content, lastKeys, contentKeys) {
-                if (content.category === 'Feature' || last.category === 'Feature') return false;
-                if (content.category === 'Content' || last.category === 'Content') return false;
-                if (content.name !== last.name) return false;
-                return content.details === last.details;
-              }
-
-              async journey() {
-                return await retrieveLocal('view-journey');
-              }
-
-              async storeJourney(journey) {
-                await storeLocal('view-journey', journey);
-              }
-
-              async reset() {
-                this.restoreJourney = await this.journey();
-                await resetLocal('view-journey');
-                await this.storeJourney([]);
-                return this.restoreJourney
-              }
-
-              async restore(journey = null) {
-                let currentJourney = await this.journey();
-                let restoreJourney = journey ? journey : this.restoreJourney;
-                if (currentJourney !== null && currentJourney.length) {
-                  restoreJourney = restoreJourney.concat(currentJourney);
-                }
-
-                function compare(a, b) {
-                  if (a.timestamp < b.timestamp) {
-                    return -1;
-                  }
-                  if (a.timestamp > b.timestamp) {
-                    return 1;
-                  }
-                  return 0;
-                }
-
-                restoreJourney.sort(compare);
-                await this.storeJourney(restoreJourney);
-                this.restoreJourney = [];
-              }
-
-              hasClassInHierarchy(target, className, maxDepth) {
-                const searcher = (node, className, maxDepth, currentDepth) => {
-                  if (currentDepth >= maxDepth)
-                    return false;
-                  if (node.className.toString().includes(className))
-                    return true;
-                  if (!node.parentElement)
-                    return false;
-                  return searcher(node.parentElement, className, maxDepth, currentDepth + 1);
-                };
-
-                return searcher(target, className, maxDepth, 0);
-              }
-
-              decipherParamsPerLibrary(params) {
-                if (params.has('xenonSrc')) {
-                  return [params.get('xenonSrc'), params.get('xenonId')];
-                }
-                if (params.has('cr_campaignid')) {
-                  return ['Cerebro', params.get('cr_campaignid')];
-                }
-                if (params.has('utm_source') && params.get('utm_source').toLowerCase() === 'klaviyo') {
-                  const source = 'Klaviyo' + (params.has('utm_medium') ? ' - ' + params.get('utm_medium') : '');
-                  return [source, params.get('utm_campaign')];
-                }
-                if (params.has('g_campaignid')) {
-                  return ['Google Ad', params.get('g_campaignid')]
-                }
-                if (params.has('utm_source') && params.get('utm_source').toLowerCase() === 'shareasale') {
-                  return ['Share-a-sale', params.get('sscid')]
-                }
-                if (params.has('sscid')) {
-                  return ['Share-a-sale', params.get('sscid')]
-                }
-                if (params.has('g_adtype') && params.get('g_adtype') === 'none') {
-                  return ['Google Organic', params.get('g_campaign')]
-                }
-                if (params.has('g_adtype') && params.get('g_adtype') === 'search') {
-                  return ['Google Paid Search', params.get('g_campaign')]
-                }
-                if (params.has('utm_source') && params.get('utm_source') === 'facebook') {
-                  return ['Facebook Ad', params.get('utm_campaign')]
-                }
-                if (params.has('utm_source') && params.get('utm_source').toLowerCase() === 'email-broadcast') {
-                  return ['Email', params.get('utm_campaign')]
-                }
-                if (params.has('utm_source') && params.get('utm_source').toLowerCase() === 'youtube') {
-                  return ['YouTube', params.get('utm_campaign')]
-                }
-                if (params.has('utm_source')) {
-                  return [params.get('utm_source'), params.get('utm_campaign')]
-                }
-                return ['Unattributed']
-              }
-
-              async autodiscoverLeadFrom(queryFromUrl) {
-                if (queryFromUrl && queryFromUrl !== '' && queryFromUrl !== '?') {
-                  const params = new URLSearchParams(queryFromUrl);
-                  const [source, identifier] = this.decipherParamsPerLibrary(params);
-                  let attribution = await retrieveSession('view-attribution');
-                  if (attribution) return queryFromUrl;
-                  await storeSession('view-attribution', {
-                    leadSource: source,
-                    leadCampaign: identifier,
-                    leadGuid: null
-                  });
-                  let variantNames = await retrieveSession('view-tags');
-                  if (source && (!variantNames || !variantNames.includes(source))) {
-                    if (variantNames) {
-                      variantNames.push(source);
-                      if (identifier) {
-                        variantNames.push(identifier);
-                      }
-                    } else {
-                      variantNames = [source];
-                      if (identifier) {
-                        variantNames.push(identifier);
-                      }
-                    }
-                    await this.variant(variantNames);
-                    (source === 'Unattributed') ?
-                      await this.leadUnattributed() :
-                      await this.leadAttributed(source, identifier);
-                  }
-                  params.delete('xenonId');
-                  params.delete('xenonSrc');
-                  let query = "";
-                  if (params.size) {
-                    query = "?" + params.toString();
-                  }
-                  return query;
-                } else {
-                  let variantNames = await retrieveSession('view-tags');
-                  const source = 'Unattributed';
-                  let attribution = await retrieveSession('view-attribution');
-                  if (attribution) return queryFromUrl;
-                  await storeSession('view-attribution', {
-                    leadSource: source,
-                    leadCampaign: null,
-                    leadGuid: null
-                  });
-                  if (!variantNames || !variantNames.includes(source)) {
-                    (variantNames) ? variantNames.push(source) : variantNames = [source];
-                    await this.variant(variantNames);
-                    await this.leadUnattributed();
-                  }
-                  return queryFromUrl;
-                }
-              }
-
-              pageURL(url) {
-                this.pageURL_ = url;
-              }
-            }
-
-            const Xenon = new _Xenon;
-
-            return Xenon;
+   'use strict';
+
+   // Generated ESM version of ua-parser-js
+   // DO NOT EDIT THIS FILE!
+   // Source: /src/main/ua-parser.js
+
+   /////////////////////////////////////////////////////////////////////////////////
+   /* UAParser.js v2.0.4
+      Copyright © 2012-2025 Faisal Salman <f@faisalman.com>
+      AGPLv3 License *//*
+      Detect Browser, Engine, OS, CPU, and Device type/model from User-Agent data.
+      Supports browser & node.js environment. 
+      Demo   : https://uaparser.dev
+      Source : https://github.com/faisalman/ua-parser-js */
+   /////////////////////////////////////////////////////////////////////////////////
+
+   /* jshint esversion: 6 */ 
+   /* globals window */
+
+
+       
+       //////////////
+       // Constants
+       /////////////
+
+       var LIBVERSION  = '2.0.4',
+           UA_MAX_LENGTH = 500,
+           USER_AGENT  = 'user-agent',
+           EMPTY       = '',
+           UNKNOWN     = '?',
+
+           // typeof
+           FUNC_TYPE   = 'function',
+           UNDEF_TYPE  = 'undefined',
+           OBJ_TYPE    = 'object',
+           STR_TYPE    = 'string',
+
+           // properties
+           UA_BROWSER  = 'browser',
+           UA_CPU      = 'cpu',
+           UA_DEVICE   = 'device',
+           UA_ENGINE   = 'engine',
+           UA_OS       = 'os',
+           UA_RESULT   = 'result',
+           
+           NAME        = 'name',
+           TYPE        = 'type',
+           VENDOR      = 'vendor',
+           VERSION     = 'version',
+           ARCHITECTURE= 'architecture',
+           MAJOR       = 'major',
+           MODEL       = 'model',
+
+           // device types
+           CONSOLE     = 'console',
+           MOBILE      = 'mobile',
+           TABLET      = 'tablet',
+           SMARTTV     = 'smarttv',
+           WEARABLE    = 'wearable',
+           XR          = 'xr',
+           EMBEDDED    = 'embedded',
+
+           // browser types
+           INAPP       = 'inapp',
+
+           // client hints
+           BRANDS      = 'brands',
+           FORMFACTORS = 'formFactors',
+           FULLVERLIST = 'fullVersionList',
+           PLATFORM    = 'platform',
+           PLATFORMVER = 'platformVersion',
+           BITNESS     = 'bitness',
+           CH_HEADER   = 'sec-ch-ua',
+           CH_HEADER_FULL_VER_LIST = CH_HEADER + '-full-version-list',
+           CH_HEADER_ARCH      = CH_HEADER + '-arch',
+           CH_HEADER_BITNESS   = CH_HEADER + '-' + BITNESS,
+           CH_HEADER_FORM_FACTORS = CH_HEADER + '-form-factors',
+           CH_HEADER_MOBILE    = CH_HEADER + '-' + MOBILE,
+           CH_HEADER_MODEL     = CH_HEADER + '-' + MODEL,
+           CH_HEADER_PLATFORM  = CH_HEADER + '-' + PLATFORM,
+           CH_HEADER_PLATFORM_VER = CH_HEADER_PLATFORM + '-version',
+           CH_ALL_VALUES       = [BRANDS, FULLVERLIST, MOBILE, MODEL, PLATFORM, PLATFORMVER, ARCHITECTURE, FORMFACTORS, BITNESS],
+
+           // device vendors
+           AMAZON      = 'Amazon',
+           APPLE       = 'Apple',
+           ASUS        = 'ASUS',
+           BLACKBERRY  = 'BlackBerry',
+           GOOGLE      = 'Google',
+           HUAWEI      = 'Huawei',
+           LENOVO      = 'Lenovo',
+           HONOR       = 'Honor',
+           LG          = 'LG',
+           MICROSOFT   = 'Microsoft',
+           MOTOROLA    = 'Motorola',
+           NVIDIA      = 'Nvidia',
+           ONEPLUS     = 'OnePlus',
+           OPPO        = 'OPPO',
+           SAMSUNG     = 'Samsung',
+           SHARP       = 'Sharp',
+           SONY        = 'Sony',
+           XIAOMI      = 'Xiaomi',
+           ZEBRA       = 'Zebra',
+
+           // browsers
+           CHROME      = 'Chrome',
+           CHROMIUM    = 'Chromium',
+           CHROMECAST  = 'Chromecast',
+           EDGE        = 'Edge',
+           FIREFOX     = 'Firefox',
+           OPERA       = 'Opera',
+           FACEBOOK    = 'Facebook',
+           SOGOU       = 'Sogou',
+
+           PREFIX_MOBILE  = 'Mobile ',
+           SUFFIX_BROWSER = ' Browser',
+
+           // os
+           WINDOWS     = 'Windows';
+      
+       var isWindow            = typeof window !== UNDEF_TYPE,
+           NAVIGATOR           = (isWindow && window.navigator) ? 
+                                   window.navigator : 
+                                   undefined,
+           NAVIGATOR_UADATA    = (NAVIGATOR && NAVIGATOR.userAgentData) ? 
+                                   NAVIGATOR.userAgentData : 
+                                   undefined;
+
+       ///////////
+       // Helper
+       //////////
+
+       var extend = function (defaultRgx, extensions) {
+               var mergedRgx = {};
+               var extraRgx = extensions;
+               if (!isExtensions(extensions)) {
+                   extraRgx = {};
+                   for (var i in extensions) {
+                       for (var j in extensions[i]) {
+                           extraRgx[j] = extensions[i][j].concat(extraRgx[j] ? extraRgx[j] : []);
+                       }
+                   }
+               }
+               for (var k in defaultRgx) {
+                   mergedRgx[k] = extraRgx[k] && extraRgx[k].length % 2 === 0 ? extraRgx[k].concat(defaultRgx[k]) : defaultRgx[k];
+               }
+               return mergedRgx;
+           },
+           enumerize = function (arr) {
+               var enums = {};
+               for (var i=0; i<arr.length; i++) {
+                   enums[arr[i].toUpperCase()] = arr[i];
+               }
+               return enums;
+           },
+           has = function (str1, str2) {
+               if (typeof str1 === OBJ_TYPE && str1.length > 0) {
+                   for (var i in str1) {
+                       if (lowerize(str2) == lowerize(str1[i])) return true;
+                   }
+                   return false;
+               }
+               return isString(str1) ? lowerize(str2) == lowerize(str1) : false;
+           },
+           isExtensions = function (obj, deep) {
+               for (var prop in obj) {
+                   return /^(browser|cpu|device|engine|os)$/.test(prop) || (deep ? isExtensions(obj[prop]) : false);
+               }
+           },
+           isString = function (val) {
+               return typeof val === STR_TYPE;
+           },
+           itemListToArray = function (header) {
+               if (!header) return undefined;
+               var arr = [];
+               var tokens = strip(/\\?\"/g, header).split(',');
+               for (var i = 0; i < tokens.length; i++) {
+                   if (tokens[i].indexOf(';') > -1) {
+                       var token = trim(tokens[i]).split(';v=');
+                       arr[i] = { brand : token[0], version : token[1] };
+                   } else {
+                       arr[i] = trim(tokens[i]);
+                   }
+               }
+               return arr;
+           },
+           lowerize = function (str) {
+               return isString(str) ? str.toLowerCase() : str;
+           },
+           majorize = function (version) {
+               return isString(version) ? strip(/[^\d\.]/g, version).split('.')[0] : undefined;
+           },
+           setProps = function (arr) {
+               for (var i in arr) {
+                   var propName = arr[i];
+                   if (typeof propName == OBJ_TYPE && propName.length == 2) {
+                       this[propName[0]] = propName[1];
+                   } else {
+                       this[propName] = undefined;
+                   }
+               }
+               return this;
+           },
+           strip = function (pattern, str) {
+               return isString(str) ? str.replace(pattern, EMPTY) : str;
+           },
+           stripQuotes = function (str) {
+               return strip(/\\?\"/g, str); 
+           },
+           trim = function (str, len) {
+               if (isString(str)) {
+                   str = strip(/^\s\s*/, str);
+                   return typeof len === UNDEF_TYPE ? str : str.substring(0, UA_MAX_LENGTH);
+               }
+       };
+
+       ///////////////
+       // Map helper
+       //////////////
+
+       var rgxMapper = function (ua, arrays) {
+
+               if(!ua || !arrays) return;
+
+               var i = 0, j, k, p, q, matches, match;
+
+               // loop through all regexes maps
+               while (i < arrays.length && !matches) {
+
+                   var regex = arrays[i],       // even sequence (0,2,4,..)
+                       props = arrays[i + 1];   // odd sequence (1,3,5,..)
+                   j = k = 0;
+
+                   // try matching uastring with regexes
+                   while (j < regex.length && !matches) {
+
+                       if (!regex[j]) { break; }
+                       matches = regex[j++].exec(ua);
+
+                       if (!!matches) {
+                           for (p = 0; p < props.length; p++) {
+                               match = matches[++k];
+                               q = props[p];
+                               // check if given property is actually array
+                               if (typeof q === OBJ_TYPE && q.length > 0) {
+                                   if (q.length === 2) {
+                                       if (typeof q[1] == FUNC_TYPE) {
+                                           // assign modified match
+                                           this[q[0]] = q[1].call(this, match);
+                                       } else {
+                                           // assign given value, ignore regex match
+                                           this[q[0]] = q[1];
+                                       }
+                                   } else if (q.length >= 3) {
+                                       // Check whether q[1] FUNCTION or REGEX
+                                       if (typeof q[1] === FUNC_TYPE && !(q[1].exec && q[1].test)) {
+                                           if (q.length > 3) {
+                                               this[q[0]] = match ? q[1].apply(this, q.slice(2)) : undefined;
+                                           } else {
+                                               // call function (usually string mapper)
+                                               this[q[0]] = match ? q[1].call(this, match, q[2]) : undefined;
+                                           }
+                                       } else {
+                                           if (q.length == 3) {
+                                               // sanitize match using given regex
+                                               this[q[0]] = match ? match.replace(q[1], q[2]) : undefined;
+                                           } else if (q.length == 4) {
+                                               this[q[0]] = match ? q[3].call(this, match.replace(q[1], q[2])) : undefined;
+                                           } else if (q.length > 4) {
+                                               this[q[0]] = match ? q[3].apply(this, [match.replace(q[1], q[2])].concat(q.slice(4))) : undefined;
+                                           }
+                                       }
+                                   }
+                               } else {
+                                   this[q] = match ? match : undefined;
+                               }
+                           }
+                       }
+                   }
+                   i += 2;
+               }
+           },
+
+           strMapper = function (str, map) {
+
+               for (var i in map) {
+                   // check if current value is array
+                   if (typeof map[i] === OBJ_TYPE && map[i].length > 0) {
+                       for (var j = 0; j < map[i].length; j++) {
+                           if (has(map[i][j], str)) {
+                               return (i === UNKNOWN) ? undefined : i;
+                           }
+                       }
+                   } else if (has(map[i], str)) {
+                       return (i === UNKNOWN) ? undefined : i;
+                   }
+               }
+               return map.hasOwnProperty('*') ? map['*'] : str;
+       };
+
+       ///////////////
+       // String map
+       //////////////
+
+       var windowsVersionMap = {
+               'ME'    : '4.90',
+               'NT 3.51': '3.51',
+               'NT 4.0': '4.0',
+               '2000'  : ['5.0', '5.01'],
+               'XP'    : ['5.1', '5.2'],
+               'Vista' : '6.0',
+               '7'     : '6.1',
+               '8'     : '6.2',
+               '8.1'   : '6.3',
+               '10'    : ['6.4', '10.0'],
+               'NT'    : ''
+           },
+           
+           formFactorsMap = {
+               'embedded'  : 'Automotive',
+               'mobile'    : 'Mobile',
+               'tablet'    : ['Tablet', 'EInk'],
+               'smarttv'   : 'TV',
+               'wearable'  : 'Watch',
+               'xr'        : ['VR', 'XR'],
+               '?'         : ['Desktop', 'Unknown'],
+               '*'         : undefined
+           },
+
+           browserHintsMap = {
+               'Chrome'        : 'Google Chrome',
+               'Edge'          : 'Microsoft Edge',
+               'Edge WebView2' : 'Microsoft Edge WebView2',
+               'Chrome WebView': 'Android WebView',
+               'Chrome Headless':'HeadlessChrome',
+               'Huawei Browser': 'HuaweiBrowser',
+               'MIUI Browser'  : 'Miui Browser',
+               'Opera Mobi'    : 'OperaMobile',
+               'Yandex'        : 'YaBrowser'
+       };
+
+       //////////////
+       // Regex map
+       /////////////
+
+       var defaultRegexes = {
+
+           browser : [[
+
+               // Most common regardless engine
+               /\b(?:crmo|crios)\/([\w\.]+)/i                                      // Chrome for Android/iOS
+               ], [VERSION, [NAME, PREFIX_MOBILE + 'Chrome']], [
+               /webview.+edge\/([\w\.]+)/i                                         // Microsoft Edge
+               ], [VERSION, [NAME, EDGE+' WebView']], [
+               /edg(?:e|ios|a)?\/([\w\.]+)/i                                       
+               ], [VERSION, [NAME, 'Edge']], [
+
+               // Presto based
+               /(opera mini)\/([-\w\.]+)/i,                                        // Opera Mini
+               /(opera [mobiletab]{3,6})\b.+version\/([-\w\.]+)/i,                 // Opera Mobi/Tablet
+               /(opera)(?:.+version\/|[\/ ]+)([\w\.]+)/i                           // Opera
+               ], [NAME, VERSION], [
+               /opios[\/ ]+([\w\.]+)/i                                             // Opera mini on iphone >= 8.0
+               ], [VERSION, [NAME, OPERA+' Mini']], [
+               /\bop(?:rg)?x\/([\w\.]+)/i                                          // Opera GX
+               ], [VERSION, [NAME, OPERA+' GX']], [
+               /\bopr\/([\w\.]+)/i                                                 // Opera Webkit
+               ], [VERSION, [NAME, OPERA]], [
+
+               // Mixed
+               /\bb[ai]*d(?:uhd|[ub]*[aekoprswx]{5,6})[\/ ]?([\w\.]+)/i            // Baidu
+               ], [VERSION, [NAME, 'Baidu']], [
+               /\b(?:mxbrowser|mxios|myie2)\/?([-\w\.]*)\b/i                       // Maxthon
+               ], [VERSION, [NAME, 'Maxthon']], [
+               /(kindle)\/([\w\.]+)/i,                                             // Kindle
+               /(lunascape|maxthon|netfront|jasmine|blazer|sleipnir)[\/ ]?([\w\.]*)/i,      
+                                                                                   // Lunascape/Maxthon/Netfront/Jasmine/Blazer/Sleipnir
+               // Trident based
+               /(avant|iemobile|slim(?:browser|boat|jet))[\/ ]?([\d\.]*)/i,        // Avant/IEMobile/SlimBrowser/SlimBoat/Slimjet
+               /(?:ms|\()(ie) ([\w\.]+)/i,                                         // Internet Explorer
+
+               // Blink/Webkit/KHTML based                                         // Flock/RockMelt/Midori/Epiphany/Silk/Skyfire/Bolt/Iron/Iridium/PhantomJS/Bowser/QupZilla/Falkon/LG Browser/Otter/qutebrowser/Dooble
+               /(flock|rockmelt|midori|epiphany|silk|skyfire|ovibrowser|bolt|iron|vivaldi|iridium|phantomjs|bowser|qupzilla|falkon|rekonq|puffin|brave|whale(?!.+naver)|qqbrowserlite|duckduckgo|klar|helio|(?=comodo_)?dragon|otter|dooble|(?:lg |qute)browser)\/([-\w\.]+)/i,
+                                                                                   // Rekonq/Puffin/Brave/Whale/QQBrowserLite/QQ//Vivaldi/DuckDuckGo/Klar/Helio/Dragon
+               /(heytap|ovi|115|surf)browser\/([\d\.]+)/i,                         // HeyTap/Ovi/115/Surf
+               /(ecosia|weibo)(?:__| \w+@)([\d\.]+)/i                              // Ecosia/Weibo
+               ], [NAME, VERSION], [
+               /quark(?:pc)?\/([-\w\.]+)/i                                         // Quark
+               ], [VERSION, [NAME, 'Quark']], [
+               /\bddg\/([\w\.]+)/i                                                 // DuckDuckGo
+               ], [VERSION, [NAME, 'DuckDuckGo']], [
+               /(?:\buc? ?browser|(?:juc.+)ucweb)[\/ ]?([\w\.]+)/i                 // UCBrowser
+               ], [VERSION, [NAME, 'UCBrowser']], [
+               /microm.+\bqbcore\/([\w\.]+)/i,                                     // WeChat Desktop for Windows Built-in Browser
+               /\bqbcore\/([\w\.]+).+microm/i,
+               /micromessenger\/([\w\.]+)/i                                        // WeChat
+               ], [VERSION, [NAME, 'WeChat']], [
+               /konqueror\/([\w\.]+)/i                                             // Konqueror
+               ], [VERSION, [NAME, 'Konqueror']], [
+               /trident.+rv[: ]([\w\.]{1,9})\b.+like gecko/i                       // IE11
+               ], [VERSION, [NAME, 'IE']], [
+               /ya(?:search)?browser\/([\w\.]+)/i                                  // Yandex
+               ], [VERSION, [NAME, 'Yandex']], [
+               /slbrowser\/([\w\.]+)/i                                             // Smart Lenovo Browser
+               ], [VERSION, [NAME, 'Smart ' + LENOVO + SUFFIX_BROWSER]], [
+               /(avast|avg)\/([\w\.]+)/i                                           // Avast/AVG Secure Browser
+               ], [[NAME, /(.+)/, '$1 Secure' + SUFFIX_BROWSER], VERSION], [
+               /\bfocus\/([\w\.]+)/i                                               // Firefox Focus
+               ], [VERSION, [NAME, FIREFOX+' Focus']], [
+               /\bopt\/([\w\.]+)/i                                                 // Opera Touch
+               ], [VERSION, [NAME, OPERA+' Touch']], [
+               /coc_coc\w+\/([\w\.]+)/i                                            // Coc Coc Browser
+               ], [VERSION, [NAME, 'Coc Coc']], [
+               /dolfin\/([\w\.]+)/i                                                // Dolphin
+               ], [VERSION, [NAME, 'Dolphin']], [
+               /coast\/([\w\.]+)/i                                                 // Opera Coast
+               ], [VERSION, [NAME, OPERA+' Coast']], [
+               /miuibrowser\/([\w\.]+)/i                                           // MIUI Browser
+               ], [VERSION, [NAME, 'MIUI' + SUFFIX_BROWSER]], [
+               /fxios\/([\w\.-]+)/i                                                // Firefox for iOS
+               ], [VERSION, [NAME, PREFIX_MOBILE + FIREFOX]], [
+               /\bqihoobrowser\/?([\w\.]*)/i                                       // 360
+               ], [VERSION, [NAME, '360']], [
+               /\b(qq)\/([\w\.]+)/i                                                // QQ
+               ], [[NAME, /(.+)/, '$1Browser'], VERSION], [
+               /(oculus|sailfish|huawei|vivo|pico)browser\/([\w\.]+)/i
+               ], [[NAME, /(.+)/, '$1' + SUFFIX_BROWSER], VERSION], [              // Oculus/Sailfish/HuaweiBrowser/VivoBrowser/PicoBrowser
+               /samsungbrowser\/([\w\.]+)/i                                        // Samsung Internet
+               ], [VERSION, [NAME, SAMSUNG + ' Internet']], [
+               /metasr[\/ ]?([\d\.]+)/i                                            // Sogou Explorer
+               ], [VERSION, [NAME, SOGOU + ' Explorer']], [
+               /(sogou)mo\w+\/([\d\.]+)/i                                          // Sogou Mobile
+               ], [[NAME, SOGOU + ' Mobile'], VERSION], [
+               /(electron)\/([\w\.]+) safari/i,                                    // Electron-based App
+               /(tesla)(?: qtcarbrowser|\/(20\d\d\.[-\w\.]+))/i,                   // Tesla
+               /m?(qqbrowser|2345(?=browser|chrome|explorer))\w*[\/ ]?v?([\w\.]+)/i   // QQ/2345
+               ], [NAME, VERSION], [
+               /(lbbrowser|rekonq)/i                                               // LieBao Browser/Rekonq
+               ], [NAME], [
+               /ome\/([\w\.]+) \w* ?(iron) saf/i,                                  // Iron
+               /ome\/([\w\.]+).+qihu (360)[es]e/i                                  // 360
+               ], [VERSION, NAME], [
+
+               // WebView
+               /((?:fban\/fbios|fb_iab\/fb4a)(?!.+fbav)|;fbav\/([\w\.]+);)/i       // Facebook App for iOS & Android
+               ], [[NAME, FACEBOOK], VERSION, [TYPE, INAPP]], [
+               /(kakao(?:talk|story))[\/ ]([\w\.]+)/i,                             // Kakao App
+               /(naver)\(.*?(\d+\.[\w\.]+).*\)/i,                                  // Naver InApp
+               /(daum)apps[\/ ]([\w\.]+)/i,                                        // Daum App
+               /safari (line)\/([\w\.]+)/i,                                        // Line App for iOS
+               /\b(line)\/([\w\.]+)\/iab/i,                                        // Line App for Android
+               /(alipay)client\/([\w\.]+)/i,                                       // Alipay
+               /(twitter)(?:and| f.+e\/([\w\.]+))/i,                               // Twitter
+               /(instagram|snapchat|klarna)[\/ ]([-\w\.]+)/i                       // Instagram/Snapchat/Klarna
+               ], [NAME, VERSION, [TYPE, INAPP]], [
+               /\bgsa\/([\w\.]+) .*safari\//i                                      // Google Search Appliance on iOS
+               ], [VERSION, [NAME, 'GSA'], [TYPE, INAPP]], [
+               /musical_ly(?:.+app_?version\/|_)([\w\.]+)/i                        // TikTok
+               ], [VERSION, [NAME, 'TikTok'], [TYPE, INAPP]], [
+               /\[(linkedin)app\]/i                                                // LinkedIn App for iOS & Android
+               ], [NAME, [TYPE, INAPP]], [
+
+               /(chromium)[\/ ]([-\w\.]+)/i                                        // Chromium
+               ], [NAME, VERSION], [
+
+               /headlesschrome(?:\/([\w\.]+)| )/i                                  // Chrome Headless
+               ], [VERSION, [NAME, CHROME+' Headless']], [
+
+               /wv\).+chrome\/([\w\.]+).+edgw\//i                                  // Edge WebView2
+               ], [VERSION, [NAME, EDGE+' WebView2']], [
+
+               / wv\).+(chrome)\/([\w\.]+)/i                                       // Chrome WebView
+               ], [[NAME, CHROME+' WebView'], VERSION], [
+
+               /droid.+ version\/([\w\.]+)\b.+(?:mobile safari|safari)/i           // Android Browser
+               ], [VERSION, [NAME, 'Android' + SUFFIX_BROWSER]], [
+
+               /chrome\/([\w\.]+) mobile/i                                         // Chrome Mobile
+               ], [VERSION, [NAME, PREFIX_MOBILE + 'Chrome']], [
+
+               /(chrome|omniweb|arora|[tizenoka]{5} ?browser)\/v?([\w\.]+)/i       // Chrome/OmniWeb/Arora/Tizen/Nokia
+               ], [NAME, VERSION], [
+
+               /version\/([\w\.\,]+) .*mobile(?:\/\w+ | ?)safari/i                 // Safari Mobile
+               ], [VERSION, [NAME, PREFIX_MOBILE + 'Safari']], [
+               /iphone .*mobile(?:\/\w+ | ?)safari/i
+               ], [[NAME, PREFIX_MOBILE + 'Safari']], [
+               /version\/([\w\.\,]+) .*(safari)/i                                  // Safari
+               ], [VERSION, NAME], [
+               /webkit.+?(mobile ?safari|safari)(\/[\w\.]+)/i                      // Safari < 3.0
+               ], [NAME, [VERSION, '1']], [
+
+               /(webkit|khtml)\/([\w\.]+)/i
+               ], [NAME, VERSION], [
+
+               // Gecko based
+               /(?:mobile|tablet);.*(firefox)\/([\w\.-]+)/i                        // Firefox Mobile
+               ], [[NAME, PREFIX_MOBILE + FIREFOX], VERSION], [
+               /(navigator|netscape\d?)\/([-\w\.]+)/i                              // Netscape
+               ], [[NAME, 'Netscape'], VERSION], [
+               /(wolvic|librewolf)\/([\w\.]+)/i                                    // Wolvic/LibreWolf
+               ], [NAME, VERSION], [
+               /mobile vr; rv:([\w\.]+)\).+firefox/i                               // Firefox Reality
+               ], [VERSION, [NAME, FIREFOX+' Reality']], [
+               /ekiohf.+(flow)\/([\w\.]+)/i,                                       // Flow
+               /(swiftfox)/i,                                                      // Swiftfox
+               /(icedragon|iceweasel|camino|chimera|fennec|maemo browser|minimo|conkeror)[\/ ]?([\w\.\+]+)/i,
+                                                                                   // IceDragon/Iceweasel/Camino/Chimera/Fennec/Maemo/Minimo/Conkeror
+               /(seamonkey|k-meleon|icecat|iceape|firebird|phoenix|palemoon|basilisk|waterfox)\/([-\w\.]+)$/i,
+                                                                                   // Firefox/SeaMonkey/K-Meleon/IceCat/IceApe/Firebird/Phoenix
+               /(firefox)\/([\w\.]+)/i,                                            // Other Firefox-based
+               /(mozilla)\/([\w\.]+) .+rv\:.+gecko\/\d+/i,                         // Mozilla
+
+               // Other
+               /(amaya|dillo|doris|icab|ladybird|lynx|mosaic|netsurf|obigo|polaris|w3m|(?:go|ice|up)[\. ]?browser)[-\/ ]?v?([\w\.]+)/i,
+                                                                                   // Polaris/Lynx/Dillo/iCab/Doris/Amaya/w3m/NetSurf/Obigo/Mosaic/Go/ICE/UP.Browser/Ladybird
+               /\b(links) \(([\w\.]+)/i                                            // Links
+               ], [NAME, [VERSION, /_/g, '.']], [
+               
+               /(cobalt)\/([\w\.]+)/i                                              // Cobalt
+               ], [NAME, [VERSION, /[^\d\.]+./, EMPTY]]
+           ],
+
+           cpu : [[
+
+               /\b((amd|x|x86[-_]?|wow|win)64)\b/i                                 // AMD64 (x64)
+               ], [[ARCHITECTURE, 'amd64']], [
+
+               /(ia32(?=;))/i,                                                     // IA32 (quicktime)
+               /\b((i[346]|x)86)(pc)?\b/i                                          // IA32 (x86)
+               ], [[ARCHITECTURE, 'ia32']], [
+
+               /\b(aarch64|arm(v?[89]e?l?|_?64))\b/i                               // ARM64
+               ], [[ARCHITECTURE, 'arm64']], [
+
+               /\b(arm(v[67])?ht?n?[fl]p?)\b/i                                     // ARMHF
+               ], [[ARCHITECTURE, 'armhf']], [
+
+               // PocketPC mistakenly identified as PowerPC
+               /( (ce|mobile); ppc;|\/[\w\.]+arm\b)/i
+               ], [[ARCHITECTURE, 'arm']], [
+
+               /((ppc|powerpc)(64)?)( mac|;|\))/i                                  // PowerPC
+               ], [[ARCHITECTURE, /ower/, EMPTY, lowerize]], [
+
+               / sun4\w[;\)]/i                                                     // SPARC
+               ], [[ARCHITECTURE, 'sparc']], [
+
+               /\b(avr32|ia64(?=;)|68k(?=\))|\barm(?=v([1-7]|[5-7]1)l?|;|eabi)|(irix|mips|sparc)(64)?\b|pa-risc)/i
+                                                                                   // IA64, 68K, ARM/64, AVR/32, IRIX/64, MIPS/64, SPARC/64, PA-RISC
+               ], [[ARCHITECTURE, lowerize]]
+           ],
+
+           device : [[
+
+               //////////////////////////
+               // MOBILES & TABLETS
+               /////////////////////////
+
+               // Samsung
+               /\b(sch-i[89]0\d|shw-m380s|sm-[ptx]\w{2,4}|gt-[pn]\d{2,4}|sgh-t8[56]9|nexus 10)/i
+               ], [MODEL, [VENDOR, SAMSUNG], [TYPE, TABLET]], [
+               /\b((?:s[cgp]h|gt|sm)-(?![lr])\w+|sc[g-]?[\d]+a?|galaxy nexus)/i,
+               /samsung[- ]((?!sm-[lr]|browser)[-\w]+)/i,
+               /sec-(sgh\w+)/i
+               ], [MODEL, [VENDOR, SAMSUNG], [TYPE, MOBILE]], [
+
+               // Apple
+               /(?:\/|\()(ip(?:hone|od)[\w, ]*)(?:\/|;)/i                          // iPod/iPhone
+               ], [MODEL, [VENDOR, APPLE], [TYPE, MOBILE]], [
+               /\((ipad);[-\w\),; ]+apple/i,                                       // iPad
+               /applecoremedia\/[\w\.]+ \((ipad)/i,
+               /\b(ipad)\d\d?,\d\d?[;\]].+ios/i
+               ], [MODEL, [VENDOR, APPLE], [TYPE, TABLET]], [
+               /(macintosh);/i
+               ], [MODEL, [VENDOR, APPLE]], [
+
+               // Sharp
+               /\b(sh-?[altvz]?\d\d[a-ekm]?)/i
+               ], [MODEL, [VENDOR, SHARP], [TYPE, MOBILE]], [
+
+               // Honor
+               /\b((?:brt|eln|hey2?|gdi|jdn)-a?[lnw]09|(?:ag[rm]3?|jdn2|kob2)-a?[lw]0[09]hn)(?: bui|\)|;)/i
+               ], [MODEL, [VENDOR, HONOR], [TYPE, TABLET]], [
+               /honor([-\w ]+)[;\)]/i
+               ], [MODEL, [VENDOR, HONOR], [TYPE, MOBILE]], [
+
+               // Huawei
+               /\b((?:ag[rs][2356]?k?|bah[234]?|bg[2o]|bt[kv]|cmr|cpn|db[ry]2?|jdn2|got|kob2?k?|mon|pce|scm|sht?|[tw]gr|vrd)-[ad]?[lw][0125][09]b?|605hw|bg2-u03|(?:gem|fdr|m2|ple|t1)-[7a]0[1-4][lu]|t1-a2[13][lw]|mediapad[\w\. ]*(?= bui|\)))\b(?!.+d\/s)/i
+               ], [MODEL, [VENDOR, HUAWEI], [TYPE, TABLET]], [
+               /(?:huawei)([-\w ]+)[;\)]/i,
+               /\b(nexus 6p|\w{2,4}e?-[atu]?[ln][\dx][012359c][adn]?)\b(?!.+d\/s)/i
+               ], [MODEL, [VENDOR, HUAWEI], [TYPE, MOBILE]], [
+
+               // Xiaomi
+               /oid[^\)]+; (2[\dbc]{4}(182|283|rp\w{2})[cgl]|m2105k81a?c)(?: bui|\))/i,
+               /\b((?:red)?mi[-_ ]?pad[\w- ]*)(?: bui|\))/i                                // Mi Pad tablets
+               ],[[MODEL, /_/g, ' '], [VENDOR, XIAOMI], [TYPE, TABLET]], [
+
+               /\b(poco[\w ]+|m2\d{3}j\d\d[a-z]{2})(?: bui|\))/i,                  // Xiaomi POCO
+               /\b; (\w+) build\/hm\1/i,                                           // Xiaomi Hongmi 'numeric' models
+               /\b(hm[-_ ]?note?[_ ]?(?:\d\w)?) bui/i,                             // Xiaomi Hongmi
+               /\b(redmi[\-_ ]?(?:note|k)?[\w_ ]+)(?: bui|\))/i,                   // Xiaomi Redmi
+               /oid[^\)]+; (m?[12][0-389][01]\w{3,6}[c-y])( bui|; wv|\))/i,        // Xiaomi Redmi 'numeric' models
+               /\b(mi[-_ ]?(?:a\d|one|one[_ ]plus|note lte|max|cc)?[_ ]?(?:\d?\w?)[_ ]?(?:plus|se|lite|pro)?)(?: bui|\))/i, // Xiaomi Mi
+               / ([\w ]+) miui\/v?\d/i
+               ], [[MODEL, /_/g, ' '], [VENDOR, XIAOMI], [TYPE, MOBILE]], [
+
+               // OnePlus
+               /droid.+; (cph2[3-6]\d[13579]|((gm|hd)19|(ac|be|in|kb)20|(d[en]|eb|le|mt)21|ne22)[0-2]\d|p[g-k]\w[1m]10)\b/i,
+               /(?:one)?(?:plus)? (a\d0\d\d)(?: b|\))/i
+               ], [MODEL, [VENDOR, ONEPLUS], [TYPE, MOBILE]], [
+
+               // OPPO
+               /; (\w+) bui.+ oppo/i,
+               /\b(cph[12]\d{3}|p(?:af|c[al]|d\w|e[ar])[mt]\d0|x9007|a101op)\b/i
+               ], [MODEL, [VENDOR, OPPO], [TYPE, MOBILE]], [
+               /\b(opd2(\d{3}a?))(?: bui|\))/i
+               ], [MODEL, [VENDOR, strMapper, { 'OnePlus' : ['203', '304', '403', '404', '413', '415'], '*' : OPPO }], [TYPE, TABLET]], [
+
+               // BLU
+               /(vivo (5r?|6|8l?|go|one|s|x[il]?[2-4]?)[\w\+ ]*)(?: bui|\))/i  // Vivo series
+               ], [MODEL, [VENDOR, 'BLU'], [TYPE, MOBILE]], [    
+
+               // Vivo
+               /; vivo (\w+)(?: bui|\))/i,
+               /\b(v[12]\d{3}\w?[at])(?: bui|;)/i
+               ], [MODEL, [VENDOR, 'Vivo'], [TYPE, MOBILE]], [
+
+               // Realme
+               /\b(rmx[1-3]\d{3})(?: bui|;|\))/i
+               ], [MODEL, [VENDOR, 'Realme'], [TYPE, MOBILE]], [
+
+               // Lenovo
+               /(ideatab[-\w ]+|602lv|d-42a|a101lv|a2109a|a3500-hv|s[56]000|pb-6505[my]|tb-?x?\d{3,4}(?:f[cu]|xu|[av])|yt\d?-[jx]?\d+[lfmx])( bui|;|\)|\/)/i,
+               /lenovo ?(b[68]0[08]0-?[hf]?|tab(?:[\w- ]+?)|tb[\w-]{6,7})( bui|;|\)|\/)/i
+               ], [MODEL, [VENDOR, LENOVO], [TYPE, TABLET]], [            
+               /lenovo[-_ ]?([-\w ]+?)(?: bui|\)|\/)/i
+               ], [MODEL, [VENDOR, LENOVO], [TYPE, MOBILE]], [
+
+               // Motorola
+               /\b(milestone|droid(?:[2-4x]| (?:bionic|x2|pro|razr))?:?( 4g)?)\b[\w ]+build\//i,
+               /\bmot(?:orola)?[- ]([\w\s]+)(\)| bui)/i,
+               /((?:moto(?! 360)[-\w\(\) ]+|xt\d{3,4}[cgkosw\+]?[-\d]*|nexus 6)(?= bui|\)))/i
+               ], [MODEL, [VENDOR, MOTOROLA], [TYPE, MOBILE]], [
+               /\b(mz60\d|xoom[2 ]{0,2}) build\//i
+               ], [MODEL, [VENDOR, MOTOROLA], [TYPE, TABLET]], [
+
+               // LG
+               /((?=lg)?[vl]k\-?\d{3}) bui| 3\.[-\w; ]{10}lg?-([06cv9]{3,4})/i
+               ], [MODEL, [VENDOR, LG], [TYPE, TABLET]], [
+               /(lm(?:-?f100[nv]?|-[\w\.]+)(?= bui|\))|nexus [45])/i,
+               /\blg[-e;\/ ]+(?!.*(?:browser|netcast|android tv|watch|webos))(\w+)/i,
+               /\blg-?([\d\w]+) bui/i
+               ], [MODEL, [VENDOR, LG], [TYPE, MOBILE]], [
+
+               // Nokia
+               /(nokia) (t[12][01])/i
+               ], [VENDOR, MODEL, [TYPE, TABLET]], [
+               /(?:maemo|nokia).*(n900|lumia \d+|rm-\d+)/i,
+               /nokia[-_ ]?(([-\w\. ]*))/i
+               ], [[MODEL, /_/g, ' '], [TYPE, MOBILE], [VENDOR, 'Nokia']], [
+
+               // Google
+               /(pixel (c|tablet))\b/i                                             // Google Pixel C/Tablet
+               ], [MODEL, [VENDOR, GOOGLE], [TYPE, TABLET]], [
+                                                                                   // Google Pixel
+               /droid.+;(?: google)? (g(01[13]a|020[aem]|025[jn]|1b60|1f8f|2ybb|4s1m|576d|5nz6|8hhn|8vou|a02099|c15s|d1yq|e2ae|ec77|gh2x|kv4x|p4bc|pj41|r83y|tt9q|ur25|wvk6)|pixel[\d ]*a?( pro)?( xl)?( fold)?( \(5g\))?)( bui|\))/i
+               ], [MODEL, [VENDOR, GOOGLE], [TYPE, MOBILE]], [
+               /(google) (pixelbook( go)?)/i
+               ], [VENDOR, MODEL], [
+
+               // Sony
+               /droid.+; (a?\d[0-2]{2}so|[c-g]\d{4}|so[-gl]\w+|xq-\w\w\d\d)(?= bui|\).+chrome\/(?![1-6]{0,1}\d\.))/i
+               ], [MODEL, [VENDOR, SONY], [TYPE, MOBILE]], [
+               /sony tablet [ps]/i,
+               /\b(?:sony)?sgp\w+(?: bui|\))/i
+               ], [[MODEL, 'Xperia Tablet'], [VENDOR, SONY], [TYPE, TABLET]], [
+
+               // Amazon
+               /(alexa)webm/i,
+               /(kf[a-z]{2}wi|aeo(?!bc)\w\w)( bui|\))/i,                           // Kindle Fire without Silk / Echo Show
+               /(kf[a-z]+)( bui|\)).+silk\//i                                      // Kindle Fire HD
+               ], [MODEL, [VENDOR, AMAZON], [TYPE, TABLET]], [
+               /((?:sd|kf)[0349hijorstuw]+)( bui|\)).+silk\//i                     // Fire Phone
+               ], [[MODEL, /(.+)/g, 'Fire Phone $1'], [VENDOR, AMAZON], [TYPE, MOBILE]], [
+
+               // BlackBerry
+               /(playbook);[-\w\),; ]+(rim)/i                                      // BlackBerry PlayBook
+               ], [MODEL, VENDOR, [TYPE, TABLET]], [
+               /\b((?:bb[a-f]|st[hv])100-\d)/i,
+               /\(bb10; (\w+)/i                                                    // BlackBerry 10
+               ], [MODEL, [VENDOR, BLACKBERRY], [TYPE, MOBILE]], [
+
+               // Asus
+               /(?:\b|asus_)(transfo[prime ]{4,10} \w+|eeepc|slider \w+|nexus 7|padfone|p00[cj])/i
+               ], [MODEL, [VENDOR, ASUS], [TYPE, TABLET]], [
+               / (z[bes]6[027][012][km][ls]|zenfone \d\w?)\b/i
+               ], [MODEL, [VENDOR, ASUS], [TYPE, MOBILE]], [
+
+               // HTC
+               /(nexus 9)/i                                                        // HTC Nexus 9
+               ], [MODEL, [VENDOR, 'HTC'], [TYPE, TABLET]], [
+               /(htc)[-;_ ]{1,2}([\w ]+(?=\)| bui)|\w+)/i,                         // HTC
+
+               // ZTE
+               /(zte)[- ]([\w ]+?)(?: bui|\/|\))/i,
+               /(alcatel|geeksphone|nexian|panasonic(?!(?:;|\.))|sony(?!-bra))[-_ ]?([-\w]*)/i         // Alcatel/GeeksPhone/Nexian/Panasonic/Sony
+               ], [VENDOR, [MODEL, /_/g, ' '], [TYPE, MOBILE]], [
+
+               // TCL
+               /tcl (xess p17aa)/i,
+               /droid [\w\.]+; ((?:8[14]9[16]|9(?:0(?:48|60|8[01])|1(?:3[27]|66)|2(?:6[69]|9[56])|466))[gqswx])(_\w(\w|\w\w))?(\)| bui)/i
+               ], [MODEL, [VENDOR, 'TCL'], [TYPE, TABLET]], [
+               /droid [\w\.]+; (418(?:7d|8v)|5087z|5102l|61(?:02[dh]|25[adfh]|27[ai]|56[dh]|59k|65[ah])|a509dl|t(?:43(?:0w|1[adepqu])|50(?:6d|7[adju])|6(?:09dl|10k|12b|71[efho]|76[hjk])|7(?:66[ahju]|67[hw]|7[045][bh]|71[hk]|73o|76[ho]|79w|81[hks]?|82h|90[bhsy]|99b)|810[hs]))(_\w(\w|\w\w))?(\)| bui)/i
+               ], [MODEL, [VENDOR, 'TCL'], [TYPE, MOBILE]], [
+
+               // itel
+               /(itel) ((\w+))/i
+               ], [[VENDOR, lowerize], MODEL, [TYPE, strMapper, { 'tablet' : ['p10001l', 'w7001'], '*' : 'mobile' }]], [
+
+               // Acer
+               /droid.+; ([ab][1-7]-?[0178a]\d\d?)/i
+               ], [MODEL, [VENDOR, 'Acer'], [TYPE, TABLET]], [
+
+               // Meizu
+               /droid.+; (m[1-5] note) bui/i,
+               /\bmz-([-\w]{2,})/i
+               ], [MODEL, [VENDOR, 'Meizu'], [TYPE, MOBILE]], [
+                   
+               // Ulefone
+               /; ((?:power )?armor(?:[\w ]{0,8}))(?: bui|\))/i
+               ], [MODEL, [VENDOR, 'Ulefone'], [TYPE, MOBILE]], [
+
+               // Energizer
+               /; (energy ?\w+)(?: bui|\))/i,
+               /; energizer ([\w ]+)(?: bui|\))/i
+               ], [MODEL, [VENDOR, 'Energizer'], [TYPE, MOBILE]], [
+
+               // Cat
+               /; cat (b35);/i,
+               /; (b15q?|s22 flip|s48c|s62 pro)(?: bui|\))/i
+               ], [MODEL, [VENDOR, 'Cat'], [TYPE, MOBILE]], [
+
+               // Smartfren
+               /((?:new )?andromax[\w- ]+)(?: bui|\))/i
+               ], [MODEL, [VENDOR, 'Smartfren'], [TYPE, MOBILE]], [
+
+               // Nothing
+               /droid.+; (a(in)?(0(15|59|6[35])|142)p?)/i
+               ], [MODEL, [VENDOR, 'Nothing'], [TYPE, MOBILE]], [
+
+               // Archos
+               /; (x67 5g|tikeasy \w+|ac[1789]\d\w+)( b|\))/i,
+               /archos ?(5|gamepad2?|([\w ]*[t1789]|hello) ?\d+[\w ]*)( b|\))/i
+               ], [MODEL, [VENDOR, 'Archos'], [TYPE, TABLET]], [
+               /archos ([\w ]+)( b|\))/i,
+               /; (ac[3-6]\d\w{2,8})( b|\))/i 
+               ], [MODEL, [VENDOR, 'Archos'], [TYPE, MOBILE]], [
+
+               // HMD
+               /; (n159v)/i
+               ], [MODEL, [VENDOR, 'HMD'], [TYPE, MOBILE]], [
+
+               // MIXED
+               /(imo) (tab \w+)/i,                                                 // IMO
+               /(infinix|tecno) (x1101b?|p904|dp(7c|8d|10a)( pro)?|p70[1-3]a?|p904|t1101)/i                     // Infinix XPad / Tecno
+               ], [VENDOR, MODEL, [TYPE, TABLET]], [
+
+               /(blackberry|benq|palm(?=\-)|sonyericsson|acer|asus(?! zenw)|dell|jolla|meizu|motorola|polytron|tecno|micromax|advan)[-_ ]?([-\w]*)/i,
+                                                                                   // BlackBerry/BenQ/Palm/Sony-Ericsson/Acer/Asus/Dell/Meizu/Motorola/Polytron/Tecno/Micromax/Advan
+               /; (blu|hmd|imo|infinix|lava|oneplus|tcl)[_ ]([\w\+ ]+?)(?: bui|\)|; r)/i,  // BLU/HMD/IMO/Infinix/Lava/OnePlus/TCL
+               /(hp) ([\w ]+\w)/i,                                                 // HP iPAQ
+               /(microsoft); (lumia[\w ]+)/i,                                      // Microsoft Lumia
+               /(oppo) ?([\w ]+) bui/i                                             // OPPO
+               ], [VENDOR, MODEL, [TYPE, MOBILE]], [
+
+               /(kobo)\s(ereader|touch)/i,                                         // Kobo
+               /(hp).+(touchpad(?!.+tablet)|tablet)/i,                             // HP TouchPad
+               /(kindle)\/([\w\.]+)/i                                              // Kindle
+               ], [VENDOR, MODEL, [TYPE, TABLET]], [
+
+               /(surface duo)/i                                                    // Surface Duo
+               ], [MODEL, [VENDOR, MICROSOFT], [TYPE, TABLET]], [
+               /droid [\d\.]+; (fp\du?)(?: b|\))/i                                 // Fairphone
+               ], [MODEL, [VENDOR, 'Fairphone'], [TYPE, MOBILE]], [
+               /((?:tegranote|shield t(?!.+d tv))[\w- ]*?)(?: b|\))/i              // Nvidia Tablets
+               ], [MODEL, [VENDOR, NVIDIA], [TYPE, TABLET]], [
+               /(sprint) (\w+)/i                                                   // Sprint Phones
+               ], [VENDOR, MODEL, [TYPE, MOBILE]], [
+               /(kin\.[onetw]{3})/i                                                // Microsoft Kin
+               ], [[MODEL, /\./g, ' '], [VENDOR, MICROSOFT], [TYPE, MOBILE]], [
+               /droid.+; ([c6]+|et5[16]|mc[239][23]x?|vc8[03]x?)\)/i               // Zebra
+               ], [MODEL, [VENDOR, ZEBRA], [TYPE, TABLET]], [
+               /droid.+; (ec30|ps20|tc[2-8]\d[kx])\)/i
+               ], [MODEL, [VENDOR, ZEBRA], [TYPE, MOBILE]], [
+
+               ///////////////////
+               // SMARTTVS
+               ///////////////////
+
+               /smart-tv.+(samsung)/i                                              // Samsung
+               ], [VENDOR, [TYPE, SMARTTV]], [
+               /hbbtv.+maple;(\d+)/i
+               ], [[MODEL, /^/, 'SmartTV'], [VENDOR, SAMSUNG], [TYPE, SMARTTV]], [
+               /(vizio)(?: |.+model\/)(\w+-\w+)/i,                                 // Vizio
+               /tcast.+(lg)e?. ([-\w]+)/i                                          // LG SmartTV
+               ], [VENDOR, MODEL, [TYPE, SMARTTV]], [
+               /(nux; netcast.+smarttv|lg (netcast\.tv-201\d|android tv))/i
+               ], [[VENDOR, LG], [TYPE, SMARTTV]], [
+               /(apple) ?tv/i                                                      // Apple TV
+               ], [VENDOR, [MODEL, APPLE+' TV'], [TYPE, SMARTTV]], [
+               /crkey.*devicetype\/chromecast/i                                    // Google Chromecast Third Generation
+               ], [[MODEL, CHROMECAST+' Third Generation'], [VENDOR, GOOGLE], [TYPE, SMARTTV]], [
+               /crkey.*devicetype\/([^/]*)/i                                       // Google Chromecast with specific device type
+               ], [[MODEL, /^/, 'Chromecast '], [VENDOR, GOOGLE], [TYPE, SMARTTV]], [
+               /fuchsia.*crkey/i                                                   // Google Chromecast Nest Hub
+               ], [[MODEL, CHROMECAST+' Nest Hub'], [VENDOR, GOOGLE], [TYPE, SMARTTV]], [
+               /crkey/i                                                            // Google Chromecast, Linux-based or unknown
+               ], [[MODEL, CHROMECAST], [VENDOR, GOOGLE], [TYPE, SMARTTV]], [
+               /(portaltv)/i                                                       // Facebook Portal TV
+               ], [MODEL, [VENDOR, FACEBOOK], [TYPE, SMARTTV]], [
+               /droid.+aft(\w+)( bui|\))/i                                         // Fire TV
+               ], [MODEL, [VENDOR, AMAZON], [TYPE, SMARTTV]], [
+               /(shield \w+ tv)/i                                                  // Nvidia Shield TV
+               ], [MODEL, [VENDOR, NVIDIA], [TYPE, SMARTTV]], [
+               /\(dtv[\);].+(aquos)/i,
+               /(aquos-tv[\w ]+)\)/i                                               // Sharp
+               ], [MODEL, [VENDOR, SHARP], [TYPE, SMARTTV]],[
+               /(bravia[\w ]+)( bui|\))/i                                          // Sony
+               ], [MODEL, [VENDOR, SONY], [TYPE, SMARTTV]], [
+               /(mi(tv|box)-?\w+) bui/i                                            // Xiaomi
+               ], [MODEL, [VENDOR, XIAOMI], [TYPE, SMARTTV]], [
+               /Hbbtv.*(technisat) (.*);/i                                         // TechniSAT
+               ], [VENDOR, MODEL, [TYPE, SMARTTV]], [
+               /\b(roku)[\dx]*[\)\/]((?:dvp-)?[\d\.]*)/i,                          // Roku
+               /hbbtv\/\d+\.\d+\.\d+ +\([\w\+ ]*; *([\w\d][^;]*);([^;]*)/i         // HbbTV devices
+               ], [[VENDOR, /.+\/(\w+)/, '$1', strMapper, {'LG':'lge'}], [MODEL, trim], [TYPE, SMARTTV]], [
+                                                                                   // SmartTV from Unidentified Vendors
+               /droid.+; ([\w- ]+) (?:android tv|smart[- ]?tv)/i
+               ], [MODEL, [TYPE, SMARTTV]], [
+               /\b(android tv|smart[- ]?tv|opera tv|tv; rv:|large screen[\w ]+safari)\b/i
+               ], [[TYPE, SMARTTV]], [
+
+               ///////////////////
+               // CONSOLES
+               ///////////////////
+
+               /(playstation \w+)/i                                                // Playstation
+               ], [MODEL, [VENDOR, SONY], [TYPE, CONSOLE]], [
+               /\b(xbox(?: one)?(?!; xbox))[\); ]/i                                // Microsoft Xbox
+               ], [MODEL, [VENDOR, MICROSOFT], [TYPE, CONSOLE]], [
+               /(ouya)/i,                                                          // Ouya
+               /(nintendo) (\w+)/i,                                                // Nintendo
+               /(retroid) (pocket ([^\)]+))/i                                      // Retroid Pocket
+               ], [VENDOR, MODEL, [TYPE, CONSOLE]], [
+               /droid.+; (shield)( bui|\))/i                                       // Nvidia Portable
+               ], [MODEL, [VENDOR, NVIDIA], [TYPE, CONSOLE]], [
+
+               ///////////////////
+               // WEARABLES
+               ///////////////////
+
+               /\b(sm-[lr]\d\d[0156][fnuw]?s?|gear live)\b/i                       // Samsung Galaxy Watch
+               ], [MODEL, [VENDOR, SAMSUNG], [TYPE, WEARABLE]], [
+               /((pebble))app/i,                                                   // Pebble
+               /(asus|google|lg|oppo) ((pixel |zen)?watch[\w ]*)( bui|\))/i        // Asus ZenWatch / LG Watch / Pixel Watch
+               ], [VENDOR, MODEL, [TYPE, WEARABLE]], [
+               /(ow(?:19|20)?we?[1-3]{1,3})/i                                      // Oppo Watch
+               ], [MODEL, [VENDOR, OPPO], [TYPE, WEARABLE]], [
+               /(watch)(?: ?os[,\/]|\d,\d\/)[\d\.]+/i                              // Apple Watch
+               ], [MODEL, [VENDOR, APPLE], [TYPE, WEARABLE]], [
+               /(opwwe\d{3})/i                                                     // OnePlus Watch
+               ], [MODEL, [VENDOR, ONEPLUS], [TYPE, WEARABLE]], [
+               /(moto 360)/i                                                       // Motorola 360
+               ], [MODEL, [VENDOR, MOTOROLA], [TYPE, WEARABLE]], [
+               /(smartwatch 3)/i                                                   // Sony SmartWatch
+               ], [MODEL, [VENDOR, SONY], [TYPE, WEARABLE]], [
+               /(g watch r)/i                                                      // LG G Watch R
+               ], [MODEL, [VENDOR, LG], [TYPE, WEARABLE]], [
+               /droid.+; (wt63?0{2,3})\)/i
+               ], [MODEL, [VENDOR, ZEBRA], [TYPE, WEARABLE]], [
+
+               ///////////////////
+               // XR
+               ///////////////////
+
+               /droid.+; (glass) \d/i                                              // Google Glass
+               ], [MODEL, [VENDOR, GOOGLE], [TYPE, XR]], [
+               /(pico) (4|neo3(?: link|pro)?)/i                                    // Pico
+               ], [VENDOR, MODEL, [TYPE, XR]], [
+               /(quest( \d| pro)?s?).+vr/i                                         // Meta Quest
+               ], [MODEL, [VENDOR, FACEBOOK], [TYPE, XR]], [
+               /mobile vr; rv.+firefox/i                                           // Unidentifiable VR device using Firefox Reality / Wolvic
+               ], [[TYPE, XR]], [
+
+               ///////////////////
+               // EMBEDDED
+               ///////////////////
+
+               /(tesla)(?: qtcarbrowser|\/[-\w\.]+)/i                              // Tesla
+               ], [VENDOR, [TYPE, EMBEDDED]], [
+               /(aeobc)\b/i                                                        // Echo Dot
+               ], [MODEL, [VENDOR, AMAZON], [TYPE, EMBEDDED]], [
+               /(homepod).+mac os/i                                                // Apple HomePod
+               ], [MODEL, [VENDOR, APPLE], [TYPE, EMBEDDED]], [
+               /windows iot/i                                                      // Unidentifiable embedded device using Windows IoT
+               ], [[TYPE, EMBEDDED]], [
+
+               ////////////////////
+               // MIXED (GENERIC)
+               ///////////////////
+
+               /droid .+?; ([^;]+?)(?: bui|; wv\)|\) applew).+?(mobile|vr|\d) safari/i
+               ], [MODEL, [TYPE, strMapper, { 'mobile' : 'Mobile', 'xr' : 'VR', '*' : TABLET }]], [
+               /\b((tablet|tab)[;\/]|focus\/\d(?!.+mobile))/i                      // Unidentifiable Tablet
+               ], [[TYPE, TABLET]], [
+               /(phone|mobile(?:[;\/]| [ \w\/\.]*safari)|pda(?=.+windows ce))/i    // Unidentifiable Mobile
+               ], [[TYPE, MOBILE]], [
+               /droid .+?; ([\w\. -]+)( bui|\))/i                                  // Generic Android Device
+               ], [MODEL, [VENDOR, 'Generic']]
+           ],
+
+           engine : [[
+
+               /windows.+ edge\/([\w\.]+)/i                                       // EdgeHTML
+               ], [VERSION, [NAME, EDGE+'HTML']], [
+
+               /(arkweb)\/([\w\.]+)/i                                              // ArkWeb
+               ], [NAME, VERSION], [
+
+               /webkit\/537\.36.+chrome\/(?!27)([\w\.]+)/i                         // Blink
+               ], [VERSION, [NAME, 'Blink']], [
+
+               /(presto)\/([\w\.]+)/i,                                             // Presto
+               /(webkit|trident|netfront|netsurf|amaya|lynx|w3m|goanna|servo)\/([\w\.]+)/i, // WebKit/Trident/NetFront/NetSurf/Amaya/Lynx/w3m/Goanna/Servo
+               /ekioh(flow)\/([\w\.]+)/i,                                          // Flow
+               /(khtml|tasman|links)[\/ ]\(?([\w\.]+)/i,                           // KHTML/Tasman/Links
+               /(icab)[\/ ]([23]\.[\d\.]+)/i,                                      // iCab
+
+               /\b(libweb)/i                                                       // LibWeb
+               ], [NAME, VERSION], [
+               /ladybird\//i
+               ], [[NAME, 'LibWeb']], [
+
+               /rv\:([\w\.]{1,9})\b.+(gecko)/i                                     // Gecko
+               ], [VERSION, NAME]
+           ],
+
+           os : [[
+
+               // Windows
+               /(windows nt) (6\.[23]); arm/i                                      // Windows RT
+               ], [[NAME, /N/, 'R'], [VERSION, strMapper, windowsVersionMap]], [
+               /(windows (?:phone|mobile|iot))(?: os)?[\/ ]?([\d\.]*( se)?)/i,     // Windows IoT/Mobile/Phone
+                                                                                   // Windows NT/3.1/95/98/ME/2000/XP/Vista/7/8/8.1/10/11
+               /(windows)[\/ ](1[01]|2000|3\.1|7|8(\.1)?|9[58]|me|server 20\d\d( r2)?|vista|xp)/i
+               ], [NAME, VERSION], [
+               /windows nt ?([\d\.\)]*)(?!.+xbox)/i,
+               /\bwin(?=3| ?9|n)(?:nt| 9x )?([\d\.;]*)/i
+               ], [[VERSION, /(;|\))/g, '', strMapper, windowsVersionMap], [NAME, WINDOWS]], [
+               /(windows ce)\/?([\d\.]*)/i                                         // Windows CE
+               ], [NAME, VERSION], [
+
+               // iOS/macOS
+               /[adehimnop]{4,7}\b(?:.*os ([\w]+) like mac|; opera)/i,             // iOS
+               /(?:ios;fbsv\/|iphone.+ios[\/ ])([\d\.]+)/i,
+               /cfnetwork\/.+darwin/i
+               ], [[VERSION, /_/g, '.'], [NAME, 'iOS']], [
+               /(mac os x) ?([\w\. ]*)/i,
+               /(macintosh|mac_powerpc\b)(?!.+(haiku|morphos))/i                   // Mac OS
+               ], [[NAME, 'macOS'], [VERSION, /_/g, '.']], [
+
+               // Google Chromecast
+               /android ([\d\.]+).*crkey/i                                         // Google Chromecast, Android-based
+               ], [VERSION, [NAME, CHROMECAST + ' Android']], [
+               /fuchsia.*crkey\/([\d\.]+)/i                                        // Google Chromecast, Fuchsia-based
+               ], [VERSION, [NAME, CHROMECAST + ' Fuchsia']], [
+               /crkey\/([\d\.]+).*devicetype\/smartspeaker/i                       // Google Chromecast, Linux-based Smart Speaker
+               ], [VERSION, [NAME, CHROMECAST + ' SmartSpeaker']], [
+               /linux.*crkey\/([\d\.]+)/i                                          // Google Chromecast, Legacy Linux-based
+               ], [VERSION, [NAME, CHROMECAST + ' Linux']], [
+               /crkey\/([\d\.]+)/i                                                 // Google Chromecast, unknown
+               ], [VERSION, [NAME, CHROMECAST]], [
+
+               // Mobile OSes
+               /droid ([\w\.]+)\b.+(android[- ]x86)/i                              // Android-x86
+               ], [VERSION, NAME], [                                               
+               /(ubuntu) ([\w\.]+) like android/i                                  // Ubuntu Touch
+               ], [[NAME, /(.+)/, '$1 Touch'], VERSION], [
+               /(harmonyos)[\/ ]?([\d\.]*)/i,                                      // HarmonyOS
+                                                                                   // Android/Blackberry/WebOS/QNX/Bada/RIM/KaiOS/Maemo/MeeGo/S40/Sailfish OS/OpenHarmony/Tizen
+               /(android|bada|blackberry|kaios|maemo|meego|openharmony|qnx|rim tablet os|sailfish|series40|symbian|tizen)\w*[-\/\.; ]?([\d\.]*)/i
+               ], [NAME, VERSION], [
+               /\(bb(10);/i                                                        // BlackBerry 10
+               ], [VERSION, [NAME, BLACKBERRY]], [
+               /(?:symbian ?os|symbos|s60(?=;)|series ?60)[-\/ ]?([\w\.]*)/i       // Symbian
+               ], [VERSION, [NAME, 'Symbian']], [
+               /mozilla\/[\d\.]+ \((?:mobile|tablet|tv|mobile; [\w ]+); rv:.+ gecko\/([\w\.]+)/i // Firefox OS
+               ], [VERSION, [NAME, FIREFOX+' OS']], [
+               /\b(?:hp)?wos(?:browser)?\/([\w\.]+)/i,                             // WebOS
+               /webos(?:[ \/]?|\.tv-20(?=2[2-9]))(\d[\d\.]*)/i
+               ], [VERSION, [NAME, 'webOS']], [
+               /web0s;.+?(?:chr[o0]me|safari)\/(\d+)/i
+                                                                                   // https://webostv.developer.lge.com/develop/specifications/web-api-and-web-engine
+               ], [[VERSION, strMapper, {'25':'120','24':'108','23':'94','22':'87','6':'79','5':'68','4':'53','3':'38','2':'538','1':'537','*':'TV'}], [NAME, 'webOS']], [                   
+               /watch(?: ?os[,\/]|\d,\d\/)([\d\.]+)/i                              // watchOS
+               ], [VERSION, [NAME, 'watchOS']], [
+
+               // Google ChromeOS
+               /(cros) [\w]+(?:\)| ([\w\.]+)\b)/i                                  // Chromium OS
+               ], [[NAME, "Chrome OS"], VERSION],[
+
+               // Smart TVs
+               /panasonic;(viera)/i,                                               // Panasonic Viera
+               /(netrange)mmh/i,                                                   // Netrange
+               /(nettv)\/(\d+\.[\w\.]+)/i,                                         // NetTV
+
+               // Console
+               /(nintendo|playstation) (\w+)/i,                                    // Nintendo/Playstation
+               /(xbox); +xbox ([^\);]+)/i,                                         // Microsoft Xbox (360, One, X, S, Series X, Series S)
+               /(pico) .+os([\w\.]+)/i,                                            // Pico
+
+               // Other
+               /\b(joli|palm)\b ?(?:os)?\/?([\w\.]*)/i,                            // Joli/Palm
+               /linux.+(mint)[\/\(\) ]?([\w\.]*)/i,                                // Mint
+               /(mageia|vectorlinux|fuchsia|arcaos|arch(?= ?linux))[;l ]([\d\.]*)/i,  // Mageia/VectorLinux/Fuchsia/ArcaOS/Arch
+               /([kxln]?ubuntu|debian|suse|opensuse|gentoo|slackware|fedora|mandriva|centos|pclinuxos|red ?hat|zenwalk|linpus|raspbian|plan 9|minix|risc os|contiki|deepin|manjaro|elementary os|sabayon|linspire|knoppix)(?: gnu[\/ ]linux)?(?: enterprise)?(?:[- ]linux)?(?:-gnu)?[-\/ ]?(?!chrom|package)([-\w\.]*)/i,
+                                                                                   // Ubuntu/Debian/SUSE/Gentoo/Slackware/Fedora/Mandriva/CentOS/PCLinuxOS/RedHat/Zenwalk/Linpus/Raspbian/Plan9/Minix/RISCOS/Contiki/Deepin/Manjaro/elementary/Sabayon/Linspire/Knoppix
+               /((?:open)?solaris)[-\/ ]?([\w\.]*)/i,                              // Solaris
+               /\b(aix)[; ]([1-9\.]{0,4})/i,                                       // AIX
+               /(hurd|linux|morphos)(?: (?:arm|x86|ppc)\w*| ?)([\w\.]*)/i,         // Hurd/Linux/MorphOS
+               /(gnu) ?([\w\.]*)/i,                                                // GNU
+               /\b([-frentopcghs]{0,5}bsd|dragonfly)[\/ ]?(?!amd|[ix346]{1,2}86)([\w\.]*)/i, // FreeBSD/NetBSD/OpenBSD/PC-BSD/GhostBSD/DragonFly
+               /(haiku) ?(r\d)?/i                                                  // Haiku
+               ], [NAME, VERSION], [
+               /(sunos) ?([\d\.]*)/i                                               // Solaris
+               ], [[NAME, 'Solaris'], VERSION], [
+               /\b(beos|os\/2|amigaos|openvms|hp-ux|serenityos)/i,                 // BeOS/OS2/AmigaOS/OpenVMS/HP-UX/SerenityOS
+               /(unix) ?([\w\.]*)/i                                                // UNIX
+               ], [NAME, VERSION]
+           ]
+       };
+
+       /////////////////
+       // Factories
+       ////////////////
+
+       var defaultProps = (function () {
+               var props = { init : {}, isIgnore : {}, isIgnoreRgx : {}, toString : {}};
+               setProps.call(props.init, [
+                   [UA_BROWSER, [NAME, VERSION, MAJOR, TYPE]],
+                   [UA_CPU, [ARCHITECTURE]],
+                   [UA_DEVICE, [TYPE, MODEL, VENDOR]],
+                   [UA_ENGINE, [NAME, VERSION]],
+                   [UA_OS, [NAME, VERSION]]
+               ]);
+               setProps.call(props.isIgnore, [
+                   [UA_BROWSER, [VERSION, MAJOR]],
+                   [UA_ENGINE, [VERSION]],
+                   [UA_OS, [VERSION]]
+               ]);
+               setProps.call(props.isIgnoreRgx, [
+                   [UA_BROWSER, / ?browser$/i],
+                   [UA_OS, / ?os$/i]
+               ]);
+               setProps.call(props.toString, [
+                   [UA_BROWSER, [NAME, VERSION]],
+                   [UA_CPU, [ARCHITECTURE]],
+                   [UA_DEVICE, [VENDOR, MODEL]],
+                   [UA_ENGINE, [NAME, VERSION]],
+                   [UA_OS, [NAME, VERSION]]
+               ]);
+               return props;
+       })();
+
+       var createIData = function (item, itemType) {
+
+           var init_props = defaultProps.init[itemType],
+               is_ignoreProps = defaultProps.isIgnore[itemType] || 0,
+               is_ignoreRgx = defaultProps.isIgnoreRgx[itemType] || 0,
+               toString_props = defaultProps.toString[itemType] || 0;
+
+           function IData () {
+               setProps.call(this, init_props);
+           }
+
+           IData.prototype.getItem = function () {
+               return item;
+           };
+
+           IData.prototype.withClientHints = function () {
+
+               // nodejs / non-client-hints browsers
+               if (!NAVIGATOR_UADATA) {
+                   return item
+                           .parseCH()
+                           .get();
+               }
+
+               // browsers based on chromium 85+
+               return NAVIGATOR_UADATA
+                       .getHighEntropyValues(CH_ALL_VALUES)
+                       .then(function (res) {
+                           return item
+                                   .setCH(new UACHData(res, false))
+                                   .parseCH()
+                                   .get();
+               });
+           };
+
+           IData.prototype.withFeatureCheck = function () {
+               return item.detectFeature().get();
+           };
+
+           if (itemType != UA_RESULT) {
+               IData.prototype.is = function (strToCheck) {
+                   var is = false;
+                   for (var i in this) {
+                       if (this.hasOwnProperty(i) && !has(is_ignoreProps, i) && lowerize(is_ignoreRgx ? strip(is_ignoreRgx, this[i]) : this[i]) == lowerize(is_ignoreRgx ? strip(is_ignoreRgx, strToCheck) : strToCheck)) {
+                           is = true;
+                           if (strToCheck != UNDEF_TYPE) break;
+                       } else if (strToCheck == UNDEF_TYPE && is) {
+                           is = !is;
+                           break;
+                       }
+                   }
+                   return is;
+               };
+               IData.prototype.toString = function () {
+                   var str = EMPTY;
+                   for (var i in toString_props) {
+                       if (typeof(this[toString_props[i]]) !== UNDEF_TYPE) {
+                           str += (str ? ' ' : EMPTY) + this[toString_props[i]];
+                       }
+                   }
+                   return str || UNDEF_TYPE;
+               };
+           }
+
+           if (!NAVIGATOR_UADATA) {
+               IData.prototype.then = function (cb) { 
+                   var that = this;
+                   var IDataResolve = function () {
+                       for (var prop in that) {
+                           if (that.hasOwnProperty(prop)) {
+                               this[prop] = that[prop];
+                           }
+                       }
+                   };
+                   IDataResolve.prototype = {
+                       is : IData.prototype.is,
+                       toString : IData.prototype.toString
+                   };
+                   var resolveData = new IDataResolve();
+                   cb(resolveData);
+                   return resolveData;
+               };
+           }
+
+           return new IData();
+       };
+
+       /////////////////
+       // Constructor
+       ////////////////
+
+       function UACHData (uach, isHttpUACH) {
+           uach = uach || {};
+           setProps.call(this, CH_ALL_VALUES);
+           if (isHttpUACH) {
+               setProps.call(this, [
+                   [BRANDS, itemListToArray(uach[CH_HEADER])],
+                   [FULLVERLIST, itemListToArray(uach[CH_HEADER_FULL_VER_LIST])],
+                   [MOBILE, /\?1/.test(uach[CH_HEADER_MOBILE])],
+                   [MODEL, stripQuotes(uach[CH_HEADER_MODEL])],
+                   [PLATFORM, stripQuotes(uach[CH_HEADER_PLATFORM])],
+                   [PLATFORMVER, stripQuotes(uach[CH_HEADER_PLATFORM_VER])],
+                   [ARCHITECTURE, stripQuotes(uach[CH_HEADER_ARCH])],
+                   [FORMFACTORS, itemListToArray(uach[CH_HEADER_FORM_FACTORS])],
+                   [BITNESS, stripQuotes(uach[CH_HEADER_BITNESS])]
+               ]);
+           } else {
+               for (var prop in uach) {
+                   if(this.hasOwnProperty(prop) && typeof uach[prop] !== UNDEF_TYPE) this[prop] = uach[prop];
+               }
+           }
+       }
+
+       function UAItem (itemType, ua, rgxMap, uaCH) {
+
+           this.get = function (prop) {
+               if (!prop) return this.data;
+               return this.data.hasOwnProperty(prop) ? this.data[prop] : undefined;
+           };
+
+           this.set = function (prop, val) {
+               this.data[prop] = val;
+               return this;
+           };
+
+           this.setCH = function (ch) {
+               this.uaCH = ch;
+               return this;
+           };
+
+           this.detectFeature = function () {
+               if (NAVIGATOR && NAVIGATOR.userAgent == this.ua) {
+                   switch (this.itemType) {
+                       case UA_BROWSER:
+                           // Brave-specific detection
+                           if (NAVIGATOR.brave && typeof NAVIGATOR.brave.isBrave == FUNC_TYPE) {
+                               this.set(NAME, 'Brave');
+                           }
+                           break;
+                       case UA_DEVICE:
+                           // Chrome-specific detection: check for 'mobile' value of navigator.userAgentData
+                           if (!this.get(TYPE) && NAVIGATOR_UADATA && NAVIGATOR_UADATA[MOBILE]) {
+                               this.set(TYPE, MOBILE);
+                           }
+                           // iPadOS-specific detection: identified as Mac, but has some iOS-only properties
+                           if (this.get(MODEL) == 'Macintosh' && NAVIGATOR && typeof NAVIGATOR.standalone !== UNDEF_TYPE && NAVIGATOR.maxTouchPoints && NAVIGATOR.maxTouchPoints > 2) {
+                               this.set(MODEL, 'iPad')
+                                   .set(TYPE, TABLET);
+                           }
+                           break;
+                       case UA_OS:
+                           // Chrome-specific detection: check for 'platform' value of navigator.userAgentData
+                           if (!this.get(NAME) && NAVIGATOR_UADATA && NAVIGATOR_UADATA[PLATFORM]) {
+                               this.set(NAME, NAVIGATOR_UADATA[PLATFORM]);
+                           }
+                           break;
+                       case UA_RESULT:
+                           var data = this.data;
+                           var detect = function (itemType) {
+                               return data[itemType]
+                                       .getItem()
+                                       .detectFeature()
+                                       .get();
+                           };
+                           this.set(UA_BROWSER, detect(UA_BROWSER))
+                               .set(UA_CPU, detect(UA_CPU))
+                               .set(UA_DEVICE, detect(UA_DEVICE))
+                               .set(UA_ENGINE, detect(UA_ENGINE))
+                               .set(UA_OS, detect(UA_OS));
+                   }
+               }
+               return this;
+           };
+
+           this.parseUA = function () {
+               if (this.itemType != UA_RESULT) {
+                   rgxMapper.call(this.data, this.ua, this.rgxMap);
+               }
+               if (this.itemType == UA_BROWSER) {
+                   this.set(MAJOR, majorize(this.get(VERSION)));
+               }
+               return this;
+           };
+
+           this.parseCH = function () {
+               var uaCH = this.uaCH,
+                   rgxMap = this.rgxMap;
+       
+               switch (this.itemType) {
+                   case UA_BROWSER:
+                   case UA_ENGINE:
+                       var brands = uaCH[FULLVERLIST] || uaCH[BRANDS], prevName;
+                       if (brands) {
+                           for (var i in brands) {
+                               var brandName = brands[i].brand || brands[i],
+                                   brandVersion = brands[i].version;
+                               if (this.itemType == UA_BROWSER && 
+                                   !/not.a.brand/i.test(brandName) && 
+                                   (!prevName || 
+                                       (/Chrom/.test(prevName) && brandName != CHROMIUM) || 
+                                       (prevName == EDGE && /WebView2/.test(brandName))
+                                   )) {
+                                       brandName = strMapper(brandName, browserHintsMap);
+                                       prevName = this.get(NAME);
+                                       if (!(prevName && !/Chrom/.test(prevName) && /Chrom/.test(brandName))) {
+                                           this.set(NAME, brandName)
+                                               .set(VERSION, brandVersion)
+                                               .set(MAJOR, majorize(brandVersion));
+                                       }
+                                       prevName = brandName;
+                               }
+                               if (this.itemType == UA_ENGINE && brandName == CHROMIUM) {
+                                   this.set(VERSION, brandVersion);
+                               }
+                           }
+                       }
+                       break;
+                   case UA_CPU:
+                       var archName = uaCH[ARCHITECTURE];
+                       if (archName) {
+                           if (archName && uaCH[BITNESS] == '64') archName += '64';
+                           rgxMapper.call(this.data, archName + ';', rgxMap);
+                       }
+                       break;
+                   case UA_DEVICE:
+                       if (uaCH[MOBILE]) {
+                           this.set(TYPE, MOBILE);
+                       }
+                       if (uaCH[MODEL]) {
+                           this.set(MODEL, uaCH[MODEL]);
+                           if (!this.get(TYPE) || !this.get(VENDOR)) {
+                               var reParse = {};
+                               rgxMapper.call(reParse, 'droid 9; ' + uaCH[MODEL] + ')', rgxMap);
+                               if (!this.get(TYPE) && !!reParse.type) {
+                                   this.set(TYPE, reParse.type);
+                               }
+                               if (!this.get(VENDOR) && !!reParse.vendor) {
+                                   this.set(VENDOR, reParse.vendor);
+                               }
+                           }
+                       }
+                       if (uaCH[FORMFACTORS]) {
+                           var ff;
+                           if (typeof uaCH[FORMFACTORS] !== 'string') {
+                               var idx = 0;
+                               while (!ff && idx < uaCH[FORMFACTORS].length) {
+                                   ff = strMapper(uaCH[FORMFACTORS][idx++], formFactorsMap);
+                               }
+                           } else {
+                               ff = strMapper(uaCH[FORMFACTORS], formFactorsMap);
+                           }
+                           this.set(TYPE, ff);
+                       }
+                       break;
+                   case UA_OS:
+                       var osName = uaCH[PLATFORM];
+                       if(osName) {
+                           var osVersion = uaCH[PLATFORMVER];
+                           if (osName == WINDOWS) osVersion = (parseInt(majorize(osVersion), 10) >= 13 ? '11' : '10');
+                           this.set(NAME, osName)
+                               .set(VERSION, osVersion);
+                       }
+                       // Xbox-Specific Detection
+                       if (this.get(NAME) == WINDOWS && uaCH[MODEL] == 'Xbox') {
+                           this.set(NAME, 'Xbox')
+                               .set(VERSION, undefined);
+                       }           
+                       break;
+                   case UA_RESULT:
+                       var data = this.data;
+                       var parse = function (itemType) {
+                           return data[itemType]
+                                   .getItem()
+                                   .setCH(uaCH)
+                                   .parseCH()
+                                   .get();
+                       };
+                       this.set(UA_BROWSER, parse(UA_BROWSER))
+                           .set(UA_CPU, parse(UA_CPU))
+                           .set(UA_DEVICE, parse(UA_DEVICE))
+                           .set(UA_ENGINE, parse(UA_ENGINE))
+                           .set(UA_OS, parse(UA_OS));
+               }
+               return this;
+           };
+
+           setProps.call(this, [
+               ['itemType', itemType],
+               ['ua', ua],
+               ['uaCH', uaCH],
+               ['rgxMap', rgxMap],
+               ['data', createIData(this, itemType)]
+           ]);
+
+           return this;
+       }
+
+       function UAParser (ua, extensions, headers) {
+
+           if (typeof ua === OBJ_TYPE) {
+               if (isExtensions(ua, true)) {
+                   if (typeof extensions === OBJ_TYPE) {
+                       headers = extensions;               // case UAParser(extensions, headers)           
+                   }
+                   extensions = ua;                        // case UAParser(extensions)
+               } else {
+                   headers = ua;                           // case UAParser(headers)
+                   extensions = undefined;
+               }
+               ua = undefined;
+           } else if (typeof ua === STR_TYPE && !isExtensions(extensions, true)) {
+               headers = extensions;                       // case UAParser(ua, headers)
+               extensions = undefined;
+           }
+
+           // Convert Headers object into a plain object
+           if (headers && typeof headers.append === FUNC_TYPE) {
+               var kv = {};
+               headers.forEach(function (v, k) { kv[k] = v; });
+               headers = kv;
+           }
+           
+           if (!(this instanceof UAParser)) {
+               return new UAParser(ua, extensions, headers).getResult();
+           }
+
+           var userAgent = typeof ua === STR_TYPE ? ua :                                       // Passed user-agent string
+                                   (headers && headers[USER_AGENT] ? headers[USER_AGENT] :     // User-Agent from passed headers
+                                   ((NAVIGATOR && NAVIGATOR.userAgent) ? NAVIGATOR.userAgent : // navigator.userAgent
+                                       EMPTY)),                                                // empty string
+
+               httpUACH = new UACHData(headers, true),
+               regexMap = extensions ? 
+                           extend(defaultRegexes, extensions) : 
+                           defaultRegexes,
+
+               createItemFunc = function (itemType) {
+                   if (itemType == UA_RESULT) {
+                       return function () {
+                           return new UAItem(itemType, userAgent, regexMap, httpUACH)
+                                       .set('ua', userAgent)
+                                       .set(UA_BROWSER, this.getBrowser())
+                                       .set(UA_CPU, this.getCPU())
+                                       .set(UA_DEVICE, this.getDevice())
+                                       .set(UA_ENGINE, this.getEngine())
+                                       .set(UA_OS, this.getOS())
+                                       .get();
+                       };
+                   } else {
+                       return function () {
+                           return new UAItem(itemType, userAgent, regexMap[itemType], httpUACH)
+                                       .parseUA()
+                                       .get();
+                       };
+                   }
+               };
+               
+           // public methods
+           setProps.call(this, [
+               ['getBrowser', createItemFunc(UA_BROWSER)],
+               ['getCPU', createItemFunc(UA_CPU)],
+               ['getDevice', createItemFunc(UA_DEVICE)],
+               ['getEngine', createItemFunc(UA_ENGINE)],
+               ['getOS', createItemFunc(UA_OS)],
+               ['getResult', createItemFunc(UA_RESULT)],
+               ['getUA', function () { return userAgent; }],
+               ['setUA', function (ua) {
+                   if (isString(ua))
+                       userAgent = ua.length > UA_MAX_LENGTH ? trim(ua, UA_MAX_LENGTH) : ua;
+                   return this;
+               }]
+           ])
+           .setUA(userAgent);
+
+           return this;
+       }
+
+       UAParser.VERSION = LIBVERSION;
+       UAParser.BROWSER =  enumerize([NAME, VERSION, MAJOR, TYPE]);
+       UAParser.CPU = enumerize([ARCHITECTURE]);
+       UAParser.DEVICE = enumerize([MODEL, VENDOR, TYPE, CONSOLE, MOBILE, SMARTTV, TABLET, WEARABLE, EMBEDDED]);
+       UAParser.ENGINE = UAParser.OS = enumerize([NAME, VERSION]);
+
+   var global$1 = (typeof global !== "undefined" ? global :
+               typeof self !== "undefined" ? self :
+               typeof window !== "undefined" ? window : {});
+
+   /* eslint-disable no-prototype-builtins */
+   var g =
+     (typeof globalThis !== 'undefined' && globalThis) ||
+     (typeof self !== 'undefined' && self) ||
+     // eslint-disable-next-line no-undef
+     (typeof global$1 !== 'undefined' && global$1) ||
+     {};
+
+   var support = {
+     searchParams: 'URLSearchParams' in g,
+     iterable: 'Symbol' in g && 'iterator' in Symbol,
+     blob:
+       'FileReader' in g &&
+       'Blob' in g &&
+       (function() {
+         try {
+           new Blob();
+           return true
+         } catch (e) {
+           return false
+         }
+       })(),
+     formData: 'FormData' in g,
+     arrayBuffer: 'ArrayBuffer' in g
+   };
+
+   function isDataView(obj) {
+     return obj && DataView.prototype.isPrototypeOf(obj)
+   }
+
+   if (support.arrayBuffer) {
+     var viewClasses = [
+       '[object Int8Array]',
+       '[object Uint8Array]',
+       '[object Uint8ClampedArray]',
+       '[object Int16Array]',
+       '[object Uint16Array]',
+       '[object Int32Array]',
+       '[object Uint32Array]',
+       '[object Float32Array]',
+       '[object Float64Array]'
+     ];
+
+     var isArrayBufferView =
+       ArrayBuffer.isView ||
+       function(obj) {
+         return obj && viewClasses.indexOf(Object.prototype.toString.call(obj)) > -1
+       };
+   }
+
+   function normalizeName(name) {
+     if (typeof name !== 'string') {
+       name = String(name);
+     }
+     if (/[^a-z0-9\-#$%&'*+.^_`|~!]/i.test(name) || name === '') {
+       throw new TypeError('Invalid character in header field name: "' + name + '"')
+     }
+     return name.toLowerCase()
+   }
+
+   function normalizeValue(value) {
+     if (typeof value !== 'string') {
+       value = String(value);
+     }
+     return value
+   }
+
+   // Build a destructive iterator for the value list
+   function iteratorFor(items) {
+     var iterator = {
+       next: function() {
+         var value = items.shift();
+         return {done: value === undefined, value: value}
+       }
+     };
+
+     if (support.iterable) {
+       iterator[Symbol.iterator] = function() {
+         return iterator
+       };
+     }
+
+     return iterator
+   }
+
+   function Headers(headers) {
+     this.map = {};
+
+     if (headers instanceof Headers) {
+       headers.forEach(function(value, name) {
+         this.append(name, value);
+       }, this);
+     } else if (Array.isArray(headers)) {
+       headers.forEach(function(header) {
+         if (header.length != 2) {
+           throw new TypeError('Headers constructor: expected name/value pair to be length 2, found' + header.length)
+         }
+         this.append(header[0], header[1]);
+       }, this);
+     } else if (headers) {
+       Object.getOwnPropertyNames(headers).forEach(function(name) {
+         this.append(name, headers[name]);
+       }, this);
+     }
+   }
+
+   Headers.prototype.append = function(name, value) {
+     name = normalizeName(name);
+     value = normalizeValue(value);
+     var oldValue = this.map[name];
+     this.map[name] = oldValue ? oldValue + ', ' + value : value;
+   };
+
+   Headers.prototype['delete'] = function(name) {
+     delete this.map[normalizeName(name)];
+   };
+
+   Headers.prototype.get = function(name) {
+     name = normalizeName(name);
+     return this.has(name) ? this.map[name] : null
+   };
+
+   Headers.prototype.has = function(name) {
+     return this.map.hasOwnProperty(normalizeName(name))
+   };
+
+   Headers.prototype.set = function(name, value) {
+     this.map[normalizeName(name)] = normalizeValue(value);
+   };
+
+   Headers.prototype.forEach = function(callback, thisArg) {
+     for (var name in this.map) {
+       if (this.map.hasOwnProperty(name)) {
+         callback.call(thisArg, this.map[name], name, this);
+       }
+     }
+   };
+
+   Headers.prototype.keys = function() {
+     var items = [];
+     this.forEach(function(value, name) {
+       items.push(name);
+     });
+     return iteratorFor(items)
+   };
+
+   Headers.prototype.values = function() {
+     var items = [];
+     this.forEach(function(value) {
+       items.push(value);
+     });
+     return iteratorFor(items)
+   };
+
+   Headers.prototype.entries = function() {
+     var items = [];
+     this.forEach(function(value, name) {
+       items.push([name, value]);
+     });
+     return iteratorFor(items)
+   };
+
+   if (support.iterable) {
+     Headers.prototype[Symbol.iterator] = Headers.prototype.entries;
+   }
+
+   function consumed(body) {
+     if (body._noBody) return
+     if (body.bodyUsed) {
+       return Promise.reject(new TypeError('Already read'))
+     }
+     body.bodyUsed = true;
+   }
+
+   function fileReaderReady(reader) {
+     return new Promise(function(resolve, reject) {
+       reader.onload = function() {
+         resolve(reader.result);
+       };
+       reader.onerror = function() {
+         reject(reader.error);
+       };
+     })
+   }
+
+   function readBlobAsArrayBuffer(blob) {
+     var reader = new FileReader();
+     var promise = fileReaderReady(reader);
+     reader.readAsArrayBuffer(blob);
+     return promise
+   }
+
+   function readBlobAsText(blob) {
+     var reader = new FileReader();
+     var promise = fileReaderReady(reader);
+     var match = /charset=([A-Za-z0-9_-]+)/.exec(blob.type);
+     var encoding = match ? match[1] : 'utf-8';
+     reader.readAsText(blob, encoding);
+     return promise
+   }
+
+   function readArrayBufferAsText(buf) {
+     var view = new Uint8Array(buf);
+     var chars = new Array(view.length);
+
+     for (var i = 0; i < view.length; i++) {
+       chars[i] = String.fromCharCode(view[i]);
+     }
+     return chars.join('')
+   }
+
+   function bufferClone(buf) {
+     if (buf.slice) {
+       return buf.slice(0)
+     } else {
+       var view = new Uint8Array(buf.byteLength);
+       view.set(new Uint8Array(buf));
+       return view.buffer
+     }
+   }
+
+   function Body() {
+     this.bodyUsed = false;
+
+     this._initBody = function(body) {
+       /*
+         fetch-mock wraps the Response object in an ES6 Proxy to
+         provide useful test harness features such as flush. However, on
+         ES5 browsers without fetch or Proxy support pollyfills must be used;
+         the proxy-pollyfill is unable to proxy an attribute unless it exists
+         on the object before the Proxy is created. This change ensures
+         Response.bodyUsed exists on the instance, while maintaining the
+         semantic of setting Request.bodyUsed in the constructor before
+         _initBody is called.
+       */
+       // eslint-disable-next-line no-self-assign
+       this.bodyUsed = this.bodyUsed;
+       this._bodyInit = body;
+       if (!body) {
+         this._noBody = true;
+         this._bodyText = '';
+       } else if (typeof body === 'string') {
+         this._bodyText = body;
+       } else if (support.blob && Blob.prototype.isPrototypeOf(body)) {
+         this._bodyBlob = body;
+       } else if (support.formData && FormData.prototype.isPrototypeOf(body)) {
+         this._bodyFormData = body;
+       } else if (support.searchParams && URLSearchParams.prototype.isPrototypeOf(body)) {
+         this._bodyText = body.toString();
+       } else if (support.arrayBuffer && support.blob && isDataView(body)) {
+         this._bodyArrayBuffer = bufferClone(body.buffer);
+         // IE 10-11 can't handle a DataView body.
+         this._bodyInit = new Blob([this._bodyArrayBuffer]);
+       } else if (support.arrayBuffer && (ArrayBuffer.prototype.isPrototypeOf(body) || isArrayBufferView(body))) {
+         this._bodyArrayBuffer = bufferClone(body);
+       } else {
+         this._bodyText = body = Object.prototype.toString.call(body);
+       }
+
+       if (!this.headers.get('content-type')) {
+         if (typeof body === 'string') {
+           this.headers.set('content-type', 'text/plain;charset=UTF-8');
+         } else if (this._bodyBlob && this._bodyBlob.type) {
+           this.headers.set('content-type', this._bodyBlob.type);
+         } else if (support.searchParams && URLSearchParams.prototype.isPrototypeOf(body)) {
+           this.headers.set('content-type', 'application/x-www-form-urlencoded;charset=UTF-8');
+         }
+       }
+     };
+
+     if (support.blob) {
+       this.blob = function() {
+         var rejected = consumed(this);
+         if (rejected) {
+           return rejected
+         }
+
+         if (this._bodyBlob) {
+           return Promise.resolve(this._bodyBlob)
+         } else if (this._bodyArrayBuffer) {
+           return Promise.resolve(new Blob([this._bodyArrayBuffer]))
+         } else if (this._bodyFormData) {
+           throw new Error('could not read FormData body as blob')
+         } else {
+           return Promise.resolve(new Blob([this._bodyText]))
+         }
+       };
+     }
+
+     this.arrayBuffer = function() {
+       if (this._bodyArrayBuffer) {
+         var isConsumed = consumed(this);
+         if (isConsumed) {
+           return isConsumed
+         } else if (ArrayBuffer.isView(this._bodyArrayBuffer)) {
+           return Promise.resolve(
+             this._bodyArrayBuffer.buffer.slice(
+               this._bodyArrayBuffer.byteOffset,
+               this._bodyArrayBuffer.byteOffset + this._bodyArrayBuffer.byteLength
+             )
+           )
+         } else {
+           return Promise.resolve(this._bodyArrayBuffer)
+         }
+       } else if (support.blob) {
+         return this.blob().then(readBlobAsArrayBuffer)
+       } else {
+         throw new Error('could not read as ArrayBuffer')
+       }
+     };
+
+     this.text = function() {
+       var rejected = consumed(this);
+       if (rejected) {
+         return rejected
+       }
+
+       if (this._bodyBlob) {
+         return readBlobAsText(this._bodyBlob)
+       } else if (this._bodyArrayBuffer) {
+         return Promise.resolve(readArrayBufferAsText(this._bodyArrayBuffer))
+       } else if (this._bodyFormData) {
+         throw new Error('could not read FormData body as text')
+       } else {
+         return Promise.resolve(this._bodyText)
+       }
+     };
+
+     if (support.formData) {
+       this.formData = function() {
+         return this.text().then(decode)
+       };
+     }
+
+     this.json = function() {
+       return this.text().then(JSON.parse)
+     };
+
+     return this
+   }
+
+   // HTTP methods whose capitalization should be normalized
+   var methods = ['CONNECT', 'DELETE', 'GET', 'HEAD', 'OPTIONS', 'PATCH', 'POST', 'PUT', 'TRACE'];
+
+   function normalizeMethod(method) {
+     var upcased = method.toUpperCase();
+     return methods.indexOf(upcased) > -1 ? upcased : method
+   }
+
+   function Request(input, options) {
+     if (!(this instanceof Request)) {
+       throw new TypeError('Please use the "new" operator, this DOM object constructor cannot be called as a function.')
+     }
+
+     options = options || {};
+     var body = options.body;
+
+     if (input instanceof Request) {
+       if (input.bodyUsed) {
+         throw new TypeError('Already read')
+       }
+       this.url = input.url;
+       this.credentials = input.credentials;
+       if (!options.headers) {
+         this.headers = new Headers(input.headers);
+       }
+       this.method = input.method;
+       this.mode = input.mode;
+       this.signal = input.signal;
+       if (!body && input._bodyInit != null) {
+         body = input._bodyInit;
+         input.bodyUsed = true;
+       }
+     } else {
+       this.url = String(input);
+     }
+
+     this.credentials = options.credentials || this.credentials || 'same-origin';
+     if (options.headers || !this.headers) {
+       this.headers = new Headers(options.headers);
+     }
+     this.method = normalizeMethod(options.method || this.method || 'GET');
+     this.mode = options.mode || this.mode || null;
+     this.signal = options.signal || this.signal || (function () {
+       if ('AbortController' in g) {
+         var ctrl = new AbortController();
+         return ctrl.signal;
+       }
+     }());
+     this.referrer = null;
+
+     if ((this.method === 'GET' || this.method === 'HEAD') && body) {
+       throw new TypeError('Body not allowed for GET or HEAD requests')
+     }
+     this._initBody(body);
+
+     if (this.method === 'GET' || this.method === 'HEAD') {
+       if (options.cache === 'no-store' || options.cache === 'no-cache') {
+         // Search for a '_' parameter in the query string
+         var reParamSearch = /([?&])_=[^&]*/;
+         if (reParamSearch.test(this.url)) {
+           // If it already exists then set the value with the current time
+           this.url = this.url.replace(reParamSearch, '$1_=' + new Date().getTime());
+         } else {
+           // Otherwise add a new '_' parameter to the end with the current time
+           var reQueryString = /\?/;
+           this.url += (reQueryString.test(this.url) ? '&' : '?') + '_=' + new Date().getTime();
+         }
+       }
+     }
+   }
+
+   Request.prototype.clone = function() {
+     return new Request(this, {body: this._bodyInit})
+   };
+
+   function decode(body) {
+     var form = new FormData();
+     body
+       .trim()
+       .split('&')
+       .forEach(function(bytes) {
+         if (bytes) {
+           var split = bytes.split('=');
+           var name = split.shift().replace(/\+/g, ' ');
+           var value = split.join('=').replace(/\+/g, ' ');
+           form.append(decodeURIComponent(name), decodeURIComponent(value));
+         }
+       });
+     return form
+   }
+
+   function parseHeaders(rawHeaders) {
+     var headers = new Headers();
+     // Replace instances of \r\n and \n followed by at least one space or horizontal tab with a space
+     // https://tools.ietf.org/html/rfc7230#section-3.2
+     var preProcessedHeaders = rawHeaders.replace(/\r?\n[\t ]+/g, ' ');
+     // Avoiding split via regex to work around a common IE11 bug with the core-js 3.6.0 regex polyfill
+     // https://github.com/github/fetch/issues/748
+     // https://github.com/zloirock/core-js/issues/751
+     preProcessedHeaders
+       .split('\r')
+       .map(function(header) {
+         return header.indexOf('\n') === 0 ? header.substr(1, header.length) : header
+       })
+       .forEach(function(line) {
+         var parts = line.split(':');
+         var key = parts.shift().trim();
+         if (key) {
+           var value = parts.join(':').trim();
+           try {
+             headers.append(key, value);
+           } catch (error) {
+             console.warn('Response ' + error.message);
+           }
+         }
+       });
+     return headers
+   }
+
+   Body.call(Request.prototype);
+
+   function Response(bodyInit, options) {
+     if (!(this instanceof Response)) {
+       throw new TypeError('Please use the "new" operator, this DOM object constructor cannot be called as a function.')
+     }
+     if (!options) {
+       options = {};
+     }
+
+     this.type = 'default';
+     this.status = options.status === undefined ? 200 : options.status;
+     if (this.status < 200 || this.status > 599) {
+       throw new RangeError("Failed to construct 'Response': The status provided (0) is outside the range [200, 599].")
+     }
+     this.ok = this.status >= 200 && this.status < 300;
+     this.statusText = options.statusText === undefined ? '' : '' + options.statusText;
+     this.headers = new Headers(options.headers);
+     this.url = options.url || '';
+     this._initBody(bodyInit);
+   }
+
+   Body.call(Response.prototype);
+
+   Response.prototype.clone = function() {
+     return new Response(this._bodyInit, {
+       status: this.status,
+       statusText: this.statusText,
+       headers: new Headers(this.headers),
+       url: this.url
+     })
+   };
+
+   Response.error = function() {
+     var response = new Response(null, {status: 200, statusText: ''});
+     response.ok = false;
+     response.status = 0;
+     response.type = 'error';
+     return response
+   };
+
+   var redirectStatuses = [301, 302, 303, 307, 308];
+
+   Response.redirect = function(url, status) {
+     if (redirectStatuses.indexOf(status) === -1) {
+       throw new RangeError('Invalid status code')
+     }
+
+     return new Response(null, {status: status, headers: {location: url}})
+   };
+
+   var DOMException = g.DOMException;
+   try {
+     new DOMException();
+   } catch (err) {
+     DOMException = function(message, name) {
+       this.message = message;
+       this.name = name;
+       var error = Error(message);
+       this.stack = error.stack;
+     };
+     DOMException.prototype = Object.create(Error.prototype);
+     DOMException.prototype.constructor = DOMException;
+   }
+
+   function fetch$1(input, init) {
+     return new Promise(function(resolve, reject) {
+       var request = new Request(input, init);
+
+       if (request.signal && request.signal.aborted) {
+         return reject(new DOMException('Aborted', 'AbortError'))
+       }
+
+       var xhr = new XMLHttpRequest();
+
+       function abortXhr() {
+         xhr.abort();
+       }
+
+       xhr.onload = function() {
+         var options = {
+           statusText: xhr.statusText,
+           headers: parseHeaders(xhr.getAllResponseHeaders() || '')
+         };
+         // This check if specifically for when a user fetches a file locally from the file system
+         // Only if the status is out of a normal range
+         if (request.url.indexOf('file://') === 0 && (xhr.status < 200 || xhr.status > 599)) {
+           options.status = 200;
+         } else {
+           options.status = xhr.status;
+         }
+         options.url = 'responseURL' in xhr ? xhr.responseURL : options.headers.get('X-Request-URL');
+         var body = 'response' in xhr ? xhr.response : xhr.responseText;
+         setTimeout(function() {
+           resolve(new Response(body, options));
+         }, 0);
+       };
+
+       xhr.onerror = function() {
+         setTimeout(function() {
+           reject(new TypeError('Network request failed'));
+         }, 0);
+       };
+
+       xhr.ontimeout = function() {
+         setTimeout(function() {
+           reject(new TypeError('Network request timed out'));
+         }, 0);
+       };
+
+       xhr.onabort = function() {
+         setTimeout(function() {
+           reject(new DOMException('Aborted', 'AbortError'));
+         }, 0);
+       };
+
+       function fixUrl(url) {
+         try {
+           return url === '' && g.location.href ? g.location.href : url
+         } catch (e) {
+           return url
+         }
+       }
+
+       xhr.open(request.method, fixUrl(request.url), true);
+
+       if (request.credentials === 'include') {
+         xhr.withCredentials = true;
+       } else if (request.credentials === 'omit') {
+         xhr.withCredentials = false;
+       }
+
+       if ('responseType' in xhr) {
+         if (support.blob) {
+           xhr.responseType = 'blob';
+         } else if (
+           support.arrayBuffer
+         ) {
+           xhr.responseType = 'arraybuffer';
+         }
+       }
+
+       if (init && typeof init.headers === 'object' && !(init.headers instanceof Headers || (g.Headers && init.headers instanceof g.Headers))) {
+         var names = [];
+         Object.getOwnPropertyNames(init.headers).forEach(function(name) {
+           names.push(normalizeName(name));
+           xhr.setRequestHeader(name, normalizeValue(init.headers[name]));
+         });
+         request.headers.forEach(function(value, name) {
+           if (names.indexOf(name) === -1) {
+             xhr.setRequestHeader(name, value);
+           }
+         });
+       } else {
+         request.headers.forEach(function(value, name) {
+           xhr.setRequestHeader(name, value);
+         });
+       }
+
+       if (request.signal) {
+         request.signal.addEventListener('abort', abortXhr);
+
+         xhr.onreadystatechange = function() {
+           // DONE (success or failure)
+           if (xhr.readyState === 4) {
+             request.signal.removeEventListener('abort', abortXhr);
+           }
+         };
+       }
+
+       xhr.send(typeof request._bodyInit === 'undefined' ? null : request._bodyInit);
+     })
+   }
+
+   fetch$1.polyfill = true;
+
+   if (!g.fetch) {
+     g.fetch = fetch$1;
+     g.Headers = Headers;
+     g.Request = Request;
+     g.Response = Response;
+   }
+
+   // the whatwg-fetch polyfill installs the fetch() function
+   // on the global object (window or self)
+   //
+   // Return that as the export for use in Webpack, Browserify etc.
+
+   self.fetch.bind(self);
+
+   async function checkStatus(response) {
+     if (response.status >= 200 && response.status < 400) {
+       return response;
+     }
+     if (response.status >= 400 && response.status < 500) {
+       const details = await response.json();
+       const error = new Error(details.error_message);
+       error.response = response;
+       error.details = details;
+       error.authIssue = true;
+       return Promise.reject(error);
+     }
+     const error = new Error(response.statusText);
+     error.response = response;
+     return Promise.reject(error);
+   }
+
+   function fetchJson(url, {accessToken, headers, ...options} = {}) {
+     const acceptHeaders = {accept: 'application/json'};
+     const authorizationHeaders = accessToken ? {authorization: `Bearer ${accessToken}`} : {};
+     options = {credentials: 'same-origin', keepalive: true, headers:
+           {...acceptHeaders, ...authorizationHeaders, ...headers}, ...options};
+     return fetch(url, options)
+       .then(checkStatus)
+       .then((response) => {
+         return [204, 304].includes(response.status) ? {} : response.json();
+       })
+       .catch((error) =>{
+         if (error instanceof TypeError) {
+           const newError = new Error('Your internet connection appears to have gone down.');
+           newError.noNet = true;
+           return Promise.reject(newError);
+         }
+         return Promise.reject(error);
+       });
+   }
+
+   const apiHost = 'app.xenonview.com';
+   const apiUrl_ = `https://${apiHost}`;
+
+
+   class ApiBase {
+     constructor(props = {}) {
+       const {name, method, headers, url: path, skipName, authenticated, apiUrl} = props;
+       this.authenticated = (authenticated) ? authenticated : false;
+       this.skipName = (skipName) ? skipName : false;
+       this.name = (name) ? name : 'ApiBase';
+       this.method = (method) ? method : 'POST';
+       this.headers = (headers) ? headers : {
+         'content-type': 'application/json'
+       };
+       this.apiUrl = (apiUrl || apiUrl != undefined) ? apiUrl : apiUrl_;
+       this.path_ = (path) ? path : '';
+     }
+
+     params(data) {
+       return {};
+     };
+
+     path(data){
+       return this.path_;
+     }
+
+     fetch({data} = {}) {
+       let parameters = {};
+       try {
+         parameters = this.params(data);
+       } catch (error) {
+         return Promise.reject(error);
+       }
+       let fetchParameters = {
+         method: this.method,
+         headers: this.headers,
+       };
+
+       if (Object.keys(parameters).length || !this.skipName) {
+         let bodyObject = {
+           parameters: parameters
+         };
+         if (!this.skipName) bodyObject.name = this.name;
+         const body = JSON.stringify(bodyObject);
+         fetchParameters.body = body;
+       }
+
+       if (this.authenticated) {
+         const {token} = data;
+         if (token) fetchParameters.accessToken = token;
+         else return Promise.reject(new Error("No token and authenticated!"))
+       }
+       const fetchUrl = `${this.apiUrl}/${this.path(data)}`;
+       return fetchJson(fetchUrl, fetchParameters);
+     }
+   }
+
+   function journeyParams(data) {
+     const {journey: journey} = data;
+     if (journey) return { journey: journey};
+     return {};
+   }
+
+   class journeyApi extends ApiBase {
+     constructor(apiUrl) {
+       let props = {
+         name: 'ApiJourney',
+         url: 'journey',
+         apiUrl: apiUrl,
+         authenticated: true
+       };
+       super(props);
+     }
+     params(data) {
+       let params = journeyParams(data);
+       const {id, timestamp} = data;
+       params.uuid = id;
+       params.timestamp = timestamp;
+       return params;
+     }
+   }
+
+   function JourneyApi(apiUrl){
+     return new journeyApi(apiUrl);
+   }
+
+   function heartbeatParams(data) {
+     const {journey: journey} = data;
+     if (journey) return { journey: journey};
+     return {};
+   }
+
+   class heartbeatApi extends ApiBase {
+     constructor(apiUrl) {
+       let props = {
+         name: 'ApiHeartbeat',
+         url: 'heartbeat',
+         apiUrl: apiUrl,
+         authenticated: true
+       };
+       super(props);
+     }
+     params(data) {
+       let params = heartbeatParams(data);
+       const {id, tags, platform, timestamp, watchdog} = data;
+       params.uuid = id;
+       params.timestamp = timestamp;
+       params.tags = tags;
+       params.platform = platform;
+       if (watchdog) {
+         params.watchdog = watchdog;
+       }
+       return params;
+     }
+   }
+
+   function HeartbeatApi(apiUrl){
+     return new heartbeatApi(apiUrl);
+   }
+
+   class deanonApi extends ApiBase {
+     constructor(apiUrl) {
+       let props = {
+         name: 'ApiDeanonymize',
+         url: 'deanonymize',
+         apiUrl: apiUrl,
+         authenticated: true
+       };
+       super(props);
+     }
+     params(data) {
+       const {id, person, timestamp} = data;
+       if (!person) throw new Error("No person data received.")
+       let params = {};
+       params.uuid = id;
+       params.person = person;
+       params.timestamp = timestamp;
+       return params;
+     }
+   }
+   function DeanonApi(apiUrl){
+     return new deanonApi(apiUrl);
+   }
+
+   class sampleApi extends ApiBase {
+     constructor(apiUrl) {
+       let props = {
+         name: 'ApiSample',
+         url: 'sample',
+         apiUrl: apiUrl,
+         authenticated: true
+       };
+       super(props);
+     }
+     params(data) {
+       const {id} = data;
+       let params = {};
+       params.uuid = id;
+       return params;
+     }
+   }
+   function SampleApi(apiUrl){
+     return new sampleApi(apiUrl);
+   }
+
+   class countApi extends ApiBase {
+     constructor(apiUrl) {
+       let props = {
+         name: 'ApiIncrementCount',
+         url: 'increment_count',
+         apiUrl: apiUrl,
+         authenticated: true
+       };
+       super(props);
+     }
+     params(data) {
+       const {uid, timestamp, outcome, content, value} = data;
+       const {leadSource, leadCampaign, leadGuid} = content;
+       let params = {};
+       params.uid = uid;
+       params.timestamp = timestamp;
+       params.outcome = outcome;
+       params.leadSource = leadSource;
+       params.leadCampaign = leadCampaign;
+       params.leadGuid = leadGuid;
+       params.value = value;
+       return params;
+     }
+   }
+   function CountApi(apiUrl){
+     return new countApi(apiUrl);
+   }
+
+   class errorLogApi extends ApiBase {
+     constructor(apiUrl) {
+       let props = {
+         name: 'ApiErrorLog',
+         url: 'error_log',
+         apiUrl: apiUrl,
+         authenticated: true
+       };
+       super(props);
+     }
+     params(data) {
+       const {log} = data;
+       let params = {};
+       params.log = log;
+       return params;
+     }
+   }
+   function ErrorLogApi(apiUrl){
+     return new errorLogApi(apiUrl);
+   }
+
+   const _defaultSessionStorage = {};
+   const _sessionStorage = {
+     setItem: (key, value) => _defaultSessionStorage[key] = value,
+     getItem: (key) => _defaultSessionStorage[key],
+     removeItem: (key) => delete _defaultSessionStorage[key],
+   };
+
+   const _defaultLocalStorage = {};
+   const _localStorage = {
+     setItem: (key, value) => _defaultLocalStorage[key] = value,
+     getItem: (key) => _defaultLocalStorage[key],
+     removeItem: (key) => delete _defaultLocalStorage[key],
+   };
+
+   class ShopifyStorage{
+     constructor(underlying) {
+       this._underlying = underlying;
+     }
+     async setItem(key, value){
+       await this._underlying.setItem(key, value);
+     }
+     async getItem(key){
+       return await this._underlying.getItem(key);
+     }
+     async removeItem(key){
+       await this._underlying.removeItem(key);
+     }
+   }
+
+   function getLocalStorage(){
+     if (typeof window != 'undefined' && window !== undefined && window && window.localStorage) return window.localStorage;
+     const browser_ = typeof self != 'undefined' && self.browser ? self.browser : null;
+     if (typeof browser_ != 'undefined' && browser_ !== undefined && browser_ && browser_.localStorage)
+         return new ShopifyStorage(browser_.localStorage);
+     return _localStorage;
+   }
+   function getSessionStorage(){
+     if (typeof window != 'undefined' && window !== undefined && window && window.sessionStorage) return window.sessionStorage;
+     const browser_ = typeof self != 'undefined' && self.browser ? self.browser : null;
+     if (typeof browser_ != 'undefined' && browser_ !== undefined && browser_ && browser_.sessionStorage)
+       return new ShopifyStorage(browser_.sessionStorage);
+     return _sessionStorage;
+   }
+
+   async function storeLocal(name, objectToStore) {
+     const ls = getLocalStorage();
+     await ls.setItem(name, JSON.stringify(objectToStore));
+   }
+
+   async function retrieveLocal(name) {
+     const ls = getLocalStorage();
+     const value = await ls.getItem(name);
+     return (value) ? JSON.parse(value) : null;
+   }
+
+   async function resetLocal(name) {
+     const ls = getLocalStorage();
+     await ls.removeItem(name);
+   }
+
+   async function storeSession(name, objectToStore) {
+     const ss = getSessionStorage();
+     await ss.setItem(name, JSON.stringify(objectToStore));
+   }
+
+   async function retrieveSession(name) {
+     const ss = getSessionStorage();
+     const value = await ss.getItem(name);
+     return (value) ? JSON.parse(value) : null;
+   }
+
+   async function resetSession(name) {
+     const ss = getSessionStorage();
+     await ss.removeItem(name);
+   }
+
+   /**
+    * Created by lwoydziak on 09/27/21.
+    */
+   /**
+    * xenon.js
+    *
+    * SDK for interacting with the Xenon View service.
+    *
+    */
+
+   class _Xenon {
+     constructor(apiKey = null, apiUrl = 'https://app.xenonview.com',
+                 countApiUrl = 'https://counts.xenonlab.ai',
+                 journeyApi = JourneyApi, deanonApi = DeanonApi, heartbeatApi = HeartbeatApi,
+                 sampleApi = SampleApi, countApi = CountApi, errorLogApi = ErrorLogApi) {
+       this.JourneyApi = journeyApi;
+       this.DeanonApi = deanonApi;
+       this.HeartbeatApi = heartbeatApi;
+       this.SampleApi = sampleApi;
+       this.CountApi = countApi;
+       this.ErrorLogApi = errorLogApi;
+       this.pageURL_ = null;
+       this.restoreJourney = [];
+       this.apiCallPending = false;
+       this.apiUrl = apiUrl;
+       this.countApiUrl = countApiUrl;
+
+     }
+
+     version() {
+       return 'v0.2.1';
+     }
+
+     async init(apiKey, apiUrl = 'https://app.xenonview.com', onApiKeyFailure = null) {
+       this.apiUrl = apiUrl;
+       this.apiKey = apiKey;
+       await this.id();
+       let journey = await this.journey();
+       if (!journey) {
+         await this.storeJourney([]);
+       }
+       await this.sampleDecision(null, onApiKeyFailure);
+       this.apiCallPending = false;
+     }
+
+     async ecomAbandonment() {
+       await storeLocal('heartbeat_type', 'ecom');
+       await this.heartbeatState(0);
+     }
+
+     async customAbandonment(outcome) {
+       await storeLocal('heartbeat_type', 'custom');
+       await storeLocal('heartbeat_outcome', outcome);
+       await this.heartbeatState(0);
+     }
+
+     async cancelAbandonment() {
+       await storeLocal('heartbeat_type', 'custom');
+       await storeLocal('heartbeat_outcome', {
+         remove: true
+       });
+       await this.heartbeatState(0);
+     }
+
+     async platform(softwareVersion, deviceModel, operatingSystemName, operatingSystemVersion) {
+       const platform = {
+         softwareVersion: softwareVersion,
+         deviceModel: deviceModel,
+         operatingSystemName: operatingSystemName,
+         operatingSystemVersion: operatingSystemVersion
+       };
+       await storeSession('view-platform', platform);
+     }
+
+     async removePlatform() {
+       await resetSession('view-platform');
+     }
+
+     async variant(variantNames) {
+       await storeSession('view-tags', variantNames);
+     }
+
+     async resetVariants() {
+       await resetSession('view-tags');
+     }
+
+     async startVariant(variantName) {
+       let variantNames = await retrieveSession('view-tags');
+       if (!variantNames || !variantNames.includes(variantName)) {
+         await this.resetVariants();
+         await this.variant([variantName]);
+       }
+     }
+
+     async addVariant(variantName) {
+       let variantNames = await retrieveSession('view-tags');
+       if (!variantNames || !variantNames.includes(variantName)) {
+         (variantNames) ? variantNames.push(variantName) : variantNames = [variantName];
+         await this.variant(variantNames);
+       }
+     }
+
+     // Stock Business Outcomes:
+     async leadAttributed(source, identifier = null) {
+       await this.count("Attribution");
+     }
+
+     async leadUnattributed() {
+       await this.count("Attribution");
+     }
+
+     async leadCaptured(specifier) {
+       const content = {
+         superOutcome: 'Lead Capture',
+         outcome: specifier,
+         result: 'success'
+       };
+       await this.outcomeAdd(content);
+     }
+
+     async leadCaptureDeclined(specifier) {
+       const content = {
+         superOutcome: 'Lead Capture',
+         outcome: specifier,
+         result: 'fail'
+       };
+       await this.outcomeAdd(content);
+     }
+
+     async accountSignup(specifier) {
+       const content = {
+         superOutcome: 'Account Signup',
+         outcome: specifier,
+         result: 'success'
+       };
+       await this.outcomeAdd(content);
+     }
+
+     async accountSignupDeclined(specifier) {
+       const content = {
+         superOutcome: 'Account Signup',
+         outcome: specifier,
+         result: 'fail'
+       };
+       await this.outcomeAdd(content);
+     }
+
+     async applicationInstalled() {
+       let content = {
+         superOutcome: 'Application Installation',
+         outcome: 'Installed',
+         result: 'success'
+       };
+       await this.outcomeAdd(content);
+     }
+
+     async applicationNotInstalled() {
+       const content = {
+         superOutcome: 'Application Installation',
+         outcome: 'Not Installed',
+         result: 'fail'
+       };
+       await this.outcomeAdd(content);
+     }
+
+     async initialSubscription(tier, method = null, price = null, term = null) {
+       const content = {
+         superOutcome: 'Initial Subscription',
+         outcome: 'Subscribe - ' + tier,
+         result: 'success'
+       };
+       if (method) {
+         content['method'] = method;
+       }
+       if (price) {
+         content['price'] = price;
+       }
+       if (term) {
+         content['term'] = term;
+       }
+       await this.outcomeAdd(content);
+     }
+
+     async subscriptionDeclined(tier, method = null, price = null, term = null) {
+       const content = {
+         superOutcome: 'Initial Subscription',
+         outcome: 'Decline - ' + tier,
+         result: 'fail'
+       };
+       if (method) {
+         content['method'] = method;
+       }
+       if (price) {
+         content['price'] = price;
+       }
+       if (term) {
+         content['term'] = term;
+       }
+       await this.outcomeAdd(content);
+     }
+
+     async subscriptionRenewed(tier, method = null, price = null, term = null) {
+       const content = {
+         superOutcome: 'Subscription Renewal',
+         outcome: 'Renew - ' + tier,
+         result: 'success'
+       };
+       if (method) {
+         content['method'] = method;
+       }
+       if (price) {
+         content['price'] = price;
+       }
+       if (term) {
+         content['term'] = term;
+       }
+       await this.outcomeAdd(content);
+     }
+
+     async subscriptionPaused(tier, method = null, price = null, term = null) {
+       const content = {
+         superOutcome: 'Subscription Renewal',
+         outcome: 'Paused - ' + tier,
+         result: 'fail'
+       };
+       if (method) {
+         content['method'] = method;
+       }
+       if (price) {
+         content['price'] = price;
+       }
+       if (term) {
+         content['term'] = term;
+       }
+       await this.outcomeAdd(content);
+     }
+
+     async subscriptionCanceled(tier, method = null, price = null, term = null) {
+       const content = {
+         superOutcome: 'Subscription Renewal',
+         outcome: 'Cancel - ' + tier,
+         result: 'fail'
+       };
+       if (method) {
+         content['method'] = method;
+       }
+       if (price) {
+         content['price'] = price;
+       }
+       if (term) {
+         content['term'] = term;
+       }
+       await this.outcomeAdd(content);
+     }
+
+     async subscriptionUpsold(tier, method = null, price = null, term = null) {
+       const content = {
+         superOutcome: 'Subscription Upsold',
+         outcome: 'Upsold - ' + tier,
+         result: 'success'
+       };
+       if (method) {
+         content['method'] = method;
+       }
+       if (price) {
+         content['price'] = price;
+       }
+       if (term) {
+         content['term'] = term;
+       }
+       await this.outcomeAdd(content);
+     }
+
+     async subscriptionUpsellDeclined(tier, method = null, price = null, term = null) {
+       const content = {
+         superOutcome: 'Subscription Upsold',
+         outcome: 'Declined - ' + tier,
+         result: 'fail'
+       };
+       if (method) {
+         content['method'] = method;
+       }
+       if (price) {
+         content['price'] = price;
+       }
+       if (term) {
+         content['term'] = term;
+       }
+       await this.outcomeAdd(content);
+     }
+
+     async subscriptionDownsell(tier, method = null, price = null, term = null) {
+       const content = {
+         superOutcome: 'Subscription Upsold',
+         outcome: 'Downsell - ' + tier,
+         result: 'fail'
+       };
+       if (method) {
+         content['method'] = method;
+       }
+       if (price) {
+         content['price'] = price;
+       }
+       if (term) {
+         content['term'] = term;
+       }
+       await this.outcomeAdd(content);
+     }
+
+     async adClicked(provider, id = null, price = null) {
+       const content = {
+         superOutcome: 'Advertisement',
+         outcome: 'Ad Click - ' + provider,
+         result: 'success'
+       };
+       if (id) {
+         content['id'] = id;
+       }
+       if (price) {
+         content['price'] = price;
+       }
+       await this.outcomeAdd(content);
+     }
+
+     async adIgnored(provider, id = null, price = null) {
+       const content = {
+         superOutcome: 'Advertisement',
+         outcome: 'Ad Ignored - ' + provider,
+         result: 'fail'
+       };
+       if (id) {
+         content['id'] = id;
+       }
+       if (price) {
+         content['price'] = price;
+       }
+       await this.outcomeAdd(content);
+     }
+
+     async referral(kind, detail = null) {
+       const content = {
+         superOutcome: 'Referral',
+         outcome: 'Referred - ' + kind,
+         result: 'success'
+       };
+       if (detail) {
+         content['details'] = detail;
+       }
+       await this.outcomeAdd(content);
+     }
+
+     async referralDeclined(kind, detail = null) {
+       const content = {
+         superOutcome: 'Referral',
+         outcome: 'Declined - ' + kind,
+         result: 'fail'
+       };
+       if (detail) {
+         content['details'] = detail;
+       }
+       await this.outcomeAdd(content);
+     }
+
+     async productAddedToCart(product, price = null) {
+       const content = {
+         superOutcome: 'Add Product To Cart',
+         outcome: 'Add - ' + product,
+         result: 'success'
+       };
+       if (price) {
+         content['price'] = price;
+       } else {
+         price = 0.0;
+       }
+       await this.outcomeAdd(content);
+       await this.heartbeatState(1);
+       await this.count("Add To Cart", price, [product]);
+     }
+
+     async productNotAddedToCart(product) {
+       const content = {
+         superOutcome: 'Add Product To Cart',
+         outcome: 'Ignore - ' + product,
+         result: 'fail'
+       };
+       await this.outcomeAdd(content);
+     }
+
+     async upsold(product, price = null) {
+       const content = {
+         superOutcome: 'Upsold Product',
+         outcome: 'Upsold - ' + product,
+         result: 'success'
+       };
+       if (price) {
+         content['price'] = price;
+       } else {
+         price = 0.0;
+       }
+       await this.outcomeAdd(content);
+       await this.count("Upsell", price, [product]);
+     }
+
+     async upsellDismissed(product, price = null) {
+       const content = {
+         superOutcome: 'Upsold Product',
+         outcome: 'Dismissed - ' + product,
+         result: 'fail'
+       };
+       if (price) {
+         content['price'] = price;
+       }
+       await this.outcomeAdd(content);
+     }
+
+     async checkOut(member = null) {
+       let outcome = "Check Out";
+       let countSting = "Check Out";
+
+       if (member != null) {
+         outcome = "Check Out - " + member;
+         countSting = "Checkout:" + member;
+       }
+
+       const content = {
+         superOutcome: 'Customer Checkout',
+         outcome: outcome,
+         result: 'success'
+       };
+       await this.outcomeAdd(content);
+       await this.heartbeatState(2);
+       await this.count(countSting);
+     }
+
+     async checkoutCanceled() {
+       const content = {
+         superOutcome: 'Customer Checkout',
+         outcome: 'Canceled',
+         result: 'fail'
+       };
+       await this.outcomeAdd(content);
+     }
+
+     async productRemoved(product) {
+       const content = {
+         superOutcome: 'Customer Checkout',
+         outcome: 'Product Removed - ' + product,
+         result: 'fail'
+       };
+       await this.outcomeAdd(content);
+     }
+
+     async purchase(SKUs, price = null, discount = null, shipping = null, member = null) {
+       let outcome = "Purchase";
+       let purchaseSting = "Purchase";
+
+       if (member != null) {
+         outcome = "Purchase - " + member;
+         purchaseSting = "Purchase:" + member;
+       }
+
+       if (!Array.isArray(SKUs)) {
+         const SKUsString = SKUs.toString();
+         SKUs = SKUsString.split(",").map(item => item.trim());
+       }
+
+       const content = {
+         superOutcome: 'Customer Purchase',
+         outcome: outcome,
+         skus: SKUs,
+         result: 'success'
+       };
+       if (price) {
+         content['price'] = price;
+       } else {
+         price = 0.0;
+       }
+       if (discount) {
+         content['discount'] = discount;
+       }
+       if (shipping) {
+         content['shipping'] = shipping;
+       }
+
+       await this.outcomeAdd(content);
+       await this.heartbeatState(3);
+       await this.count(purchaseSting, price, SKUs);
+     }
+
+     async purchaseCancel(SKUs = null, price = null) {
+       const outcome = 'Canceled' + (SKUs ? ' - ' + SKUs : '');
+       const content = {
+         superOutcome: 'Customer Purchase',
+         outcome: outcome,
+         result: 'fail'
+       };
+       if (price) {
+         content['price'] = price;
+       }
+       await this.outcomeAdd(content);
+     }
+
+     async promiseFulfilled() {
+       const content = {
+         superOutcome: 'Promise Fulfillment',
+         outcome: 'Fulfilled',
+         result: 'success'
+       };
+       await this.outcomeAdd(content);
+     }
+
+     async promiseUnfulfilled() {
+       const content = {
+         superOutcome: 'Promise Fulfillment',
+         outcome: 'Unfulfilled',
+         result: 'fail'
+       };
+       await this.outcomeAdd(content);
+     }
+
+     async productKept(product) {
+       const content = {
+         superOutcome: 'Product Disposition',
+         outcome: 'Kept - ' + product,
+         result: 'success'
+       };
+       await this.outcomeAdd(content);
+     }
+
+     async productReturned(product) {
+       const content = {
+         superOutcome: 'Product Disposition',
+         outcome: 'Returned - ' + product,
+         result: 'fail'
+       };
+       await this.outcomeAdd(content);
+     }
+
+   // Stock Milestones:
+
+     async featureAttempted(name, detail = null) {
+       const event = {
+         category: 'Feature',
+         action: 'Attempted',
+         name: name
+       };
+       if (detail) {
+         event['details'] = detail;
+       }
+       await this.journeyAdd(event);
+     }
+
+     async featureCompleted(name, detail = null) {
+       const event = {
+         category: 'Feature',
+         action: 'Completed',
+         name: name
+       };
+       if (detail) {
+         event['details'] = detail;
+       }
+       await this.journeyAdd(event);
+     }
+
+     async featureFailed(name, detail = null) {
+       const event = {
+         category: 'Feature',
+         action: 'Failed',
+         name: name
+       };
+       if (detail) {
+         event['details'] = detail;
+       }
+       await this.journeyAdd(event);
+     }
+
+     async contentViewed(contentType, identifier = null) {
+       const event = {
+         category: 'Content',
+         action: 'Viewed',
+         type: contentType,
+       };
+       if (identifier) {
+         event['identifier'] = identifier;
+       }
+       await this.journeyAdd(event);
+     }
+
+     async contentEdited(contentType, identifier = null, detail = null) {
+       const event = {
+         category: 'Content',
+         action: 'Edited',
+         type: contentType,
+       };
+       if (identifier) {
+         event['identifier'] = identifier;
+       }
+       if (detail) {
+         event['details'] = detail;
+       }
+       await this.journeyAdd(event);
+     }
+
+     async contentCreated(contentType, identifier = null) {
+       const event = {
+         category: 'Content',
+         action: 'Created',
+         type: contentType,
+       };
+       if (identifier) {
+         event['identifier'] = identifier;
+       }
+       await this.journeyAdd(event);
+     }
+
+     async contentDeleted(contentType, identifier = null) {
+       const event = {
+         category: 'Content',
+         action: 'Deleted',
+         type: contentType,
+       };
+       if (identifier) {
+         event['identifier'] = identifier;
+       }
+       await this.journeyAdd(event);
+     }
+
+     async contentArchived(contentType, identifier = null) {
+       const event = {
+         category: 'Content',
+         action: 'Archived',
+         type: contentType,
+       };
+       if (identifier) {
+         event['identifier'] = identifier;
+       }
+       await this.journeyAdd(event);
+     }
+
+     async contentRequested(contentType, identifier = null) {
+       const event = {
+         category: 'Content',
+         action: 'Requested',
+         type: contentType,
+       };
+       if (identifier) {
+         event['identifier'] = identifier;
+       }
+       await this.journeyAdd(event);
+     }
+
+     async contentSearched(contentType) {
+       const event = {
+         category: 'Content',
+         action: 'Searched',
+         type: contentType,
+       };
+       await this.journeyAdd(event);
+     }
+
+     async pageLoadTime(loadTime, url) {
+       const event = {
+         category: 'Webpage Load Time',
+         time: loadTime.toString(),
+         identifier: url,
+       };
+       await this.journeyAdd(event);
+     }
+
+     // Custom Milestones
+
+     async milestone(category, operation, name, detail) {
+       const event = {
+         category: category,
+         action: operation,
+         name: name,
+         details: detail
+       };
+       await this.journeyAdd(event);
+     }
+
+     // API Communication:
+
+     async count(outcome, value = 0.0, skus = null, surfaceErrors = false) {
+       const attribution = await retrieveSession('view-attribution');
+       if (!attribution) return Promise.resolve(true);
+       const platform = await retrieveSession('view-platform');
+       let params = {
+         data: {
+           uid: await this.id(),
+           token: this.apiKey,
+           timestamp: (new Date()).getTime() / 1000,
+           outcome: outcome,
+           content: attribution,
+           platform: platform ? platform : null,
+           skus: skus,
+           value: value
+         }
+       };
+       let replayLog = await retrieveSession('view-count-replay');
+       if (replayLog) {
+         replayLog.push(params);
+       } else {
+         replayLog = [params];
+       }
+       await storeSession('view-count-replay', replayLog);
+       try {
+         let result = null;
+         while (replayLog.length > 0) {
+           const params = replayLog.shift();
+           result = await this.CountApi(this.countApiUrl).fetch(params);
+           await storeSession('view-count-replay', replayLog);
+         }
+         return result;
+       } catch (error) {
+         return (surfaceErrors ? Promise.reject(error) : Promise.resolve(true));
+       }
+     }
+
+     async heartbeatState(stage = null) {
+       const previousStage = await retrieveLocal('heartbeat_stage');
+       if (stage && stage > previousStage) {
+         await storeLocal('heartbeat_stage', stage);
+       }
+       if (!stage && !previousStage) {
+         await storeLocal('heartbeat_stage', 0);
+       }
+       return Number(await retrieveLocal('heartbeat_stage'));
+     }
+
+     async commit(surfaceErrors = false) {
+       if (!await this.sampleDecision() || this.apiCallPending) {
+         return Promise.resolve(true);
+       }
+       this.apiCallPending = true;
+       let params = {
+         data: {
+           id: await this.id(),
+           journey: await this.journey(),
+           token: this.apiKey,
+           timestamp: (new Date()).getTime() / 1000
+         }
+       };
+       const saved = await this.reset();
+       try {
+         const value = await this.JourneyApi(this.apiUrl).fetch(params);
+         this.apiCallPending = false;
+         return Promise.resolve(value);
+       } catch (error) {
+         await this.restore(saved);
+         this.apiCallPending = false;
+         return (surfaceErrors ? Promise.reject(error) : Promise.resolve(true));
+       }
+     }
+
+     async heartbeatMessage(type) {
+       const stage = await this.heartbeatState();
+       const messages = {
+         ecom: {
+           0: {
+             expires_in_seconds: 600,
+             if_abandoned: {
+               superOutcome: 'Add Product To Cart',
+               outcome: 'Abandoned',
+               result: 'fail'
+             }
+           },
+           1: {
+             expires_in_seconds: 600,
+             if_abandoned: {
+               superOutcome: 'Customer Checkout',
+               outcome: 'Abandoned',
+               result: 'fail'
+             }
+           },
+           2: {
+             expires_in_seconds: 600,
+             if_abandoned: {
+               superOutcome: 'Customer Purchase',
+               outcome: 'Abandoned',
+               result: 'fail'
+             }
+           },
+           3: {
+             remove: true
+           },
+         }
+       };
+       if (Object.keys(messages).includes(type)) {
+         return messages[type][stage];
+       }
+       return await retrieveLocal('heartbeat_outcome')
+     }
+
+     async heartbeat(surfaceErrors = false) {
+       const platform = await retrieveSession('view-platform');
+       const tags = await retrieveSession('view-tags');
+       let params = {
+         data: {
+           id: await this.id(),
+           journey: await this.journey(),
+           token: this.apiKey,
+           platform: platform ? platform : {},
+           tags: tags ? tags : [],
+           timestamp: (new Date()).getTime() / 1000
+         }
+       };
+
+       const heartbeatType = await retrieveLocal('heartbeat_type');
+       if (heartbeatType) {
+         params.data['watchdog'] = await this.heartbeatMessage(heartbeatType);
+       }
+
+       if (!await this.sampleDecision() || this.apiCallPending) {
+         return Promise.resolve(true);
+       }
+       this.apiCallPending = true;
+
+       const saved = await this.reset();
+       try {
+         const value = await this.HeartbeatApi(this.apiUrl).fetch(params);
+         if (heartbeatType && Object.keys(params.data['watchdog']).includes('remove')) {
+           await resetLocal('heartbeat_stage');
+           await resetLocal('heartbeat_type');
+           await resetLocal('heartbeat_outcome');
+         }
+         this.apiCallPending = false;
+         return Promise.resolve(value);
+       } catch (error) {
+         await this.restore(saved);
+         this.apiCallPending = false;
+         return (surfaceErrors ? Promise.reject(error) : Promise.resolve(true));
+       }
+     }
+
+     async deanonymize(person) {
+       if (!await this.sampleDecision()) {
+         return Promise.resolve(true);
+       }
+
+       let params = {
+         data: {
+           id: await this.id(),
+           person: person,
+           token: this.apiKey,
+           timestamp: (new Date()).getTime() / 1000
+         }
+       };
+       return await this.DeanonApi(this.apiUrl).fetch(params);
+     }
+
+     async recordError(log) {
+       if (!await this.sampleDecision()) {
+         return Promise.resolve(true);
+       }
+
+       let params = {
+         data: {
+           log: log,
+           token: this.apiKey,
+         }
+       };
+       return await this.ErrorLogApi(this.apiUrl).fetch(params);
+     }
+
+     // Internals:
+
+     async id(id) {
+       if (id) {
+         await storeSession('xenon-view', id);
+       }
+       id = await retrieveSession('xenon-view');
+       if (!id || id === '') {
+         return await this.newId();
+       }
+       return id;
+     }
+
+     async newId() {
+       await storeSession('xenon-view', crypto.randomUUID());
+       return await retrieveSession('xenon-view');
+     }
+
+     async sampleDecision(decision = null, onApiKeyFailure = null) {
+       if (decision !== null) {
+         await storeSession('xenon-will-sample', decision);
+       }
+       decision = await retrieveSession('xenon-will-sample');
+       if (decision === null || decision === '') {
+         let params = {data: {id: await this.id(), token: this.apiKey}};
+         try {
+           const json = await this.SampleApi(this.apiUrl).fetch(params);
+           decision = await this.sampleDecision(json['sample'], onApiKeyFailure);
+         } catch (error) {
+           if (error.authIssue && onApiKeyFailure) {
+             onApiKeyFailure(error);
+             return;
+           }
+           decision = await this.sampleDecision(true, onApiKeyFailure);
+         }
+       }
+       decision = Boolean(decision);
+       return decision;
+     }
+
+     async outcomeAdd(content) {
+       let platform = await retrieveSession('view-platform');
+       if (platform) content['platform'] = platform;
+       let tags = await retrieveSession('view-tags');
+       if (tags) content['tags'] = tags;
+       await this.journeyAdd(content);
+     }
+
+     async journeyAdd(content) {
+       let journey = await this.journey();
+       content.timestamp = (new Date()).getTime() / 1000;
+       if (this.pageURL_) {
+         content.url = this.pageURL_;
+       }
+       if (journey && journey.length) {
+         let last = journey[journey.length - 1];
+         if (this.isDuplicate(last, content)) {
+           let count = last.hasOwnProperty('count') ? last.count : 1;
+           last.count = count + 1;
+         } else {
+           journey.push(content);
+         }
+       } else {
+         journey = [content];
+       }
+       await this.storeJourney(journey);
+     }
+
+
+     isDuplicate(last, content) {
+       const lastKeys = Object.keys(last);
+       const contentKeys = Object.keys(content);
+       const isSuperset = (set, subset) => {
+         for (const elem of subset) {
+           if (!set.has(elem)) {
+             return false;
+           }
+         }
+         return true;
+       };
+       if (!isSuperset(new Set(lastKeys), new Set(contentKeys))) return false;
+       if (!contentKeys.includes('category') || !lastKeys.includes('category')) return false;
+       if (content.category !== last.category) return false;
+       if (!contentKeys.includes('action') || !lastKeys.includes('action')) return false;
+       if (content.action !== last.action) return false;
+       return (this.duplicateFeature(last, content, lastKeys, contentKeys) ||
+         this.duplicateContent(last, content, lastKeys, contentKeys) ||
+         this.duplicateMilestone(last, content, lastKeys, contentKeys));
+     }
+
+     duplicateFeature(last, content, lastKeys, contentKeys) {
+       if (content.category !== 'Feature' || last.category !== 'Feature') return false;
+       return content.name === last.name;
+     }
+
+     duplicateContent(last, content, lastKeys, contentKeys) {
+       if (content.category !== 'Content' || last.category !== 'Content') return false;
+       if (!contentKeys.includes('type') && !lastKeys.includes('type')) return true;
+       if (content.type !== last.type) return false;
+       if (!contentKeys.includes('identifier') && !lastKeys.includes('identifier')) return true;
+       if (content.identifier !== last.identifier) return false;
+       if (!contentKeys.includes('details') && !lastKeys.includes('details')) return true;
+       return content.details === last.details;
+     }
+
+     duplicateMilestone(last, content, lastKeys, contentKeys) {
+       if (content.category === 'Feature' || last.category === 'Feature') return false;
+       if (content.category === 'Content' || last.category === 'Content') return false;
+       if (content.name !== last.name) return false;
+       return content.details === last.details;
+     }
+
+     async journey() {
+       return await retrieveLocal('view-journey');
+     }
+
+     async storeJourney(journey) {
+       await storeLocal('view-journey', journey);
+     }
+
+     async reset() {
+       this.restoreJourney = await this.journey();
+       await resetLocal('view-journey');
+       await this.storeJourney([]);
+       return this.restoreJourney
+     }
+
+     async restore(journey = null) {
+       let currentJourney = await this.journey();
+       let restoreJourney = journey ? journey : this.restoreJourney;
+       if (currentJourney !== null && currentJourney.length) {
+         restoreJourney = restoreJourney.concat(currentJourney);
+       }
+
+       function compare(a, b) {
+         if (a.timestamp < b.timestamp) {
+           return -1;
+         }
+         if (a.timestamp > b.timestamp) {
+           return 1;
+         }
+         return 0;
+       }
+
+       restoreJourney.sort(compare);
+       await this.storeJourney(restoreJourney);
+       this.restoreJourney = [];
+     }
+
+     hasClassInHierarchy(target, className, maxDepth) {
+       const searcher = (node, className, maxDepth, currentDepth) => {
+         if (currentDepth >= maxDepth)
+           return false;
+         if (node.className.toString().includes(className))
+           return true;
+         if (!node.parentElement)
+           return false;
+         return searcher(node.parentElement, className, maxDepth, currentDepth + 1);
+       };
+
+       return searcher(target, className, maxDepth, 0);
+     }
+
+     decipherParamsPerLibrary(params) {
+       if (params.has('xenonSrc')) {
+         return [params.get('xenonSrc'), params.get('xenonId')];
+       }
+       if (params.has('cr_campaignid')) {
+         return ['Cerebro', params.get('cr_campaignid')];
+       }
+       if (params.has('utm_source') && params.get('utm_source').toLowerCase() === 'klaviyo') {
+         const source = 'Klaviyo' + (params.has('utm_medium') ? ' - ' + params.get('utm_medium') : '');
+         return [source, params.get('utm_campaign')];
+       }
+       if (params.has('g_campaignid')) {
+         return ['Google Ad', params.get('g_campaignid')]
+       }
+       if (params.has('utm_source') && params.get('utm_source').toLowerCase() === 'shareasale') {
+         return ['Share-a-sale', params.get('sscid')]
+       }
+       if (params.has('sscid')) {
+         return ['Share-a-sale', params.get('sscid')]
+       }
+       if (params.has('g_adtype') && params.get('g_adtype') === 'none') {
+         return ['Google Organic', params.get('g_campaign')]
+       }
+       if (params.has('g_adtype') && params.get('g_adtype') === 'search') {
+         return ['Google Paid Search', params.get('g_campaign')]
+       }
+       if (params.has('utm_source') && params.get('utm_source') === 'facebook') {
+         return ['Facebook Ad', params.get('utm_campaign')]
+       }
+       if (params.has('utm_source') && params.get('utm_source').toLowerCase() === 'email-broadcast') {
+         return ['Email', params.get('utm_campaign')]
+       }
+       if (params.has('utm_source') && params.get('utm_source').toLowerCase() === 'youtube') {
+         return ['YouTube', params.get('utm_campaign')]
+       }
+       if (params.has('utm_source')) {
+         return [params.get('utm_source'), params.get('utm_campaign')]
+       }
+       return ['Unattributed']
+     }
+
+     async autodiscoverLeadFrom(queryFromUrl) {
+       if (queryFromUrl && queryFromUrl !== '' && queryFromUrl !== '?') {
+         const params = new URLSearchParams(queryFromUrl);
+         const [source, identifier] = this.decipherParamsPerLibrary(params);
+         let attribution = await retrieveSession('view-attribution');
+         if (attribution) return queryFromUrl;
+         await storeSession('view-attribution', {
+           leadSource: source,
+           leadCampaign: identifier,
+           leadGuid: null
+         });
+         let variantNames = await retrieveSession('view-tags');
+         if (source && (!variantNames || !variantNames.includes(source))) {
+           if (variantNames) {
+             variantNames.push(source);
+             if (identifier) {
+               variantNames.push(identifier);
+             }
+           } else {
+             variantNames = [source];
+             if (identifier) {
+               variantNames.push(identifier);
+             }
+           }
+           await this.variant(variantNames);
+           (source === 'Unattributed') ?
+             await this.leadUnattributed() :
+             await this.leadAttributed(source, identifier);
+         }
+         params.delete('xenonId');
+         params.delete('xenonSrc');
+         let query = "";
+         if (params.size) {
+           query = "?" + params.toString();
+         }
+         return query;
+       } else {
+         let variantNames = await retrieveSession('view-tags');
+         const source = 'Unattributed';
+         let attribution = await retrieveSession('view-attribution');
+         if (attribution) return queryFromUrl;
+         await storeSession('view-attribution', {
+           leadSource: source,
+           leadCampaign: null,
+           leadGuid: null
+         });
+         if (!variantNames || !variantNames.includes(source)) {
+           (variantNames) ? variantNames.push(source) : variantNames = [source];
+           await this.variant(variantNames);
+           await this.leadUnattributed();
+         }
+         return queryFromUrl;
+       }
+     }
+
+     pageURL(url) {
+       this.pageURL_ = url;
+     }
+
+     async setPlatformByUserAgent(userAgent, version){
+       const userAgentParser = new UAParser(userAgent);
+       const browser = userAgentParser.getBrowser();
+       const deviceModel = browser.name + ":" + browser.version;
+       const os = userAgentParser.getOS();
+       const operatingSystemName = os.name;
+       const operatingSystemVersion = os.version;
+       await this.platform(version, deviceModel, operatingSystemName, operatingSystemVersion);
+     }
+   }
+
+   const Xenon = new _Xenon;
+
+   return Xenon;
 
 })();

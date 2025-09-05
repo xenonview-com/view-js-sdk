@@ -203,30 +203,79 @@ describe('View SDK', () => {
             done();
           })();
         });
-      });
-      describe('when adding outcome after platform set', () => {
-        it('then journey contains platform', (done) => {
+        afterEach((done) => {
           (async () => {
-            const journey = (await unit.journey())[0];
-            expect(journey.platform.softwareVersion).toEqual('5.1.5');
-            expect(journey.platform.deviceModel).toEqual('Pixel 4 XL');
-            expect(journey.platform.operatingSystemName).toEqual('Android');
-            expect(journey.platform.operatingSystemVersion).toEqual('12.0');
+            ImmediatelyResolvePromise(3);
+            await unit.removePlatform();
+            ImmediatelyResolvePromise(0);
             done();
           })();
         });
-        beforeEach((done) => {
-          const softwareVersion = '5.1.5';
-          const deviceModel = 'Pixel 4 XL';
-          const operatingSystemName = 'Android';
-          const operatingSystemVersion = '12.0';
-          (async () => {
-            ImmediatelyResolvePromise(3);
-            await unit.platform(softwareVersion, deviceModel, operatingSystemName, operatingSystemVersion);
-            ImmediatelyResolvePromise(7);
-            await unit.applicationInstalled()
-            done();
-          })();
+      });
+      describe('when adding outcome after platform set', () => {
+        describe('via manual platform setting', () => {
+          it('then journey contains platform', (done) => {
+            (async () => {
+              const journey = (await unit.journey())[0];
+              expect(journey.platform.softwareVersion).toEqual('5.1.5');
+              expect(journey.platform.deviceModel).toEqual('Pixel 4 XL');
+              expect(journey.platform.operatingSystemName).toEqual('Android');
+              expect(journey.platform.operatingSystemVersion).toEqual('12.0');
+              done();
+            })();
+          });
+          beforeEach((done) => {
+            const softwareVersion = '5.1.5';
+            const deviceModel = 'Pixel 4 XL';
+            const operatingSystemName = 'Android';
+            const operatingSystemVersion = '12.0';
+            (async () => {
+              ImmediatelyResolvePromise(3);
+              await unit.platform(softwareVersion, deviceModel, operatingSystemName, operatingSystemVersion);
+              ImmediatelyResolvePromise(7);
+              await unit.applicationInstalled()
+              done();
+            })();
+          });
+          afterEach((done) => {
+            (async () => {
+              ImmediatelyResolvePromise(3);
+              await unit.removePlatform();
+              ImmediatelyResolvePromise(0);
+              done();
+            })();
+          });
+        });
+        describe('via automatic platform setting', () => {
+          it('then journey contains platform', (done) => {
+            (async () => {
+              const journey = (await unit.journey())[0];
+              expect(journey.platform.softwareVersion).toEqual('5.1.5');
+              expect(journey.platform.deviceModel).toEqual('Maemo Browser:1.4.1.22');
+              expect(journey.platform.operatingSystemName).toEqual('Maemo');
+              expect(journey.platform.operatingSystemVersion).toEqual(undefined);
+              done();
+            })();
+          });
+          beforeEach((done) => {
+            const userAgent = 'Mozilla/5.0 (X11; U; Linux armv7l; en-GB; rv:1.9.2a1pre) Gecko/20090928 Firefox/3.5 Maemo Browser 1.4.1.22 RX-51 N900';
+            const softwareVersion = '5.1.5';
+            (async () => {
+              ImmediatelyResolvePromise(4);
+              await unit.setPlatformByUserAgent(userAgent, softwareVersion);
+              ImmediatelyResolvePromise(7);
+              await unit.applicationInstalled()
+              done();
+            })();
+          });
+          afterEach((done) => {
+            (async () => {
+              ImmediatelyResolvePromise(3);
+              await unit.removePlatform();
+              ImmediatelyResolvePromise(0);
+              done();
+            })();
+          });
         });
       });
       describe("when testing tags", () => {

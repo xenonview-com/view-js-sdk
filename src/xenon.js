@@ -7,6 +7,7 @@
  * SDK for interacting with the Xenon View service.
  *
  */
+import { UAParser } from 'ua-parser-js';
 import JourneyApi from "./api/journey";
 import HeartbeatApi from "./api/heartbeat";
 import DeanonApi from "./api/deanonymize";
@@ -1131,6 +1132,25 @@ export class _Xenon {
 
   pageURL(url) {
     this.pageURL_ = url;
+  }
+
+  async setPlatformByUserAgent(userAgent, version){
+    const platform = {
+      softwareVersion: version,
+      deviceModel: null,
+      operatingSystemName: null,
+      operatingSystemVersion: null
+    };
+    const userAgentParser = new UAParser(userAgent);
+    const browser = userAgentParser.getBrowser();
+    const deviceModel = browser.name + ":" + browser.version;
+    const os = userAgentParser.getOS();
+    const operatingSystemName = os.name;
+    const operatingSystemVersion = os.version;
+    platform.deviceModel = deviceModel;
+    platform.operatingSystemName = operatingSystemName;
+    platform.operatingSystemVersion = operatingSystemVersion;
+    await this.platform(version, deviceModel, operatingSystemName, operatingSystemVersion);
   }
 }
 

@@ -61,7 +61,8 @@
   "license": "Apache",
   "dependencies": {
     "encoding": "^0.1.13",
-    "isomorphic-fetch": "^3.0.0"
+    "isomorphic-fetch": "^3.0.0",
+    "ua-parser-js": "^2.0.4"
   },
   "publishConfig": {
     "registry": "https://registry.npmjs.org"
