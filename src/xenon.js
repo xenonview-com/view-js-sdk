@@ -36,7 +36,7 @@ export class _Xenon {
   }
 
   version() {
-    return 'v0.2.2.1';
+    return 'v0.2.3';
   }
 
   async init(apiKey, apiUrl = 'https://app.xenonview.com', onApiKeyFailure = null) {
