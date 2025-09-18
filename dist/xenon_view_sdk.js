@@ -3469,7 +3469,10 @@ var Xenon = (function () {
        return searcher(target, className, maxDepth, 0);
      }
 
-     decipherParamsPerLibrary(params) {
+     async decipherParamsPerLibrary(params) {
+       if (params.has('xenon_euid')) {
+         await this.id(params.get('xenon_euid'));
+       }
        if (params.has('xenonSrc')) {
          return [params.get('xenonSrc'), params.get('xenonId')];
        }
@@ -3513,7 +3516,7 @@ var Xenon = (function () {
      async autodiscoverLeadFrom(queryFromUrl) {
        if (queryFromUrl && queryFromUrl !== '' && queryFromUrl !== '?') {
          const params = new URLSearchParams(queryFromUrl);
-         const [source, identifier] = this.decipherParamsPerLibrary(params);
+         const [source, identifier] = await this.decipherParamsPerLibrary(params);
          let attribution = await retrieveSession('view-attribution');
          if (attribution) return queryFromUrl;
          await storeSession('view-attribution', {
@@ -3541,6 +3544,7 @@ var Xenon = (function () {
          }
          params.delete('xenonId');
          params.delete('xenonSrc');
+         params.delete('xenon_euid');
          let query = "";
          if (params.size) {
            query = "?" + params.toString();

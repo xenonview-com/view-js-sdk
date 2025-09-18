@@ -9,11 +9,16 @@
  */
 import {_Xenon} from '../src/xenon';
 import './helper/api_helper';
-import {UnblockPromises, ImmediatelyResolvePromise} from './helper/api_helper';
+import {
+  UnblockPromises,
+  ImmediatelyResolvePromise,
+  ImmediatelyResolveAllPromises,
+  ResetImmediatelyResolvePromises
+} from './helper/api_helper';
 import {retrieveSession, storeSession, retrieveLocal, resetSession} from '../src/storage/storage';
 import MockPromises from "mock-promises";
 
-``
+
 describe('View SDK', () => {
   let unit = null;
   let unit2 = null;
@@ -3097,12 +3102,13 @@ describe('View SDK', () => {
           localStorage.clear();
           sessionStorage.clear();
           resetCalls();
+          MockPromises.reset();
+          ImmediatelyResolveAllPromises();
         });
         describe('when custom xenon attribution', () => {
           let filteredQuery = '';
           it('then has tags', (done) => {
             (async () => {
-              ImmediatelyResolvePromise(2);
               const tags = await retrieveSession('view-tags');
               expect(tags).toContain("email");
               expect(tags).toContain("2024");
@@ -3115,7 +3121,6 @@ describe('View SDK', () => {
           describe('when repeated', () => {
             it('then has same tags', (done) => {
               (async () => {
-                ImmediatelyResolvePromise(2);
                 const tags = await retrieveSession('view-tags');
                 expect(tags).toContain("email");
                 expect(tags).toContain("2024");
@@ -3124,7 +3129,6 @@ describe('View SDK', () => {
             });
             it('then has attribution', (done) => {
               (async () => {
-                ImmediatelyResolvePromise(2);
                 const attribution = await retrieveSession('view-attribution');
                 expect(attribution).toEqual({leadSource: 'email', leadCampaign: '2024', leadGuid: null});
                 done();
@@ -3132,9 +3136,7 @@ describe('View SDK', () => {
             })
             beforeEach((done) => {
               (async () => {
-                ImmediatelyResolvePromise(3);
                 await resetSession('view-attribution');
-                ImmediatelyResolvePromise(4);
                 await unit.autodiscoverLeadFrom('?xenonSrc=email&xenonId=2024');
                 done();
               })();
@@ -3142,10 +3144,28 @@ describe('View SDK', () => {
           });
           beforeEach((done) => {
             (async () => {
-              MockPromises.reset();
-              ImmediatelyResolvePromise(11);
               countResolvePromise({"result": "success"});
               filteredQuery = await unit.autodiscoverLeadFrom('?xenonSrc=email&xenonId=2024');
+              done();
+            })();
+          });
+        });
+        describe('when xenon end user id passed', () => {
+          let filteredQuery = '';
+          it('then has expected ID', (done) => {
+            (async () => {
+              const euid = await unit.id();
+              expect(euid).toEqual("1234-5678");
+              done();
+            })();
+          });
+          it('then filters appropriately', () => {
+            expect(filteredQuery).toEqual("");
+          });
+          beforeEach((done) => {
+            (async () => {
+              countResolvePromise({"result": "success"});
+              filteredQuery = await unit.autodiscoverLeadFrom('?xenon_euid=1234-5678');
               done();
             })();
           });
@@ -3154,7 +3174,6 @@ describe('View SDK', () => {
           let filteredQuery = '';
           it('then has tags', (done) => {
             (async () => {
-              ImmediatelyResolvePromise(2);
               const tags = await retrieveSession('view-tags');
               expect(tags).toContain("email");
               done();
@@ -3165,8 +3184,6 @@ describe('View SDK', () => {
           });
           beforeEach((done) => {
             (async () => {
-              MockPromises.reset();
-              ImmediatelyResolvePromise(11);
               countResolvePromise({"result": "success"});
               filteredQuery = await unit.autodiscoverLeadFrom('?xenonSrc=email');
               done();
@@ -3177,7 +3194,6 @@ describe('View SDK', () => {
           let filteredQuery = '';
           it('then has tags', (done) => {
             (async () => {
-              ImmediatelyResolvePromise(2);
               const tags = await retrieveSession('view-tags');
               expect(tags).toContain("Cerebro");
               expect(tags).toContain("2024");
@@ -3189,8 +3205,6 @@ describe('View SDK', () => {
           });
           beforeEach((done) => {
             (async () => {
-              MockPromises.reset();
-              ImmediatelyResolvePromise(11);
               countResolvePromise({"result": "success"});
               filteredQuery = await unit.autodiscoverLeadFrom('?cr_campaignid=2024');
               done();
@@ -3199,7 +3213,6 @@ describe('View SDK', () => {
           describe('when duplicate added', () => {
             it('then has tags', (done) => {
               (async () => {
-                ImmediatelyResolvePromise(2);
                 const tags = await retrieveSession('view-tags');
                 expect(tags).toContain("Cerebro");
                 expect(tags).toContain("2024");
@@ -3211,7 +3224,6 @@ describe('View SDK', () => {
             });
             beforeEach((done) => {
               (async () => {
-                ImmediatelyResolvePromise(3);
                 countResolvePromise({"result": "success"});
                 filteredQuery = await unit.autodiscoverLeadFrom('?cr_campaignid=2024');
                 done();
@@ -3223,7 +3235,6 @@ describe('View SDK', () => {
           let filteredQuery = '';
           it('then has tags', (done) => {
             (async () => {
-              ImmediatelyResolvePromise(2);
               const tags = await retrieveSession('view-tags');
               expect(tags).toContain("Klaviyo");
               expect(tags).toContain("2024");
@@ -3235,8 +3246,6 @@ describe('View SDK', () => {
           });
           beforeEach((done) => {
             (async () => {
-              MockPromises.reset();
-              ImmediatelyResolvePromise(11);
               countResolvePromise({"result": "success"});
               filteredQuery = await unit.autodiscoverLeadFrom('?utm_source=klaviyo&utm_campaign=2024');
               done();
@@ -3247,7 +3256,6 @@ describe('View SDK', () => {
           let filteredQuery = '';
           it('then has tags', (done) => {
             (async () => {
-              ImmediatelyResolvePromise(2);
               const tags = await retrieveSession('view-tags');
               expect(tags).toContain("Klaviyo - email");
               expect(tags).toContain("2024");
@@ -3259,8 +3267,6 @@ describe('View SDK', () => {
           });
           beforeEach((done) => {
             (async () => {
-              MockPromises.reset();
-              ImmediatelyResolvePromise(11);
               countResolvePromise({"result": "success"});
               filteredQuery = await unit.autodiscoverLeadFrom('?utm_source=klaviyo&utm_campaign=2024&utm_medium=email');
               done();
@@ -3271,7 +3277,6 @@ describe('View SDK', () => {
           let filteredQuery = '';
           it('then has tags', (done) => {
             (async () => {
-              ImmediatelyResolvePromise(2);
               const tags = await retrieveSession('view-tags');
               expect(tags).toContain("Google Ad");
               expect(tags).toContain("2024");
@@ -3283,8 +3288,6 @@ describe('View SDK', () => {
           });
           beforeEach((done) => {
             (async () => {
-              MockPromises.reset();
-              ImmediatelyResolvePromise(11);
               countResolvePromise({"result": "success"});
               filteredQuery = await unit.autodiscoverLeadFrom('?g_campaignid=2024');
               done();
@@ -3295,7 +3298,6 @@ describe('View SDK', () => {
           let filteredQuery = '';
           it('then has tags', (done) => {
             (async () => {
-              ImmediatelyResolvePromise(2);
               const tags = await retrieveSession('view-tags');
               expect(tags).toContain("Share-a-sale");
               expect(tags).toContain("2024");
@@ -3307,7 +3309,6 @@ describe('View SDK', () => {
           });
           beforeEach((done) => {
             (async () => {
-              ImmediatelyResolvePromise(11);
               countResolvePromise({"result": "success"});
               filteredQuery = await unit.autodiscoverLeadFrom('?utm_source=shareasale&sscid=2024');
               done();
@@ -3318,7 +3319,6 @@ describe('View SDK', () => {
           let filteredQuery = '';
           it('then has tags', (done) => {
             (async () => {
-              ImmediatelyResolvePromise(2);
               const tags = await retrieveSession('view-tags');
               expect(tags).toContain("Share-a-sale");
               expect(tags).toContain("2024");
@@ -3330,8 +3330,6 @@ describe('View SDK', () => {
           });
           beforeEach((done) => {
             (async () => {
-              MockPromises.reset();
-              ImmediatelyResolvePromise(11);
               countResolvePromise({"result": "success"});
               filteredQuery = await unit.autodiscoverLeadFrom('?sscid=2024');
               done();
@@ -3342,7 +3340,6 @@ describe('View SDK', () => {
           let filteredQuery = '';
           it('then has tags', (done) => {
             (async () => {
-              ImmediatelyResolvePromise(2);
               const tags = await retrieveSession('view-tags');
               expect(tags).toContain("Google Organic");
               expect(tags).toContain("2024");
@@ -3354,8 +3351,6 @@ describe('View SDK', () => {
           });
           beforeEach((done) => {
             (async () => {
-              MockPromises.reset();
-              ImmediatelyResolvePromise(11);
               countResolvePromise({"result": "success"});
               filteredQuery = await unit.autodiscoverLeadFrom('?g_adtype=none&g_campaign=2024');
               done();
@@ -3366,7 +3361,6 @@ describe('View SDK', () => {
           let filteredQuery = '';
           it('then has tags', (done) => {
             (async () => {
-              ImmediatelyResolvePromise(2);
               const tags = await retrieveSession('view-tags');
               expect(tags).toContain("Google Paid Search");
               expect(tags).toContain("2024");
@@ -3378,7 +3372,6 @@ describe('View SDK', () => {
           });
           beforeEach((done) => {
             (async () => {
-              ImmediatelyResolvePromise(11);
               countResolvePromise({"result": "success"});
               filteredQuery = await unit.autodiscoverLeadFrom('?g_adtype=search&g_campaign=2024');
               done();
@@ -3389,7 +3382,6 @@ describe('View SDK', () => {
           let filteredQuery = '';
           it('then has tags', (done) => {
             (async () => {
-              ImmediatelyResolvePromise(2);
               const tags = await retrieveSession('view-tags');
               expect(tags).toContain("Facebook Ad");
               expect(tags).toContain("2024");
@@ -3401,8 +3393,6 @@ describe('View SDK', () => {
           });
           beforeEach((done) => {
             (async () => {
-              MockPromises.reset();
-              ImmediatelyResolvePromise(11);
               countResolvePromise({"result": "success"});
               filteredQuery = await unit.autodiscoverLeadFrom('?utm_source=facebook&utm_campaign=2024');
               done();
@@ -3413,7 +3403,6 @@ describe('View SDK', () => {
           let filteredQuery = '';
           it('then has tags', (done) => {
             (async () => {
-              ImmediatelyResolvePromise(2);
               const tags = await retrieveSession('view-tags');
               expect(tags).toContain("Email");
               expect(tags).toContain("2024");
@@ -3425,7 +3414,6 @@ describe('View SDK', () => {
           });
           beforeEach((done) => {
             (async () => {
-              ImmediatelyResolvePromise(11);
               countResolvePromise({"result": "success"});
               filteredQuery = await unit.autodiscoverLeadFrom('?utm_source=email-broadcast&utm_campaign=2024');
               done();
@@ -3436,7 +3424,6 @@ describe('View SDK', () => {
           let filteredQuery = '';
           it('then has tags', (done) => {
             (async () => {
-              ImmediatelyResolvePromise(2);
               const tags = await retrieveSession('view-tags');
               expect(tags).toContain("YouTube");
               expect(tags).toContain("2024");
@@ -3448,7 +3435,6 @@ describe('View SDK', () => {
           });
           beforeEach((done) => {
             (async () => {
-              ImmediatelyResolvePromise(11);
               countResolvePromise({"result": "success"});
               filteredQuery = await unit.autodiscoverLeadFrom('?utm_source=youtube&utm_campaign=2024');
               done();
@@ -3458,7 +3444,6 @@ describe('View SDK', () => {
         describe('when YouTube with previous variant', () => {
           it('then has tags', (done) => {
             (async () => {
-              ImmediatelyResolvePromise(2);
               const tags = await retrieveSession('view-tags');
               expect(tags).toContain("YouTube");
               expect(tags).toContain("2024");
@@ -3468,8 +3453,6 @@ describe('View SDK', () => {
           });
           beforeEach((done) => {
             (async () => {
-              MockPromises.reset();
-              ImmediatelyResolvePromise(20);
               countResolvePromise({"result": "success"});
               await unit.variant(['test'])
               await unit.autodiscoverLeadFrom('?utm_source=youtube&utm_campaign=2024');
@@ -3481,7 +3464,6 @@ describe('View SDK', () => {
           let filteredQuery = '';
           it('then has tags', (done) => {
             (async () => {
-              ImmediatelyResolvePromise(2);
               const tags = await retrieveSession('view-tags');
               expect(tags).toContain("instagram");
               expect(tags).toContain("2024");
@@ -3493,8 +3475,6 @@ describe('View SDK', () => {
           });
           beforeEach((done) => {
             (async () => {
-              MockPromises.reset();
-              ImmediatelyResolvePromise(11);
               countResolvePromise({"result": "success"});
               filteredQuery = await unit.autodiscoverLeadFrom('?utm_source=instagram&utm_campaign=2024');
               done();
@@ -3505,7 +3485,6 @@ describe('View SDK', () => {
           let filteredQuery = '';
           it('then has tags', (done) => {
             (async () => {
-              ImmediatelyResolvePromise(2);
               const tags = await retrieveSession('view-tags');
               expect(tags).toContain("Unattributed");
               done();
@@ -3530,15 +3509,11 @@ describe('View SDK', () => {
           });
           beforeEach((done) => {
             (async () => {
-              MockPromises.reset();
-              ImmediatelyResolvePromise(11);
               countResolvePromise({"result": "success"});
               await unit.autodiscoverLeadFrom('');
-              ImmediatelyResolvePromise(6);
               countResolvePromise({"result": "success"});
               await unit.autodiscoverLeadFrom('');
               await resetSession('view-attribution');
-              ImmediatelyResolvePromise(7);
               countResolvePromise({"result": "success"});
               filteredQuery = await unit.autodiscoverLeadFrom('');
               done();
@@ -3549,7 +3524,6 @@ describe('View SDK', () => {
           let filteredQuery = '';
           it('then has tags', (done) => {
             (async () => {
-              ImmediatelyResolvePromise(2);
               const tags = await retrieveSession('view-tags');
               expect(tags).toContain("Unattributed");
               done();
@@ -3560,8 +3534,6 @@ describe('View SDK', () => {
           });
           beforeEach((done) => {
             (async () => {
-              MockPromises.reset();
-              ImmediatelyResolvePromise(11);
               countResolvePromise({"result": "success"});
               filteredQuery = await unit.autodiscoverLeadFrom('?hello=world');
               done();
@@ -3571,7 +3543,6 @@ describe('View SDK', () => {
         describe('when None previous variant', () => {
           it('then has tags', (done) => {
             (async () => {
-              ImmediatelyResolvePromise(2);
               const tags = await retrieveSession('view-tags');
               expect(tags).toContain('test', "unattributed");
               done();
@@ -3579,8 +3550,6 @@ describe('View SDK', () => {
           });
           beforeEach((done) => {
             (async () => {
-              MockPromises.reset();
-              ImmediatelyResolvePromise(20);
               countResolvePromise({"result": "success"});
               await unit.variant(['test'])
               await unit.autodiscoverLeadFrom('');
@@ -3591,7 +3560,6 @@ describe('View SDK', () => {
         describe('when other query and previous variant', () => {
           it('then has tags', (done) => {
             (async () => {
-              ImmediatelyResolvePromise(2);
               const tags = await retrieveSession('view-tags');
               expect(tags).toContain('test', "unattributed");
               expect(tags).not.toContain(null);
@@ -3600,8 +3568,6 @@ describe('View SDK', () => {
           });
           beforeEach((done) => {
             (async () => {
-              MockPromises.reset();
-              ImmediatelyResolvePromise(20);
               countResolvePromise({"result": "success"});
               await unit.variant(['test'])
               await unit.autodiscoverLeadFrom('?abc=123');
@@ -3612,7 +3578,7 @@ describe('View SDK', () => {
         afterEach(() => {
           localStorage.clear();
           sessionStorage.clear();
-          ImmediatelyResolvePromise(0);
+          ResetImmediatelyResolvePromises();
         });
       });
       // API Communication tests
@@ -4623,7 +4589,6 @@ describe('View SDK', () => {
           });
           beforeEach((done) => {
             (async () => {
-              MockPromises.reset();
               countResolvePromise({"result": "success"});
               await countPromise;
               UnblockPromises();

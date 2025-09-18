@@ -17,6 +17,16 @@ export function ImmediatelyResolvePromise(number) {
   MockPromises.immediateResolve(number);
 }
 
+export function ImmediatelyResolveAllPromises() {
+  jasmine.clock().tick(1);
+  MockPromises.immediateResolveAll();
+}
+
+export function ResetImmediatelyResolvePromises() {
+  jasmine.clock().tick(1);
+  MockPromises.immediateResolveDisabled();
+}
+
 beforeAll(() => {
   MockFetch.install();
 });
