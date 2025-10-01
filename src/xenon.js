@@ -36,7 +36,7 @@ export class _Xenon {
   }
 
   version() {
-    return 'v0.2.6';
+    return 'v0.2.7';
   }
 
   async init(apiKey, apiUrl = 'https://app.xenonview.com', onApiKeyFailure = null) {
@@ -1155,6 +1155,7 @@ export class _Xenon {
     platform.operatingSystemName = operatingSystemName;
     platform.operatingSystemVersion = operatingSystemVersion;
     await this.platform(version, deviceModel, operatingSystemName, operatingSystemVersion);
+    return platform;
   }
 }
 

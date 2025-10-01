@@ -2471,7 +2471,7 @@ var Xenon = (function () {
      }
 
      version() {
-       return 'v0.2.6';
+       return 'v0.2.7';
      }
 
      async init(apiKey, apiUrl = 'https://app.xenonview.com', onApiKeyFailure = null) {
@@ -3574,13 +3574,23 @@ var Xenon = (function () {
      }
 
      async setPlatformByUserAgent(userAgent, version){
+       const platform = {
+         softwareVersion: version,
+         deviceModel: null,
+         operatingSystemName: null,
+         operatingSystemVersion: null
+       };
        const userAgentParser = new UAParser(userAgent);
        const browser = userAgentParser.getBrowser();
        const deviceModel = browser.name + ":" + browser.version;
        const os = userAgentParser.getOS();
        const operatingSystemName = os.name;
        const operatingSystemVersion = os.version;
+       platform.deviceModel = deviceModel;
+       platform.operatingSystemName = operatingSystemName;
+       platform.operatingSystemVersion = operatingSystemVersion;
        await this.platform(version, deviceModel, operatingSystemName, operatingSystemVersion);
+       return platform;
      }
    }
 
