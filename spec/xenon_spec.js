@@ -3211,7 +3211,27 @@ describe('View SDK', () => {
             })();
           });
         });
-        /* codex add test here */
+        describe('when UTM source without campaign', () => {
+          let filteredQuery = '';
+          it('then has tags', (done) => {
+            (async () => {
+              const tags = await retrieveSession('view-tags');
+              expect(tags).toContain("bing");
+              expect(tags).toContain("No Campaign");
+              done();
+            })();
+          });
+          it('then filters appropriately', () => {
+            expect(filteredQuery).toEqual("?utm_source=bing");
+          });
+          beforeEach((done) => {
+            (async () => {
+              countResolvePromise({"result": "success"});
+              filteredQuery = await unit.autodiscoverLeadFrom('?utm_source=bing');
+              done();
+            })();
+          });
+        });
         describe('when Cerebro attribution', () => {
           let filteredQuery = '';
           it('then has tags', (done) => {
