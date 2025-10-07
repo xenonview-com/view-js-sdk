@@ -3190,6 +3190,28 @@ describe('View SDK', () => {
             })();
           });
         });
+        describe('when Google Merchant', () => {
+          let filteredQuery = '';
+          it('then has tags', (done) => {
+            (async () => {
+              const tags = await retrieveSession('view-tags');
+              expect(tags).toContain("Google Merchant");
+              expect(tags).toContain("2024");
+              done();
+            })();
+          });
+          it('then filters appropriately', () => {
+            expect(filteredQuery).toEqual("?srsltid=2024");
+          });
+          beforeEach((done) => {
+            (async () => {
+              countResolvePromise({"result": "success"});
+              filteredQuery = await unit.autodiscoverLeadFrom('?srsltid=2024');
+              done();
+            })();
+          });
+        });
+        /* codex add test here */
         describe('when Cerebro attribution', () => {
           let filteredQuery = '';
           it('then has tags', (done) => {
