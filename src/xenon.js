@@ -1072,8 +1072,14 @@ export class _Xenon {
     if (params.has('utm_source') && params.get('utm_source').toLowerCase() === 'youtube') {
       return ['YouTube', params.get('utm_campaign')]
     }
-    if (params.has('utm_source')) {
+    if (params.has('srsltid')) {
+      return ['Google Merchant', params.get('srsltid')]
+    }
+    if (params.has('utm_source') && params.has('utm_campaign')) {
       return [params.get('utm_source'), params.get('utm_campaign')]
+    }
+    if (params.has('utm_source')) {
+      return [params.get('utm_source'), "No Campaign"];
     }
     return ['Unattributed']
   }
