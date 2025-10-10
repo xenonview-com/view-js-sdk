@@ -1035,43 +1035,43 @@ export class _Xenon {
   }
 
   async decipherParamsPerLibrary(params) {
-    const fallbackIdentifier = (value) => value || 'No Campaign';
+    const fallbackIdentifier = (key) => params.has(key) ? (params.get(key) || 'No Campaign') : 'No Campaign';
     if (params.has('xenon_euid')) {
       await this.id(params.get('xenon_euid'))
     }
     if (params.has('xenonSrc')) {
-      return [params.get('xenonSrc'), fallbackIdentifier(params.get('xenonId'))];
+      return [params.get('xenonSrc'), fallbackIdentifier('xenonId')];
     }
     if (params.has('cr_campaignid')) {
       return ['Cerebro', params.get('cr_campaignid')];
     }
     if (params.has('utm_source') && params.get('utm_source').toLowerCase() === 'klaviyo') {
       const source = 'Klaviyo' + (params.has('utm_medium') ? ' - ' + params.get('utm_medium') : '');
-      return [source, fallbackIdentifier(params.get('utm_campaign'))];
+      return [source, fallbackIdentifier('utm_campaign')];
     }
     if (params.has('g_campaignid')) {
       return ['Google Ad', params.get('g_campaignid')]
     }
     if (params.has('utm_source') && params.get('utm_source').toLowerCase() === 'shareasale') {
-      return ['Share-a-sale', fallbackIdentifier(params.get('sscid'))]
+      return ['Share-a-sale', fallbackIdentifier('sscid')]
     }
     if (params.has('sscid')) {
       return ['Share-a-sale', params.get('sscid')]
     }
     if (params.has('g_adtype') && params.get('g_adtype') === 'none') {
-      return ['Google Organic', fallbackIdentifier(params.get('g_campaign'))]
+      return ['Google Organic', fallbackIdentifier('g_campaign')]
     }
     if (params.has('g_adtype') && params.get('g_adtype') === 'search') {
-      return ['Google Paid Search', fallbackIdentifier(params.get('g_campaign'))]
+      return ['Google Paid Search', fallbackIdentifier('g_campaign')]
     }
     if (params.has('utm_source') && params.get('utm_source') === 'facebook') {
-      return ['Facebook Ad', fallbackIdentifier(params.get('utm_campaign'))]
+      return ['Facebook Ad', fallbackIdentifier('utm_campaign')]
     }
     if (params.has('utm_source') && params.get('utm_source').toLowerCase() === 'email-broadcast') {
-      return ['Email', fallbackIdentifier(params.get('utm_campaign'))]
+      return ['Email', fallbackIdentifier('utm_campaign')]
     }
     if (params.has('utm_source') && params.get('utm_source').toLowerCase() === 'youtube') {
-      return ['YouTube', fallbackIdentifier(params.get('utm_campaign'))]
+      return ['YouTube', fallbackIdentifier('utm_campaign')]
     }
     if (params.has('srsltid')) {
       return ['Google Merchant', params.get('srsltid')]
