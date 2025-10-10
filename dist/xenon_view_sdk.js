@@ -2471,7 +2471,7 @@ var Xenon = (function () {
      }
 
      version() {
-       return 'v0.2.8';
+       return 'v0.2.9';
      }
 
      async init(apiKey, apiUrl = 'https://app.xenonview.com', onApiKeyFailure = null) {
@@ -3470,42 +3470,43 @@ var Xenon = (function () {
      }
 
      async decipherParamsPerLibrary(params) {
+       const checkForCampaign = (key) => params.has(key) ? (params.get(key) || 'No Campaign') : 'No Campaign';
        if (params.has('xenon_euid')) {
          await this.id(params.get('xenon_euid'));
        }
        if (params.has('xenonSrc')) {
-         return [params.get('xenonSrc'), params.get('xenonId')];
+         return [params.get('xenonSrc'), checkForCampaign('xenonId')];
        }
        if (params.has('cr_campaignid')) {
          return ['Cerebro', params.get('cr_campaignid')];
        }
        if (params.has('utm_source') && params.get('utm_source').toLowerCase() === 'klaviyo') {
          const source = 'Klaviyo' + (params.has('utm_medium') ? ' - ' + params.get('utm_medium') : '');
-         return [source, params.get('utm_campaign')];
+         return [source, checkForCampaign('utm_campaign')];
        }
        if (params.has('g_campaignid')) {
          return ['Google Ad', params.get('g_campaignid')]
        }
        if (params.has('utm_source') && params.get('utm_source').toLowerCase() === 'shareasale') {
-         return ['Share-a-sale', params.get('sscid')]
+         return ['Share-a-sale', checkForCampaign('sscid')]
        }
        if (params.has('sscid')) {
          return ['Share-a-sale', params.get('sscid')]
        }
        if (params.has('g_adtype') && params.get('g_adtype') === 'none') {
-         return ['Google Organic', params.get('g_campaign')]
+         return ['Google Organic', checkForCampaign('g_campaign')]
        }
        if (params.has('g_adtype') && params.get('g_adtype') === 'search') {
-         return ['Google Paid Search', params.get('g_campaign')]
+         return ['Google Paid Search', checkForCampaign('g_campaign')]
        }
        if (params.has('utm_source') && params.get('utm_source') === 'facebook') {
-         return ['Facebook Ad', params.get('utm_campaign')]
+         return ['Facebook Ad', checkForCampaign('utm_campaign')]
        }
        if (params.has('utm_source') && params.get('utm_source').toLowerCase() === 'email-broadcast') {
-         return ['Email', params.get('utm_campaign')]
+         return ['Email', checkForCampaign('utm_campaign')]
        }
        if (params.has('utm_source') && params.get('utm_source').toLowerCase() === 'youtube') {
-         return ['YouTube', params.get('utm_campaign')]
+         return ['YouTube', checkForCampaign('utm_campaign')]
        }
        if (params.has('srsltid')) {
          return ['Google Merchant', params.get('srsltid')]
