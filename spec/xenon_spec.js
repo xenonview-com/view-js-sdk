@@ -3176,6 +3176,14 @@ describe('View SDK', () => {
             (async () => {
               const tags = await retrieveSession('view-tags');
               expect(tags).toContain("email");
+              expect(tags).toContain("No Campaign");
+              done();
+            })();
+          });
+          it('then stores fallback attribution', (done) => {
+            (async () => {
+              const attribution = await retrieveSession('view-attribution');
+              expect(attribution).toEqual({leadSource: 'email', leadCampaign: 'No Campaign', leadGuid: null});
               done();
             })();
           });
@@ -3315,6 +3323,34 @@ describe('View SDK', () => {
             })();
           });
         });
+        describe('when Klaviyo attribution without campaign', () => {
+          let filteredQuery = '';
+          it('then uses fallback tags', (done) => {
+            (async () => {
+              const tags = await retrieveSession('view-tags');
+              expect(tags).toContain("Klaviyo");
+              expect(tags).toContain("No Campaign");
+              done();
+            })();
+          });
+          it('then stores fallback attribution', (done) => {
+            (async () => {
+              const attribution = await retrieveSession('view-attribution');
+              expect(attribution).toEqual({leadSource: 'Klaviyo', leadCampaign: 'No Campaign', leadGuid: null});
+              done();
+            })();
+          });
+          it('then filters appropriately', () => {
+            expect(filteredQuery).toEqual("?utm_source=klaviyo");
+          });
+          beforeEach((done) => {
+            (async () => {
+              countResolvePromise({"result": "success"});
+              filteredQuery = await unit.autodiscoverLeadFrom('?utm_source=klaviyo');
+              done();
+            })();
+          });
+        });
         describe('when Google Ad', () => {
           let filteredQuery = '';
           it('then has tags', (done) => {
@@ -3378,6 +3414,34 @@ describe('View SDK', () => {
             })();
           });
         });
+        describe('when Share-a-sale without campaign', () => {
+          let filteredQuery = '';
+          it('then uses fallback tags', (done) => {
+            (async () => {
+              const tags = await retrieveSession('view-tags');
+              expect(tags).toContain("Share-a-sale");
+              expect(tags).toContain("No Campaign");
+              done();
+            })();
+          });
+          it('then stores fallback attribution', (done) => {
+            (async () => {
+              const attribution = await retrieveSession('view-attribution');
+              expect(attribution).toEqual({leadSource: 'Share-a-sale', leadCampaign: 'No Campaign', leadGuid: null});
+              done();
+            })();
+          });
+          it('then filters appropriately', () => {
+            expect(filteredQuery).toEqual("?utm_source=shareasale");
+          });
+          beforeEach((done) => {
+            (async () => {
+              countResolvePromise({"result": "success"});
+              filteredQuery = await unit.autodiscoverLeadFrom('?utm_source=shareasale');
+              done();
+            })();
+          });
+        });
         describe('when Google Organic', () => {
           let filteredQuery = '';
           it('then has tags', (done) => {
@@ -3395,6 +3459,34 @@ describe('View SDK', () => {
             (async () => {
               countResolvePromise({"result": "success"});
               filteredQuery = await unit.autodiscoverLeadFrom('?g_adtype=none&g_campaign=2024');
+              done();
+            })();
+          });
+        });
+        describe('when Google Organic without campaign', () => {
+          let filteredQuery = '';
+          it('then uses fallback tags', (done) => {
+            (async () => {
+              const tags = await retrieveSession('view-tags');
+              expect(tags).toContain("Google Organic");
+              expect(tags).toContain("No Campaign");
+              done();
+            })();
+          });
+          it('then stores fallback attribution', (done) => {
+            (async () => {
+              const attribution = await retrieveSession('view-attribution');
+              expect(attribution).toEqual({leadSource: 'Google Organic', leadCampaign: 'No Campaign', leadGuid: null});
+              done();
+            })();
+          });
+          it('then filters appropriately', () => {
+            expect(filteredQuery).toEqual("?g_adtype=none");
+          });
+          beforeEach((done) => {
+            (async () => {
+              countResolvePromise({"result": "success"});
+              filteredQuery = await unit.autodiscoverLeadFrom('?g_adtype=none');
               done();
             })();
           });
@@ -3420,6 +3512,34 @@ describe('View SDK', () => {
             })();
           });
         });
+        describe('when Google Paid Search without campaign', () => {
+          let filteredQuery = '';
+          it('then uses fallback tags', (done) => {
+            (async () => {
+              const tags = await retrieveSession('view-tags');
+              expect(tags).toContain("Google Paid Search");
+              expect(tags).toContain("No Campaign");
+              done();
+            })();
+          });
+          it('then stores fallback attribution', (done) => {
+            (async () => {
+              const attribution = await retrieveSession('view-attribution');
+              expect(attribution).toEqual({leadSource: 'Google Paid Search', leadCampaign: 'No Campaign', leadGuid: null});
+              done();
+            })();
+          });
+          it('then filters appropriately', () => {
+            expect(filteredQuery).toEqual("?g_adtype=search");
+          });
+          beforeEach((done) => {
+            (async () => {
+              countResolvePromise({"result": "success"});
+              filteredQuery = await unit.autodiscoverLeadFrom('?g_adtype=search');
+              done();
+            })();
+          });
+        });
         describe('when Facebook Ad', () => {
           let filteredQuery = '';
           it('then has tags', (done) => {
@@ -3437,6 +3557,34 @@ describe('View SDK', () => {
             (async () => {
               countResolvePromise({"result": "success"});
               filteredQuery = await unit.autodiscoverLeadFrom('?utm_source=facebook&utm_campaign=2024');
+              done();
+            })();
+          });
+        });
+        describe('when Facebook Ad without campaign', () => {
+          let filteredQuery = '';
+          it('then uses fallback tags', (done) => {
+            (async () => {
+              const tags = await retrieveSession('view-tags');
+              expect(tags).toContain("Facebook Ad");
+              expect(tags).toContain("No Campaign");
+              done();
+            })();
+          });
+          it('then stores fallback attribution', (done) => {
+            (async () => {
+              const attribution = await retrieveSession('view-attribution');
+              expect(attribution).toEqual({leadSource: 'Facebook Ad', leadCampaign: 'No Campaign', leadGuid: null});
+              done();
+            })();
+          });
+          it('then filters appropriately', () => {
+            expect(filteredQuery).toEqual("?utm_source=facebook");
+          });
+          beforeEach((done) => {
+            (async () => {
+              countResolvePromise({"result": "success"});
+              filteredQuery = await unit.autodiscoverLeadFrom('?utm_source=facebook');
               done();
             })();
           });
@@ -3462,6 +3610,34 @@ describe('View SDK', () => {
             })();
           });
         });
+        describe('when Email without campaign', () => {
+          let filteredQuery = '';
+          it('then uses fallback tags', (done) => {
+            (async () => {
+              const tags = await retrieveSession('view-tags');
+              expect(tags).toContain("Email");
+              expect(tags).toContain("No Campaign");
+              done();
+            })();
+          });
+          it('then stores fallback attribution', (done) => {
+            (async () => {
+              const attribution = await retrieveSession('view-attribution');
+              expect(attribution).toEqual({leadSource: 'Email', leadCampaign: 'No Campaign', leadGuid: null});
+              done();
+            })();
+          });
+          it('then filters appropriately', () => {
+            expect(filteredQuery).toEqual("?utm_source=email-broadcast");
+          });
+          beforeEach((done) => {
+            (async () => {
+              countResolvePromise({"result": "success"});
+              filteredQuery = await unit.autodiscoverLeadFrom('?utm_source=email-broadcast');
+              done();
+            })();
+          });
+        });
         describe('when YouTube', () => {
           let filteredQuery = '';
           it('then has tags', (done) => {
@@ -3479,6 +3655,34 @@ describe('View SDK', () => {
             (async () => {
               countResolvePromise({"result": "success"});
               filteredQuery = await unit.autodiscoverLeadFrom('?utm_source=youtube&utm_campaign=2024');
+              done();
+            })();
+          });
+        });
+        describe('when YouTube without campaign', () => {
+          let filteredQuery = '';
+          it('then uses fallback tags', (done) => {
+            (async () => {
+              const tags = await retrieveSession('view-tags');
+              expect(tags).toContain("YouTube");
+              expect(tags).toContain("No Campaign");
+              done();
+            })();
+          });
+          it('then stores fallback attribution', (done) => {
+            (async () => {
+              const attribution = await retrieveSession('view-attribution');
+              expect(attribution).toEqual({leadSource: 'YouTube', leadCampaign: 'No Campaign', leadGuid: null});
+              done();
+            })();
+          });
+          it('then filters appropriately', () => {
+            expect(filteredQuery).toEqual("?utm_source=youtube");
+          });
+          beforeEach((done) => {
+            (async () => {
+              countResolvePromise({"result": "success"});
+              filteredQuery = await unit.autodiscoverLeadFrom('?utm_source=youtube');
               done();
             })();
           });
