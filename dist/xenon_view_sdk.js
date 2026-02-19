@@ -2471,7 +2471,7 @@ var Xenon = (function () {
      }
 
      version() {
-       return 'v0.2.9';
+       return 'v0.2.10';
      }
 
      async init(apiKey, apiUrl = 'https://app.xenonview.com', onApiKeyFailure = null) {
@@ -3510,6 +3510,9 @@ var Xenon = (function () {
        }
        if (params.has('srsltid')) {
          return ['Google Merchant', params.get('srsltid')]
+       }
+       if (params.has('avad')) {
+         return ['Avantlink', checkForCampaign('avad')]
        }
        if (params.has('utm_source') && params.has('utm_campaign')) {
          return [params.get('utm_source'), params.get('utm_campaign')]

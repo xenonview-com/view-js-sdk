@@ -3219,6 +3219,55 @@ describe('View SDK', () => {
             })();
           });
         });
+        describe('when Avantlink attribution', () => {
+          let filteredQuery = '';
+          it('then has tags', (done) => {
+            (async () => {
+              const tags = await retrieveSession('view-tags');
+              expect(tags).toContain("Avantlink");
+              expect(tags).toContain("380149_a470dd50d");
+              done();
+            })();
+          });
+          it('then filters appropriately', () => {
+            expect(filteredQuery).toEqual("?avad=380149_a470dd50d");
+          });
+          beforeEach((done) => {
+            (async () => {
+              countResolvePromise({"result": "success"});
+              filteredQuery = await unit.autodiscoverLeadFrom('?avad=380149_a470dd50d');
+              done();
+            })();
+          });
+        });
+        describe('when Avantlink attribution without campaign', () => {
+          let filteredQuery = '';
+          it('then uses fallback tags', (done) => {
+            (async () => {
+              const tags = await retrieveSession('view-tags');
+              expect(tags).toContain("Avantlink");
+              expect(tags).toContain("No Campaign");
+              done();
+            })();
+          });
+          it('then stores fallback attribution', (done) => {
+            (async () => {
+              const attribution = await retrieveSession('view-attribution');
+              expect(attribution).toEqual({leadSource: 'Avantlink', leadCampaign: 'No Campaign', leadGuid: null});
+              done();
+            })();
+          });
+          it('then filters appropriately', () => {
+            expect(filteredQuery).toEqual("?avad=");
+          });
+          beforeEach((done) => {
+            (async () => {
+              countResolvePromise({"result": "success"});
+              filteredQuery = await unit.autodiscoverLeadFrom('?avad=');
+              done();
+            })();
+          });
+        });
         describe('when UTM source without campaign', () => {
           let filteredQuery = '';
           it('then has tags', (done) => {
