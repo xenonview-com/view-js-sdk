@@ -1,4 +1,6 @@
 declare module 'xenon-view-sdk' {
+    export type ProductIdentifiers = string | Array<string>;
+    export type ProductMetadata = string | Array<string>;
     export interface XenonInterface {
         version: () => string;
         init: (apiKey: string, apiUrl?: string, onApiKeyFailure?: Function) => Promise<void>;
@@ -32,19 +34,19 @@ declare module 'xenon-view-sdk' {
         adIgnored: (provider: string, id?: string, price?: string) => Promise<void>;
         referral: (kind: string, detail?: string) => Promise<void>;
         referralDeclined: (kind: string, detail?: string) => Promise<void>;
-        productAddedToCart: (product: string) => Promise<void>;
-        productNotAddedToCart: (product: string) => Promise<void>;
-        upsold: (product: string, price?: string) => Promise<void>;
-        upsellDismissed: (product: string, price?: string) => Promise<void>;
+        productAddedToCart: (product: string, price?: string | number | null, productName?: string | null, brand?: string | null) => Promise<void>;
+        productNotAddedToCart: (product: string, productName?: string | null, brand?: string | null) => Promise<void>;
+        upsold: (product: string, price?: string | number | null, productName?: string | null, brand?: string | null) => Promise<void>;
+        upsellDismissed: (product: string, price?: string | number | null, productName?: string | null, brand?: string | null) => Promise<void>;
         checkOut: () => Promise<void>;
         checkoutCanceled: () => Promise<void>;
-        productRemoved: (product: string) => Promise<void>;
-        purchase: (SKUs: Array<string>, price?: string) => Promise<void>;
-        purchaseCancel: (SKUs: Array<string>, price?: string) => Promise<void>;
+        productRemoved: (product: string, productName?: string | null, brand?: string | null) => Promise<void>;
+        purchase: (SKUs: ProductIdentifiers, price?: string | number | null, discount?: string | number | null, shipping?: string | number | null, member?: string | null, productNames?: ProductMetadata | null, brands?: ProductMetadata | null) => Promise<void>;
+        purchaseCancel: (SKUs?: ProductIdentifiers | null, price?: string | number | null, productNames?: ProductMetadata | null, brands?: ProductMetadata | null) => Promise<void>;
         promiseFulfilled: () => Promise<void>;
         promiseUnfulfilled: () => Promise<void>;
-        productKept: (product: string) => Promise<void>;
-        productReturned: (product: string) => Promise<void>;
+        productKept: (product: string, productName?: string | null, brand?: string | null) => Promise<void>;
+        productReturned: (product: string, productName?: string | null, brand?: string | null) => Promise<void>;
         // Stock Milestones:
         featureAttempted: (name: string, detail?: string) => Promise<void>;
         featureCompleted: (name: string, detail?: string) => Promise<void>;
@@ -60,7 +62,7 @@ declare module 'xenon-view-sdk' {
         // Custom Milestones
         milestone: (category: string, operation: string, name: string, detail: string) => Promise<void>;
         // API Communication:
-        count: (outcome: string, value: number, surfaceErrors?: boolean) => Promise<void>;
+        count: (outcome: string, value?: number, skus?: ProductIdentifiers | null, surfaceErrors?: boolean, productNames?: ProductMetadata | null, brands?: ProductMetadata | null) => Promise<void>;
         commit: (surfaceErrors?: boolean) => Promise<object>;
         heartbeat: (surfaceErrors?: boolean) => Promise<object>;
         deanonymize: (person: object) => Promise<object>;

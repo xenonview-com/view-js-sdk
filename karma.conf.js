@@ -110,6 +110,7 @@ module.exports = function (config) {
       //   }
       // },
 
+      thresholds: {global: {statements: 100, branches: 100, functions: 100, lines: 100}},
       verbose: true // output config used by istanbul for debugging
     },
 

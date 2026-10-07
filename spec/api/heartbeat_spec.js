@@ -9,7 +9,8 @@ describe('HeartbeatApi', () => {
   const apiUrl = 'https://app.xenonview.com';
   let dataWithoutWatchdog = {id: 'somevalue', token: "<testToken>", timestamp: 0.1, tags: [], platform: {}};
   let dataWithoutJourney = {...dataWithoutWatchdog, watchdog: {}};
-  let dataWithJourney = {...dataWithoutJourney, journey: ['step']};
+  const product = {skus: ['sku-1'], productNames: ['Laptop'], brands: ['Dell']};
+  let dataWithJourney = {...dataWithoutJourney, journey: [product]};
   beforeEach((done) => {
     (async () => {
       MockPromises.reset();
@@ -28,10 +29,14 @@ describe('HeartbeatApi', () => {
   it('requests journey', () => {
     expect(`${apiUrl}/heartbeat`).toHaveBeenRequested();
   });
+  it('includes SKU metadata in the HTTP request body', () => {
+    const request = jasmine.Ajax.requests.mostRecent();
+    expect(JSON.parse(request.params).parameters.journey).toEqual([product]);
+  });
   it('creates parameters with journey', () => {
     expect(subject.params(dataWithJourney)).toEqual({
       uuid: 'somevalue',
-      journey: ['step'],
+      journey: [product],
       tags: [],
       platform: {},
       watchdog: {},

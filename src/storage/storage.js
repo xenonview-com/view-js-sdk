@@ -27,19 +27,47 @@ class ShopifyStorage{
   }
 }
 
-function getLocalStorage(){
-  if (typeof window != 'undefined' && window !== undefined && window && window.localStorage) return window.localStorage;
-  const browser_ = typeof self != 'undefined' && self.browser ? self.browser : null;
-  if (typeof browser_ != 'undefined' && browser_ !== undefined && browser_ && browser_.localStorage)
-      return new ShopifyStorage(browser_.localStorage);
-  return _localStorage;
+export class StorageProvider {
+  static browser(environment) {
+    if (typeof environment === 'undefined') return null;
+    return environment;
+  }
+
+  static shopify(environment) {
+    if (typeof environment === 'undefined') return null;
+    return environment.browser;
+  }
+
+  static browserStorage(name, browser = StorageProvider.browser(globalThis.window)) {
+    if (!browser) return null;
+    return browser[name];
+  }
+
+  static shopifyStorage(name) {
+    const browser = StorageProvider.shopify(globalThis.self);
+    if (!browser) return null;
+    return browser[name];
+  }
+
+  static get(name, fallback) {
+    const browser = StorageProvider.browserStorage(name);
+    if (browser) return browser;
+    return StorageProvider.wrapShopify(name, fallback);
+  }
+
+  static wrapShopify(name, fallback) {
+    const shopify = StorageProvider.shopifyStorage(name);
+    if (shopify) return new ShopifyStorage(shopify);
+    return fallback;
+  }
 }
-function getSessionStorage(){
-  if (typeof window != 'undefined' && window !== undefined && window && window.sessionStorage) return window.sessionStorage;
-  const browser_ = typeof self != 'undefined' && self.browser ? self.browser : null;
-  if (typeof browser_ != 'undefined' && browser_ !== undefined && browser_ && browser_.sessionStorage)
-    return new ShopifyStorage(browser_.sessionStorage);
-  return _sessionStorage;
+
+function getLocalStorage() {
+  return StorageProvider.get('localStorage', _localStorage);
+}
+
+function getSessionStorage() {
+  return StorageProvider.get('sessionStorage', _sessionStorage);
 }
 
 export async function storeLocal(name, objectToStore) {

@@ -1,6 +1,7 @@
 require('jasmine-ajax');
 const Bluebird = require('bluebird');
 const MockPromises = require("mock-promises");
+const qs = require('querystring');
 const MockFetch = require("../api/fetch/mock_fetch");
 
 Bluebird.prototype.catch = function(...args) {
@@ -8,23 +9,73 @@ Bluebird.prototype.catch = function(...args) {
 };
 global.Promise = Bluebird;
 
+class SettledPromises {
+  static enabled = false;
+
+  static settled(promise) {
+    if (promise._returnedMockPromise) return SettledPromises.settled(promise._returnedMockPromise);
+    return [promise.isFulfilled(), promise.isRejected()].some(Boolean);
+  }
+
+  static execute(promise) {
+    if (SettledPromises.enabled) SettledPromises.executeSettled(promise);
+  }
+
+  static executeSettled(promise) {
+    if (SettledPromises.settled(promise)) MockPromises.executeForPromise(promise);
+  }
+
+  static install() {
+    const mockedThen = global.Promise.prototype.then;
+    global.Promise.prototype.then = function(...args) {
+      MockPromises.immediateResolveDisabled();
+      const next = mockedThen.apply(this, args);
+      SettledPromises.execute(this);
+      return next;
+    };
+  }
+}
+
+export function EnableSettledPromises() {
+  SettledPromises.install();
+}
+
 export function UnblockPromises() {
   jasmine.clock().tick(1);
   MockPromises.tickAllTheWay();
 }
 export function ImmediatelyResolvePromise(number) {
   jasmine.clock().tick(1);
+  SettledPromises.enabled = number > 0;
   MockPromises.immediateResolve(number);
 }
 
 export function ImmediatelyResolveAllPromises() {
   jasmine.clock().tick(1);
+  SettledPromises.enabled = true;
   MockPromises.immediateResolveAll();
 }
 
 export function ResetImmediatelyResolvePromises() {
   jasmine.clock().tick(1);
+  SettledPromises.enabled = false;
   MockPromises.immediateResolveDisabled();
+}
+
+class RequestMessages {
+  static queryDetails(queries) {
+    return queries.length === 0 ? ', but it was never requested.' :
+      `, but it was not. Actual requests had query parameters: \n${queries.map(query => JSON.stringify(query)).join('\n')}`;
+  }
+
+  static requestDetails(actual, options) {
+    const prefix = `Expected ${actual} to have been requested with\n\n${JSON.stringify(options, null, 5)}`;
+    if (jasmine.Ajax.requests.count() === 0) return `${prefix}\n\nbut it was not requested.`;
+    const requests = jasmine.Ajax.requests.filter(/.*/).map(req => JSON.stringify({
+      method: req.method, url: req.url, data: req.data && req.data(), requestHeaders: req.requestHeaders
+    }, null, 5)).join(',\n\n');
+    return `${prefix};\n\nactual requests were\n\n${requests}`;
+  }
 }
 
 beforeAll(() => {
@@ -85,8 +136,7 @@ beforeEach(() => {
             return qs.parse(request.url.replace(/.*\?(.*)$/, '$1'));
           });
 
-          const stringifiedQueryParams = requestsQueryParams.map(p => JSON.stringify(p)).join(',\n');
-          const actualRequestsQueriesMessage = (requests.length === 0) ? ', but it was never requested.' : `, but it was not. Actual requests had query parameters: \n${stringifiedQueryParams}`;
+          const actualRequestsQueriesMessage = RequestMessages.queryDetails(requestsQueryParams);
 
           const message = pass ? `Expected ${actual} not to have been requested with query parameters ${JSON.stringify(query)}, but it was.` :
             `Expected ${actual} to have been requested with query parameters ${JSON.stringify(query)}${actualRequestsQueriesMessage}`;
@@ -109,15 +159,7 @@ beforeEach(() => {
 
           const message = pass ?
             `Expected ${actual} not to have been requested with\n\n${JSON.stringify(options, null, 5)}` :
-            jasmine.Ajax.requests.count() === 0 ? `Expected ${actual} to have been requested with\n\n${JSON.stringify(options, null, 5)}\n\nbut it was not requested.` :
-              `Expected ${actual} to have been requested with\n\n${JSON.stringify(options, null, 5)};\n\nactual requests were\n\n${jasmine.Ajax.requests.filter(/.*/).map(function (req) {
-                return `${JSON.stringify({
-                  method: req.method,
-                  url: req.url,
-                  data: req.data && req.data(),
-                  requestHeaders: req.requestHeaders
-                }, null, 5)}`;
-              }).join(',\n\n')}`;
+            RequestMessages.requestDetails(actual, options);
           return {pass, message};
         }
       };

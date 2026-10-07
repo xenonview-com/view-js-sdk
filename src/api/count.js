@@ -1,4 +1,5 @@
 import ApiBase from './api_base';
+import ProductMetadata from '../product_metadata';
 
 class countApi extends ApiBase {
   constructor(apiUrl) {
@@ -11,7 +12,7 @@ class countApi extends ApiBase {
     super(props);
   }
   params(data) {
-    const {uid, timestamp, outcome, content, value, skus, platform} = data;
+    const {uid, timestamp, outcome, content, value, skus, platform, productNames, brands} = data;
     const {leadSource, leadCampaign, leadGuid} = content;
     let params = {};
     params.uid = uid;
@@ -23,6 +24,7 @@ class countApi extends ApiBase {
     params.value = value;
     params.platform = platform;
     params.skus = skus;
+    Object.assign(params, new ProductMetadata(skus, productNames, brands).values());
     return params;
   }
 }

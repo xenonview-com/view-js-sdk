@@ -16,6 +16,10 @@ import CountApi from "./api/count";
 import ErrorLogApi from "./api/error_log";
 import {resetLocal, resetSession, retrieveLocal, retrieveSession, storeLocal, storeSession} from "./storage/storage";
 
+import ProductMetadata from './product_metadata';
+import Fields from './fields';
+import Attribution from './attribution';
+
 export class _Xenon {
   constructor(apiKey = null, apiUrl = 'https://app.xenonview.com',
               countApiUrl = 'https://counts.xenonlab.ai',
@@ -94,7 +98,7 @@ export class _Xenon {
 
   async startVariant(variantName) {
     let variantNames = await retrieveSession('view-tags');
-    if (!variantNames || !variantNames.includes(variantName)) {
+    if (!Fields.fallback(variantNames, []).includes(variantName)) {
       await this.resetVariants()
       await this.variant([variantName])
     }
@@ -102,8 +106,9 @@ export class _Xenon {
 
   async addVariant(variantName) {
     let variantNames = await retrieveSession('view-tags');
-    if (!variantNames || !variantNames.includes(variantName)) {
-      (variantNames) ? variantNames.push(variantName) : variantNames = [variantName];
+    if (!Fields.fallback(variantNames, []).includes(variantName)) {
+      variantNames = Fields.fallback(variantNames, []);
+      variantNames.push(variantName);
       await this.variant(variantNames);
     }
   }
@@ -177,15 +182,7 @@ export class _Xenon {
       outcome: 'Subscribe - ' + tier,
       result: 'success'
     };
-    if (method) {
-      content['method'] = method;
-    }
-    if (price) {
-      content['price'] = price;
-    }
-    if (term) {
-      content['term'] = term;
-    }
+    Object.assign(content, Fields.truthy({method: method, price: price, term: term}));
     await this.outcomeAdd(content);
   }
 
@@ -195,15 +192,7 @@ export class _Xenon {
       outcome: 'Decline - ' + tier,
       result: 'fail'
     };
-    if (method) {
-      content['method'] = method;
-    }
-    if (price) {
-      content['price'] = price;
-    }
-    if (term) {
-      content['term'] = term;
-    }
+    Object.assign(content, Fields.truthy({method: method, price: price, term: term}));
     await this.outcomeAdd(content);
   }
 
@@ -213,15 +202,7 @@ export class _Xenon {
       outcome: 'Renew - ' + tier,
       result: 'success'
     };
-    if (method) {
-      content['method'] = method;
-    }
-    if (price) {
-      content['price'] = price;
-    }
-    if (term) {
-      content['term'] = term;
-    }
+    Object.assign(content, Fields.truthy({method: method, price: price, term: term}));
     await this.outcomeAdd(content);
   }
 
@@ -231,15 +212,7 @@ export class _Xenon {
       outcome: 'Paused - ' + tier,
       result: 'fail'
     };
-    if (method) {
-      content['method'] = method;
-    }
-    if (price) {
-      content['price'] = price;
-    }
-    if (term) {
-      content['term'] = term;
-    }
+    Object.assign(content, Fields.truthy({method: method, price: price, term: term}));
     await this.outcomeAdd(content);
   }
 
@@ -249,15 +222,7 @@ export class _Xenon {
       outcome: 'Cancel - ' + tier,
       result: 'fail'
     };
-    if (method) {
-      content['method'] = method;
-    }
-    if (price) {
-      content['price'] = price;
-    }
-    if (term) {
-      content['term'] = term;
-    }
+    Object.assign(content, Fields.truthy({method: method, price: price, term: term}));
     await this.outcomeAdd(content);
   }
 
@@ -267,15 +232,7 @@ export class _Xenon {
       outcome: 'Upsold - ' + tier,
       result: 'success'
     };
-    if (method) {
-      content['method'] = method;
-    }
-    if (price) {
-      content['price'] = price;
-    }
-    if (term) {
-      content['term'] = term;
-    }
+    Object.assign(content, Fields.truthy({method: method, price: price, term: term}));
     await this.outcomeAdd(content);
   }
 
@@ -285,15 +242,7 @@ export class _Xenon {
       outcome: 'Declined - ' + tier,
       result: 'fail'
     };
-    if (method) {
-      content['method'] = method;
-    }
-    if (price) {
-      content['price'] = price;
-    }
-    if (term) {
-      content['term'] = term;
-    }
+    Object.assign(content, Fields.truthy({method: method, price: price, term: term}));
     await this.outcomeAdd(content);
   }
 
@@ -303,15 +252,7 @@ export class _Xenon {
       outcome: 'Downsell - ' + tier,
       result: 'fail'
     };
-    if (method) {
-      content['method'] = method;
-    }
-    if (price) {
-      content['price'] = price;
-    }
-    if (term) {
-      content['term'] = term;
-    }
+    Object.assign(content, Fields.truthy({method: method, price: price, term: term}));
     await this.outcomeAdd(content);
   }
 
@@ -321,12 +262,7 @@ export class _Xenon {
       outcome: 'Ad Click - ' + provider,
       result: 'success'
     };
-    if (id) {
-      content['id'] = id;
-    }
-    if (price) {
-      content['price'] = price;
-    }
+    Object.assign(content, Fields.truthy({id: id, price: price}));
     await this.outcomeAdd(content);
   }
 
@@ -336,12 +272,7 @@ export class _Xenon {
       outcome: 'Ad Ignored - ' + provider,
       result: 'fail'
     };
-    if (id) {
-      content['id'] = id;
-    }
-    if (price) {
-      content['price'] = price;
-    }
+    Object.assign(content, Fields.truthy({id: id, price: price}));
     await this.outcomeAdd(content);
   }
 
@@ -351,9 +282,7 @@ export class _Xenon {
       outcome: 'Referred - ' + kind,
       result: 'success'
     };
-    if (detail) {
-      content['details'] = detail;
-    }
+    Object.assign(content, Fields.truthy({details: detail}));
     await this.outcomeAdd(content);
   }
 
@@ -363,30 +292,29 @@ export class _Xenon {
       outcome: 'Declined - ' + kind,
       result: 'fail'
     };
-    if (detail) {
-      content['details'] = detail;
-    }
+    Object.assign(content, Fields.truthy({details: detail}));
     await this.outcomeAdd(content);
   }
 
-  async productAddedToCart(product, price = null) {
+  async productAddedToCart(product, price = null, productName = null, brand = null) {
+    const metadata = new ProductMetadata([product], productName, brand).values();
     const content = {
+      ...metadata,
       superOutcome: 'Add Product To Cart',
       outcome: 'Add - ' + product,
       result: 'success'
     };
-    if (price) {
-      content['price'] = price;
-    } else {
-      price = 0.0;
-    }
+    Object.assign(content, Fields.truthy({price}));
+    price = Fields.fallback(price, 0.0);
     await this.outcomeAdd(content);
     await this.heartbeatState(1);
-    await this.count("Add To Cart", price, [product]);
+    await this.count("Add To Cart", price, [product], false, metadata.productNames, metadata.brands);
   }
 
-  async productNotAddedToCart(product) {
+  async productNotAddedToCart(product, productName = null, brand = null) {
+    const metadata = new ProductMetadata([product], productName, brand).values();
     const content = {
+      ...metadata,
       superOutcome: 'Add Product To Cart',
       outcome: 'Ignore - ' + product,
       result: 'fail'
@@ -394,30 +322,29 @@ export class _Xenon {
     await this.outcomeAdd(content);
   }
 
-  async upsold(product, price = null) {
+  async upsold(product, price = null, productName = null, brand = null) {
+    const metadata = new ProductMetadata([product], productName, brand).values();
     const content = {
+      ...metadata,
       superOutcome: 'Upsold Product',
       outcome: 'Upsold - ' + product,
       result: 'success'
     };
-    if (price) {
-      content['price'] = price;
-    } else {
-      price = 0.0;
-    }
+    Object.assign(content, Fields.truthy({price}));
+    price = Fields.fallback(price, 0.0);
     await this.outcomeAdd(content);
-    await this.count("Upsell", price, [product]);
+    await this.count("Upsell", price, [product], false, metadata.productNames, metadata.brands);
   }
 
-  async upsellDismissed(product, price = null) {
+  async upsellDismissed(product, price = null, productName = null, brand = null) {
+    const metadata = new ProductMetadata([product], productName, brand).values();
     const content = {
+      ...metadata,
       superOutcome: 'Upsold Product',
       outcome: 'Dismissed - ' + product,
       result: 'fail'
     };
-    if (price) {
-      content['price'] = price;
-    }
+    Object.assign(content, Fields.truthy({price: price}));
     await this.outcomeAdd(content);
   }
 
@@ -449,8 +376,10 @@ export class _Xenon {
     await this.outcomeAdd(content);
   }
 
-  async productRemoved(product) {
+  async productRemoved(product, productName = null, brand = null) {
+    const metadata = new ProductMetadata([product], productName, brand).values();
     const content = {
+      ...metadata,
       superOutcome: 'Customer Checkout',
       outcome: 'Product Removed - ' + product,
       result: 'fail'
@@ -458,7 +387,8 @@ export class _Xenon {
     await this.outcomeAdd(content);
   }
 
-  async purchase(SKUs, price = null, discount = null, shipping = null, member = null) {
+  async purchase(SKUs, price = null, discount = null, shipping = null, member = null, productNames = null, brands = null) {
+    const metadata = new ProductMetadata(SKUs, productNames, brands).values();
     let outcome = "Purchase";
     let purchaseSting = "Purchase";
 
@@ -467,44 +397,34 @@ export class _Xenon {
       purchaseSting = "Purchase:" + member
     }
 
-    if (!Array.isArray(SKUs)) {
-      const SKUsString = SKUs.toString();
-      SKUs = SKUsString.split(",").map(item => item.trim());
-    }
+    SKUs = ProductMetadata.identifiers(SKUs);
 
     const content = {
       superOutcome: 'Customer Purchase',
       outcome: outcome,
+      ...metadata,
       skus: SKUs,
       result: 'success'
     };
-    if (price) {
-      content['price'] = price;
-    } else {
-      price = 0.0;
-    }
-    if (discount) {
-      content['discount'] = discount;
-    }
-    if (shipping) {
-      content['shipping'] = shipping;
-    }
+    Object.assign(content, Fields.truthy({price}));
+    price = Fields.fallback(price, 0.0);
+    Object.assign(content, Fields.truthy({discount: discount, shipping: shipping}));
 
     await this.outcomeAdd(content);
     await this.heartbeatState(3);
-    await this.count(purchaseSting, price, SKUs);
+    await this.count(purchaseSting, price, SKUs, false, metadata.productNames, metadata.brands);
   }
 
-  async purchaseCancel(SKUs = null, price = null) {
-    const outcome = 'Canceled' + (SKUs ? ' - ' + SKUs : '');
+  async purchaseCancel(SKUs = null, price = null, productNames = null, brands = null) {
+    const metadata = new ProductMetadata(SKUs, productNames, brands).withSkus();
+    const outcome = 'Canceled' + Fields.fallback(SKUs && ' - ' + SKUs, '');
     const content = {
+      ...metadata,
       superOutcome: 'Customer Purchase',
       outcome: outcome,
       result: 'fail'
     };
-    if (price) {
-      content['price'] = price;
-    }
+    Object.assign(content, Fields.truthy({price: price}));
     await this.outcomeAdd(content);
   }
 
@@ -526,8 +446,10 @@ export class _Xenon {
     await this.outcomeAdd(content);
   }
 
-  async productKept(product) {
+  async productKept(product, productName = null, brand = null) {
+    const metadata = new ProductMetadata([product], productName, brand).values();
     const content = {
+      ...metadata,
       superOutcome: 'Product Disposition',
       outcome: 'Kept - ' + product,
       result: 'success'
@@ -535,8 +457,10 @@ export class _Xenon {
     await this.outcomeAdd(content);
   }
 
-  async productReturned(product) {
+  async productReturned(product, productName = null, brand = null) {
+    const metadata = new ProductMetadata([product], productName, brand).values();
     const content = {
+      ...metadata,
       superOutcome: 'Product Disposition',
       outcome: 'Returned - ' + product,
       result: 'fail'
@@ -552,9 +476,7 @@ export class _Xenon {
       action: 'Attempted',
       name: name
     };
-    if (detail) {
-      event['details'] = detail;
-    }
+    Object.assign(event, Fields.truthy({details: detail}));
     await this.journeyAdd(event);
   }
 
@@ -564,9 +486,7 @@ export class _Xenon {
       action: 'Completed',
       name: name
     };
-    if (detail) {
-      event['details'] = detail;
-    }
+    Object.assign(event, Fields.truthy({details: detail}));
     await this.journeyAdd(event);
   }
 
@@ -576,9 +496,7 @@ export class _Xenon {
       action: 'Failed',
       name: name
     };
-    if (detail) {
-      event['details'] = detail;
-    }
+    Object.assign(event, Fields.truthy({details: detail}));
     await this.journeyAdd(event);
   }
 
@@ -588,9 +506,7 @@ export class _Xenon {
       action: 'Viewed',
       type: contentType,
     };
-    if (identifier) {
-      event['identifier'] = identifier;
-    }
+    Object.assign(event, Fields.truthy({identifier: identifier}));
     await this.journeyAdd(event);
   }
 
@@ -600,12 +516,7 @@ export class _Xenon {
       action: 'Edited',
       type: contentType,
     };
-    if (identifier) {
-      event['identifier'] = identifier;
-    }
-    if (detail) {
-      event['details'] = detail;
-    }
+    Object.assign(event, Fields.truthy({identifier: identifier, details: detail}));
     await this.journeyAdd(event);
   }
 
@@ -615,9 +526,7 @@ export class _Xenon {
       action: 'Created',
       type: contentType,
     };
-    if (identifier) {
-      event['identifier'] = identifier;
-    }
+    Object.assign(event, Fields.truthy({identifier: identifier}));
     await this.journeyAdd(event);
   }
 
@@ -627,9 +536,7 @@ export class _Xenon {
       action: 'Deleted',
       type: contentType,
     };
-    if (identifier) {
-      event['identifier'] = identifier;
-    }
+    Object.assign(event, Fields.truthy({identifier: identifier}));
     await this.journeyAdd(event);
   }
 
@@ -639,9 +546,7 @@ export class _Xenon {
       action: 'Archived',
       type: contentType,
     };
-    if (identifier) {
-      event['identifier'] = identifier;
-    }
+    Object.assign(event, Fields.truthy({identifier: identifier}));
     await this.journeyAdd(event);
   }
 
@@ -651,9 +556,7 @@ export class _Xenon {
       action: 'Requested',
       type: contentType,
     };
-    if (identifier) {
-      event['identifier'] = identifier;
-    }
+    Object.assign(event, Fields.truthy({identifier: identifier}));
     await this.journeyAdd(event);
   }
 
@@ -689,7 +592,8 @@ export class _Xenon {
 
   // API Communication:
 
-  async count(outcome, value = 0.0, skus = null, surfaceErrors = false) {
+  async count(outcome, value = 0.0, skus = null, surfaceErrors = false, productNames = null, brands = null) {
+    const metadata = new ProductMetadata(skus, productNames, brands).values();
     const attribution = await retrieveSession('view-attribution');
     if (!attribution) return Promise.resolve(true);
     const platform = await retrieveSession('view-platform');
@@ -700,64 +604,82 @@ export class _Xenon {
         timestamp: (new Date()).getTime() / 1000,
         outcome: outcome,
         content: attribution,
-        platform: platform ? platform : null,
+        platform: Fields.fallback(platform, null),
         skus: skus,
+        ...metadata,
         value: value
       }
     };
-    let replayLog = await retrieveSession('view-count-replay');
-    if (replayLog) {
-      replayLog.push(params);
-    } else {
-      replayLog = [params];
-    }
+    const replayLog = Fields.fallback(await retrieveSession('view-count-replay'), []);
+    replayLog.push(params);
     await storeSession('view-count-replay', replayLog);
+    return this.replayCounts(replayLog, surfaceErrors);
+  }
+
+  async replayCounts(replayLog, surfaceErrors) {
     try {
-      let result = null;
-      while (replayLog.length > 0) {
-        const params = replayLog.shift();
-        result = await this.CountApi(this.countApiUrl).fetch(params);
-        await storeSession('view-count-replay', replayLog);
-      }
-      return result;
+      return await this.sendCounts(replayLog);
     } catch (error) {
-      return (surfaceErrors ? Promise.reject(error) : Promise.resolve(true));
+      return this.handleApiError(error, surfaceErrors);
     }
+  }
+
+  async sendCounts(replayLog) {
+    let result = null;
+    while (replayLog.length > 0) {
+      result = await this.CountApi(this.countApiUrl).fetch(replayLog.shift());
+      await storeSession('view-count-replay', replayLog);
+    }
+    return result;
+  }
+
+  handleApiError(error, surfaceErrors) {
+    return surfaceErrors ? Promise.reject(error) : Promise.resolve(true);
   }
 
   async heartbeatState(stage = null) {
     const previousStage = await retrieveLocal('heartbeat_stage');
-    if (stage && stage > previousStage) {
-      await storeLocal('heartbeat_stage', stage);
-    }
-    if (!stage && !previousStage) {
-      await storeLocal('heartbeat_stage', 0);
-    }
+    await this.advanceHeartbeat(stage, previousStage);
+    await this.initializeHeartbeat(stage, previousStage);
     return Number(await retrieveLocal('heartbeat_stage'));
   }
 
-  async commit(surfaceErrors = false) {
-    if (!await this.sampleDecision() || this.apiCallPending) {
-      return Promise.resolve(true);
+  async advanceHeartbeat(stage, previousStage) {
+    if (Fields.all([() => stage, () => stage > previousStage])) {
+      await storeLocal('heartbeat_stage', stage);
     }
+  }
+
+  async initializeHeartbeat(stage, previousStage) {
+    if (![stage, previousStage].some(Boolean)) await storeLocal('heartbeat_stage', 0);
+  }
+
+  async commit(surfaceErrors = false) {
+    const sampled = await this.sampleDecision();
+    if (![sampled, !this.apiCallPending].every(Boolean)) return Promise.resolve(true);
     this.apiCallPending = true;
-    let params = {
-      data: {
-        id: await this.id(),
-        journey: await this.journey(),
-        token: this.apiKey,
-        timestamp: (new Date()).getTime() / 1000
-      }
+    const params = {data: await this.journeyData()};
+    return this.sendJourney(this.JourneyApi(this.apiUrl), params, surfaceErrors);
+  }
+
+  async journeyData() {
+    return {
+      id: await this.id(), journey: await this.journey(), token: this.apiKey,
+      timestamp: (new Date()).getTime() / 1000
     };
+  }
+
+  async sendJourney(api, params, surfaceErrors) {
     const saved = await this.reset();
     try {
-      const value = await this.JourneyApi(this.apiUrl).fetch(params);
+      const value = await api.fetch(params);
+      await this.finishHeartbeat(params);
       this.apiCallPending = false;
       return Promise.resolve(value);
     } catch (error) {
       await this.restore(saved);
       this.apiCallPending = false;
-      return (surfaceErrors ? Promise.reject(error) : Promise.resolve(true));
+      return this.handleApiError(error, surfaceErrors);
     }
   }
 
@@ -803,42 +725,24 @@ export class _Xenon {
   async heartbeat(surfaceErrors = false) {
     const platform = await retrieveSession('view-platform');
     const tags = await retrieveSession('view-tags');
-    let params = {
-      data: {
-        id: await this.id(),
-        journey: await this.journey(),
-        token: this.apiKey,
-        platform: platform ? platform : {},
-        tags: tags ? tags : [],
-        timestamp: (new Date()).getTime() / 1000
-      }
-    };
-
-    const heartbeatType = await retrieveLocal('heartbeat_type');
-    if (heartbeatType) {
-      params.data['watchdog'] = await this.heartbeatMessage(heartbeatType);
-    }
-
-    if (!await this.sampleDecision() || this.apiCallPending) {
-      return Promise.resolve(true);
-    }
+    const data = {...await this.journeyData(), platform: Fields.fallback(platform, {}), tags: Fields.fallback(tags, [])};
+    await this.addWatchdog(data);
+    const sampled = await this.sampleDecision();
+    if (![sampled, !this.apiCallPending].every(Boolean)) return Promise.resolve(true);
     this.apiCallPending = true;
+    return this.sendJourney(this.HeartbeatApi(this.apiUrl), {data}, surfaceErrors);
+  }
 
-    const saved = await this.reset();
-    try {
-      const value = await this.HeartbeatApi(this.apiUrl).fetch(params);
-      if (heartbeatType && Object.keys(params.data['watchdog']).includes('remove')) {
-        await resetLocal('heartbeat_stage');
-        await resetLocal('heartbeat_type');
-        await resetLocal('heartbeat_outcome');
-      }
-      this.apiCallPending = false;
-      return Promise.resolve(value);
-    } catch (error) {
-      await this.restore(saved);
-      this.apiCallPending = false;
-      return (surfaceErrors ? Promise.reject(error) : Promise.resolve(true));
-    }
+  async addWatchdog(data) {
+    const heartbeatType = await retrieveLocal('heartbeat_type');
+    if (heartbeatType) data.watchdog = await this.heartbeatMessage(heartbeatType);
+  }
+
+  async finishHeartbeat({data}) {
+    if (!Fields.all([() => data.watchdog, () => Object.keys(data.watchdog).includes('remove')])) return;
+    await resetLocal('heartbeat_stage');
+    await resetLocal('heartbeat_type');
+    await resetLocal('heartbeat_outcome');
   }
 
   async deanonymize(person) {
@@ -874,14 +778,14 @@ export class _Xenon {
   // Internals:
 
   async id(id) {
-    if (id) {
-      await storeSession('xenon-view', id);
-    }
+    await this.storeId(id);
     id = await retrieveSession('xenon-view');
-    if (!id || id === '') {
-      return await this.newId();
-    }
+    if (!id) return await this.newId();
     return id;
+  }
+
+  async storeId(id) {
+    if (id) await storeSession('xenon-view', id);
   }
 
   async newId() {
@@ -890,97 +794,109 @@ export class _Xenon {
   }
 
   async sampleDecision(decision = null, onApiKeyFailure = null) {
-    if (decision !== null) {
-      await storeSession('xenon-will-sample', decision)
-    }
+    await this.storeSampleDecision(decision);
     decision = await retrieveSession('xenon-will-sample');
-    if (decision === null || decision === '') {
-      let params = {data: {id: await this.id(), token: this.apiKey}};
-      try {
-        const json = await this.SampleApi(this.apiUrl).fetch(params);
-        decision = await this.sampleDecision(json['sample'], onApiKeyFailure);
-      } catch (error) {
-        if (error.authIssue && onApiKeyFailure) {
-          onApiKeyFailure(error);
-          return;
-        }
-        decision = await this.sampleDecision(true, onApiKeyFailure);
-      }
+    if ([null, ''].includes(decision)) return this.fetchSampleDecision(onApiKeyFailure);
+    return Boolean(decision);
+  }
+
+  async storeSampleDecision(decision) {
+    if (decision !== null) await storeSession('xenon-will-sample', decision);
+  }
+
+  async fetchSampleDecision(onApiKeyFailure) {
+    const params = {data: {id: await this.id(), token: this.apiKey}};
+    try {
+      const json = await this.SampleApi(this.apiUrl).fetch(params);
+      return await this.sampleDecision(json.sample, onApiKeyFailure);
+    } catch (error) {
+      return this.handleSampleError(error, onApiKeyFailure);
     }
-    decision = Boolean(decision);
-    return decision;
+  }
+
+  async handleSampleError(error, onApiKeyFailure) {
+    if ([error.authIssue, onApiKeyFailure].every(Boolean)) {
+      onApiKeyFailure(error);
+      return;
+    }
+    return this.sampleDecision(true, onApiKeyFailure);
   }
 
   async outcomeAdd(content) {
-    let platform = await retrieveSession('view-platform');
-    if (platform) content['platform'] = platform;
-    let tags = await retrieveSession('view-tags');
-    if (tags) content['tags'] = tags;
+    Object.assign(content, Fields.truthy({
+      platform: await retrieveSession('view-platform'), tags: await retrieveSession('view-tags')
+    }));
     await this.journeyAdd(content);
   }
 
   async journeyAdd(content) {
-    let journey = await this.journey();
+    const journey = Fields.fallback(await this.journey(), []);
     content.timestamp = (new Date()).getTime() / 1000;
-    if (this.pageURL_) {
-      content.url = this.pageURL_;
-    }
-    if (journey && journey.length) {
-      let last = journey[journey.length - 1];
-      if (this.isDuplicate(last, content)) {
-        let count = last.hasOwnProperty('count') ? last.count : 1;
-        last.count = count + 1;
-      } else {
-        journey.push(content);
-      }
-    } else {
-      journey = [content];
-    }
+    Object.assign(content, Fields.truthy({url: this.pageURL_}));
+    this.appendJourney(journey, content);
     await this.storeJourney(journey);
   }
 
+  appendJourney(journey, content) {
+    if (journey.length) return this.appendOrCount(journey, content);
+    journey.push(content);
+  }
+
+  appendOrCount(journey, content) {
+    const last = journey[journey.length - 1];
+    if (!this.isDuplicate(last, content)) return journey.push(content);
+    this.incrementJourney(last);
+  }
+
+  incrementJourney(last) {
+    const count = Object.prototype.hasOwnProperty.call(last, 'count') ? last.count : 1;
+    last.count = count + 1;
+  }
 
   isDuplicate(last, content) {
-    const lastKeys = Object.keys(last);
-    const contentKeys = Object.keys(content);
-    const isSuperset = (set, subset) => {
-      for (const elem of subset) {
-        if (!set.has(elem)) {
-          return false;
-        }
-      }
-      return true;
-    };
-    if (!isSuperset(new Set(lastKeys), new Set(contentKeys))) return false;
-    if (!contentKeys.includes('category') || !lastKeys.includes('category')) return false;
-    if (content.category !== last.category) return false;
-    if (!contentKeys.includes('action') || !lastKeys.includes('action')) return false;
-    if (content.action !== last.action) return false;
-    return (this.duplicateFeature(last, content, lastKeys, contentKeys) ||
-      this.duplicateContent(last, content, lastKeys, contentKeys) ||
-      this.duplicateMilestone(last, content, lastKeys, contentKeys));
+    return Fields.all([
+      () => Object.keys(content).every(key => Object.prototype.hasOwnProperty.call(last, key)),
+      () => ['category', 'action'].every(key => Object.prototype.hasOwnProperty.call(content, key)),
+      () => content.category === last.category,
+      () => content.action === last.action,
+      () => Fields.any([
+        () => this.duplicateFeature(last, content),
+        () => this.duplicateContent(last, content),
+        () => this.duplicateMilestone(last, content)
+      ])
+    ]);
   }
 
-  duplicateFeature(last, content, lastKeys, contentKeys) {
-    if (content.category !== 'Feature' || last.category !== 'Feature') return false;
-    return content.name === last.name;
+  duplicateFeature(last, content) {
+    return Fields.all([
+      () => [content.category, last.category].every(category => category === 'Feature'),
+      () => content.name === last.name
+    ]);
   }
 
-  duplicateContent(last, content, lastKeys, contentKeys) {
-    if (content.category !== 'Content' || last.category !== 'Content') return false;
-    if (!contentKeys.includes('type') && !lastKeys.includes('type')) return true;
-    if (content.type !== last.type) return false;
-    if (!contentKeys.includes('identifier') && !lastKeys.includes('identifier')) return true;
-    if (content.identifier !== last.identifier) return false;
-    if (!contentKeys.includes('details') && !lastKeys.includes('details')) return true;
-    return content.details === last.details;
+  duplicateContent(last, content) {
+    return Fields.all([
+      () => [content.category, last.category].every(category => category === 'Content'),
+      () => this.matchContentFields(last, content, ['type', 'identifier', 'details'])
+    ]);
   }
 
-  duplicateMilestone(last, content, lastKeys, contentKeys) {
-    if (content.category === 'Feature' || last.category === 'Feature') return false;
-    if (content.category === 'Content' || last.category === 'Content') return false;
-    if (content.name !== last.name) return false;
-    return content.details === last.details;
+  matchContentFields(last, content, keys) {
+    if (!keys.length) return true;
+    return this.matchContentField(last, content, keys);
+  }
+
+  matchContentField(last, content, [key, ...remaining]) {
+    if (![last, content].some(value => Object.prototype.hasOwnProperty.call(value, key))) return true;
+    return Fields.all([() => last[key] === content[key], () => this.matchContentFields(last, content, remaining)]);
+  }
+
+  duplicateMilestone(last, content) {
+    return Fields.all([
+      () => ![content.category, last.category].some(category => ['Feature', 'Content'].includes(category)),
+      () => content.name === last.name,
+      () => content.details === last.details
+    ]);
   }
 
   async journey() {
@@ -1000,19 +916,13 @@ export class _Xenon {
 
   async restore(journey = null) {
     let currentJourney = await this.journey();
-    let restoreJourney = journey ? journey : this.restoreJourney;
-    if (currentJourney !== null && currentJourney.length) {
+    let restoreJourney = Fields.fallback(journey, this.restoreJourney);
+    if (Fields.fallback(currentJourney, []).length) {
       restoreJourney = restoreJourney.concat(currentJourney);
     }
 
     function compare(a, b) {
-      if (a.timestamp < b.timestamp) {
-        return -1;
-      }
-      if (a.timestamp > b.timestamp) {
-        return 1;
-      }
-      return 0;
+      return Math.sign(a.timestamp - b.timestamp);
     }
 
     restoreJourney.sort(compare);
@@ -1021,127 +931,61 @@ export class _Xenon {
   }
 
   hasClassInHierarchy(target, className, maxDepth) {
-    const searcher = (node, className, maxDepth, currentDepth) => {
-      if (currentDepth >= maxDepth)
-        return false;
-      if (node.className.toString().includes(className))
-        return true;
-      if (!node.parentElement)
-        return false;
-      return searcher(node.parentElement, className, maxDepth, currentDepth + 1);
-    };
+    if (maxDepth <= 0) return false;
+    return this.findClassInHierarchy(target, className, maxDepth);
+  }
 
-    return searcher(target, className, maxDepth, 0);
+  findClassInHierarchy(target, className, remainingDepth) {
+    if (target.className.toString().includes(className)) return true;
+    return this.findClassInParent(target.parentElement, className, remainingDepth - 1);
+  }
+
+  findClassInParent(parent, className, remainingDepth) {
+    if (!parent) return false;
+    return this.hasClassInHierarchy(parent, className, remainingDepth);
   }
 
   async decipherParamsPerLibrary(params) {
-    const checkForCampaign = (key) => params.has(key) ? (params.get(key) || 'No Campaign') : 'No Campaign';
-    if (params.has('xenon_euid')) {
-      await this.id(params.get('xenon_euid'))
-    }
-    if (params.has('xenonSrc')) {
-      return [params.get('xenonSrc'), checkForCampaign('xenonId')];
-    }
-    if (params.has('cr_campaignid')) {
-      return ['Cerebro', params.get('cr_campaignid')];
-    }
-    if (params.has('utm_source') && params.get('utm_source').toLowerCase() === 'klaviyo') {
-      const source = 'Klaviyo' + (params.has('utm_medium') ? ' - ' + params.get('utm_medium') : '');
-      return [source, checkForCampaign('utm_campaign')];
-    }
-    if (params.has('g_campaignid')) {
-      return ['Google Ad', params.get('g_campaignid')]
-    }
-    if (params.has('utm_source') && params.get('utm_source').toLowerCase() === 'shareasale') {
-      return ['Share-a-sale', checkForCampaign('sscid')]
-    }
-    if (params.has('sscid')) {
-      return ['Share-a-sale', params.get('sscid')]
-    }
-    if (params.has('g_adtype') && params.get('g_adtype') === 'none') {
-      return ['Google Organic', checkForCampaign('g_campaign')]
-    }
-    if (params.has('g_adtype') && params.get('g_adtype') === 'search') {
-      return ['Google Paid Search', checkForCampaign('g_campaign')]
-    }
-    if (params.has('utm_source') && params.get('utm_source') === 'facebook') {
-      return ['Facebook Ad', checkForCampaign('utm_campaign')]
-    }
-    if (params.has('utm_source') && params.get('utm_source').toLowerCase() === 'email-broadcast') {
-      return ['Email', checkForCampaign('utm_campaign')]
-    }
-    if (params.has('utm_source') && params.get('utm_source').toLowerCase() === 'youtube') {
-      return ['YouTube', checkForCampaign('utm_campaign')]
-    }
-    if (params.has('srsltid')) {
-      return ['Google Merchant', params.get('srsltid')]
-    }
-    if (params.has('avad')) {
-      return ['Avantlink', checkForCampaign('avad')]
-    }
-    if (params.has('utm_source') && params.has('utm_campaign')) {
-      return [params.get('utm_source'), params.get('utm_campaign')]
-    }
-    if (params.has('utm_source')) {
-      return [params.get('utm_source'), "No Campaign"];
-    }
-    return ['Unattributed']
+    if (params.has('xenon_euid')) await this.id(params.get('xenon_euid'));
+    return new Attribution(params).values();
   }
 
   async autodiscoverLeadFrom(queryFromUrl) {
-    if (queryFromUrl && queryFromUrl !== '' && queryFromUrl !== '?') {
-      const params = new URLSearchParams(queryFromUrl);
-      const [source, identifier] = await this.decipherParamsPerLibrary(params);
-      let attribution = await retrieveSession('view-attribution');
-      if (attribution) return queryFromUrl;
-      await storeSession('view-attribution', {
-        leadSource: source,
-        leadCampaign: identifier,
-        leadGuid: null
-      })
-      let variantNames = await retrieveSession('view-tags');
-      if (source && (!variantNames || !variantNames.includes(source))) {
-        if (variantNames) {
-          variantNames.push(source);
-          if (identifier) {
-            variantNames.push(identifier);
-          }
-        } else {
-          variantNames = [source];
-          if (identifier) {
-            variantNames.push(identifier);
-          }
-        }
-        await this.variant(variantNames);
-        (source === 'Unattributed') ?
-          await this.leadUnattributed() :
-          await this.leadAttributed(source, identifier);
-      }
-      params.delete('xenonId');
-      params.delete('xenonSrc');
-      params.delete('xenon_euid');
-      let query = "";
-      if (params.size) {
-        query = "?" + params.toString();
-      }
-      return query;
-    } else {
-      let variantNames = await retrieveSession('view-tags');
-      const source = 'Unattributed';
-      let attribution = await retrieveSession('view-attribution');
-      if (attribution) return queryFromUrl;
-      await storeSession('view-attribution', {
-        leadSource: source,
-        leadCampaign: null,
-        leadGuid: null
-      })
-      if (!variantNames || !variantNames.includes(source)) {
-        (variantNames) ? variantNames.push(source) : variantNames = [source];
-        await this.variant(variantNames);
-        await this.leadUnattributed();
-      }
-      return queryFromUrl;
+    if (Fields.all([() => queryFromUrl, () => queryFromUrl !== '?'])) return this.discoverQuery(queryFromUrl);
+    return this.discoverUnattributed(queryFromUrl);
+  }
+
+  async discoverQuery(queryFromUrl) {
+    const params = new URLSearchParams(queryFromUrl);
+    const [source, identifier] = await this.decipherParamsPerLibrary(params);
+    if (await retrieveSession('view-attribution')) return queryFromUrl;
+    await this.saveAttribution(source, identifier);
+    ['xenonId', 'xenonSrc', 'xenon_euid'].forEach(key => params.delete(key));
+    return this.remainingQuery(params);
+  }
+
+  remainingQuery(params) {
+    return params.size ? '?' + params.toString() : '';
+  }
+
+  async discoverUnattributed(queryFromUrl) {
+    if (await retrieveSession('view-attribution')) return queryFromUrl;
+    await this.saveAttribution('Unattributed', null);
+    return queryFromUrl;
+  }
+
+  async saveAttribution(source, identifier) {
+    await storeSession('view-attribution', {leadSource: source, leadCampaign: identifier, leadGuid: null});
+    const variantNames = Fields.fallback(await retrieveSession('view-tags'), []);
+    if (Fields.all([() => source, () => !variantNames.includes(source)])) {
+      await this.tagAttribution(variantNames, source, identifier);
     }
+  }
+
+  async tagAttribution(variantNames, source, identifier) {
+    await this.variant([...variantNames, source, ...[identifier].filter(Boolean)]);
+    if (source === 'Unattributed') return this.leadUnattributed();
+    return this.leadAttributed(source, identifier);
   }
 
   pageURL(url) {

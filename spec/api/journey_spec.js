@@ -8,7 +8,8 @@ describe('JourneyApi', () => {
   let subject;
   const apiUrl = 'https://app.xenonview.com';
   let dataWithoutJourney = {id: 'somevalue', token: "<testToken>", timestamp: 0.1}
-  let dataWithJourney = {...dataWithoutJourney, journey: ['step']};
+  const product = {skus: ['sku-1'], productNames: ['Laptop'], brands: ['Dell']};
+  let dataWithJourney = {...dataWithoutJourney, journey: [product]};
   beforeEach((done) => {
     (async () => {
       MockPromises.reset();
@@ -27,10 +28,14 @@ describe('JourneyApi', () => {
   it('requests journey', () => {
     expect(`${apiUrl}/journey`).toHaveBeenRequested();
   });
+  it('includes SKU metadata in the HTTP request body', () => {
+    const request = jasmine.Ajax.requests.mostRecent();
+    expect(JSON.parse(request.params).parameters.journey).toEqual([product]);
+  });
   it('creates parameters with journey', () => {
     expect(subject.params(dataWithJourney)).toEqual({
       uuid: 'somevalue',
-      journey: ['step'],
+      journey: [product],
       timestamp: jasmine.any(Number)
     });
   });

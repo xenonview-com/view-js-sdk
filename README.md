@@ -2264,6 +2264,44 @@ export default function Home() {
 
 <br/>
 
+#### Product names and brands
+
+SKU and product outcome functions accept optional product names and brands at the
+end of their existing arguments. Existing calls remain valid.
+
+```javascript
+Xenon.productAddedToCart('sku-1', 100, 'Laptop', 'Dell');
+Xenon.upsold('sku-2', 25, 'Keyboard', 'Apple');
+Xenon.upsellDismissed('sku-2', 25, 'Keyboard', 'Apple');
+Xenon.productNotAddedToCart('sku-1', 'Laptop', 'Dell');
+Xenon.productRemoved('sku-1', 'Laptop', 'Dell');
+Xenon.productKept('sku-1', 'Laptop', 'Dell');
+Xenon.productReturned('sku-1', 'Laptop', 'Dell');
+
+const skus = ['sku-1', 'sku-2'];
+const productNames = ['Laptop', 'Keyboard'];
+const brands = ['Dell', 'Apple'];
+Xenon.purchase(skus, 125, null, null, null, productNames, brands);
+Xenon.purchaseCancel(skus, 125, productNames, brands);
+Xenon.count('Purchase', 125, skus, false, productNames, brands);
+```
+
+For `purchase`, the arguments before product names and brands are SKUs, price,
+discount, shipping, and member. For `count`, they are outcome, value, SKUs, and
+surfaceErrors.
+
+Each supplied metadata array must contain exactly one entry per SKU in the same
+order: `skus[i]`, `productNames[i]`, and `brands[i]` describe the same product.
+For one SKU, a name or brand can be a string. Names and brands are sent as arrays
+in the `productNames` and `brands` payload fields. Strings containing commas are
+kept intact; use arrays for multiple names or brands. Purchase SKUs still accept
+a comma-separated string.
+
+Either metadata field can be omitted with `null`. A mismatched length rejects the
+call with a `RangeError` before any event is recorded. Single product outcome
+functions accept one product name and one brand. Cancellation events with
+metadata also include the corresponding `skus` array.
+
 #### Customer Completes Purchase  <a id='ecom-purchase'></a>
 Use this call to track when your Customer completes a purchase.
 

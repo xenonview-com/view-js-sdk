@@ -1,10 +1,27 @@
 import 'isomorphic-fetch';
 
-async function checkStatus(response) {
-  if (response.status >= 200 && response.status < 400) {
-    return response;
+class ResponseStatus {
+  static successful(response) {
+    return [response.status >= 200, response.status < 400].every(Boolean);
   }
-  if (response.status >= 400 && response.status < 500) {
+
+  static clientError(response) {
+    return [response.status >= 400, response.status < 500].every(Boolean);
+  }
+
+  static async check(response) {
+    if (ResponseStatus.successful(response)) return response;
+    return ResponseStatus.reject(response);
+  }
+
+  static async reject(response) {
+    if (ResponseStatus.clientError(response)) return ResponseStatus.rejectClient(response);
+    const error = new Error(response.statusText);
+    error.response = response;
+    return Promise.reject(error);
+  }
+
+  static async rejectClient(response) {
     const details = await response.json();
     const error = new Error(details.error_message);
     error.response = response;
@@ -12,9 +29,6 @@ async function checkStatus(response) {
     error.authIssue = true;
     return Promise.reject(error);
   }
-  const error = new Error(response.statusText);
-  error.response = response;
-  return Promise.reject(error);
 }
 
 export function fetchJson(url, {accessToken, headers, ...options} = {}) {
@@ -23,7 +37,7 @@ export function fetchJson(url, {accessToken, headers, ...options} = {}) {
   options = {credentials: 'same-origin', keepalive: true, headers:
         {...acceptHeaders, ...authorizationHeaders, ...headers}, ...options};
   return fetch(url, options)
-    .then(checkStatus)
+    .then(ResponseStatus.check)
     .then((response) => {
       return [204, 304].includes(response.status) ? {} : response.json();
     })

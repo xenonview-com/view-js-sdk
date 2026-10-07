@@ -1,6 +1,7 @@
 import '../helper/api_helper';
 import MockPromises from "mock-promises";
 import {
+  StorageProvider,
   resetLocal,
   resetSession,
   retrieveLocal,
@@ -12,6 +13,11 @@ import {
 
 self.browser = null;
 describe('Storage', () => {
+  it('handles a runtime without a browser or worker global', () => {
+    expect(StorageProvider.browser(undefined)).toBeNull();
+    expect(StorageProvider.shopify(undefined)).toBeNull();
+    expect(StorageProvider.browserStorage('localStorage', null)).toBeNull();
+  });
   beforeEach((done) => {
     (async () => {
       MockPromises.reset();

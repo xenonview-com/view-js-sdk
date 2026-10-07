@@ -8,8 +8,11 @@
  *
  */
 import {_Xenon} from '../src/xenon';
+import ApiBase from '../src/api/api_base';
+import {mock, instance, when, anything, capture, verify, resetCalls as resetMockitoCalls} from 'ts-mockito';
 import './helper/api_helper';
 import {
+  EnableSettledPromises,
   UnblockPromises,
   ImmediatelyResolvePromise,
   ImmediatelyResolveAllPromises,
@@ -20,26 +23,27 @@ import MockPromises from "mock-promises";
 
 
 describe('View SDK', () => {
+  beforeEach(() => EnableSettledPromises());
   let unit = null;
   let unit2 = null;
-  let journeyApi = jasmine.createSpyObj('MyJourneyApi', ['fetch']);
+  let journeyApi = mock(ApiBase);
   let JourneyApi = jasmine.createSpy('constructor');
-  JourneyApi.and.returnValue(journeyApi);
-  let deanonApi = jasmine.createSpyObj('MyDeanonApi', ['fetch']);
+  JourneyApi.and.returnValue(instance(journeyApi));
+  let deanonApi = mock(ApiBase);
   let DeanonApi = jasmine.createSpy('constructor');
-  DeanonApi.and.returnValue(deanonApi);
-  let heartbeatApi = jasmine.createSpyObj('MyHeartbeatApi', ['fetch']);
+  DeanonApi.and.returnValue(instance(deanonApi));
+  let heartbeatApi = mock(ApiBase);
   let HeartbeatApi = jasmine.createSpy('constructor');
-  HeartbeatApi.and.returnValue(heartbeatApi);
-  let sampleApi = jasmine.createSpyObj('MySampleApi', ['fetch']);
+  HeartbeatApi.and.returnValue(instance(heartbeatApi));
+  let sampleApi = mock(ApiBase);
   let SampleApi = jasmine.createSpy('constructor');
-  SampleApi.and.returnValue(sampleApi);
-  let countApi = jasmine.createSpyObj('MyCountApi', ['fetch']);
+  SampleApi.and.returnValue(instance(sampleApi));
+  let countApi = mock(ApiBase);
   let CountApi = jasmine.createSpy('constructor');
-  CountApi.and.returnValue(countApi);
-  let errorLogApi = jasmine.createSpyObj('MyErrorLogApi', ['fetch']);
+  CountApi.and.returnValue(instance(countApi));
+  let errorLogApi = mock(ApiBase);
   let ErrorLogApi = jasmine.createSpy('constructor');
-  ErrorLogApi.and.returnValue(errorLogApi);
+  ErrorLogApi.and.returnValue(instance(errorLogApi));
   let apiKey = '<token>';
   let apiUrl = 'https://localhost';
   let countApiUrl = 'https://localhost2';
@@ -52,17 +56,17 @@ describe('View SDK', () => {
 
   function resetCalls() {
     DeanonApi.calls.reset();
-    deanonApi.fetch.calls.reset();
+    resetMockitoCalls(deanonApi);
     HeartbeatApi.calls.reset();
-    heartbeatApi.fetch.calls.reset();
+    resetMockitoCalls(heartbeatApi);
     JourneyApi.calls.reset();
-    journeyApi.fetch.calls.reset();
+    resetMockitoCalls(journeyApi);
     SampleApi.calls.reset();
-    sampleApi.fetch.calls.reset();
+    resetMockitoCalls(sampleApi);
     CountApi.calls.reset();
-    countApi.fetch.calls.reset();
+    resetMockitoCalls(countApi);
     ErrorLogApi.calls.reset();
-    errorLogApi.fetch.calls.reset();
+    resetMockitoCalls(errorLogApi);
   }
 
   describe('when no decision previously', () => {
@@ -76,7 +80,7 @@ describe('View SDK', () => {
         })();
       });
       it('then calls the view sample API', () => {
-        expect(sampleApi.fetch).toHaveBeenCalledWith({
+        expect(capture(sampleApi.fetch).last()[0]).toEqual({
           data: {
             id: jasmine.any(String),
             token: apiKey
@@ -468,7 +472,7 @@ describe('View SDK', () => {
         const identifier = 'Search';
         describe('when has id', () => {
           it('then counts', () => {
-            expect(countApi.fetch).toHaveBeenCalledWith({
+            expect(capture(countApi.fetch).last()[0]).toEqual({
               data: {
                 uid: jasmine.any(String),
                 token: '<token>',
@@ -497,7 +501,7 @@ describe('View SDK', () => {
         });
         describe('when no id', () => {
           it('then counts', () => {
-            expect(countApi.fetch).toHaveBeenCalledWith({
+            expect(capture(countApi.fetch).last()[0]).toEqual({
               data: {
                 uid: jasmine.any(String),
                 token: '<token>',
@@ -527,7 +531,7 @@ describe('View SDK', () => {
       });
       describe('when leadUnattributed', () => {
         it('then counts', () => {
-          expect(countApi.fetch).toHaveBeenCalledWith({
+          expect(capture(countApi.fetch).last()[0]).toEqual({
             data: {
               uid: jasmine.any(String),
               token: '<token>',
@@ -1462,7 +1466,7 @@ describe('View SDK', () => {
             })();
           });
           it('then counts', () => {
-            expect(countApi.fetch).toHaveBeenCalledWith({
+            expect(capture(countApi.fetch).last()[0]).toEqual({
               data: {
                 uid: jasmine.any(String),
                 token: '<token>',
@@ -1501,7 +1505,7 @@ describe('View SDK', () => {
             })();
           });
           it('then counts', () => {
-            expect(countApi.fetch).toHaveBeenCalledWith({
+            expect(capture(countApi.fetch).last()[0]).toEqual({
               data: {
                 uid: jasmine.any(String),
                 token: '<token>',
@@ -1566,7 +1570,7 @@ describe('View SDK', () => {
             })();
           });
           it('then counts', () => {
-            expect(countApi.fetch).toHaveBeenCalledWith({
+            expect(capture(countApi.fetch).last()[0]).toEqual({
               data: {
                 uid: jasmine.any(String),
                 token: '<token>',
@@ -1604,7 +1608,7 @@ describe('View SDK', () => {
             })();
           });
           it('then counts', () => {
-            expect(countApi.fetch).toHaveBeenCalledWith({
+            expect(capture(countApi.fetch).last()[0]).toEqual({
               data: {
                 uid: jasmine.any(String),
                 token: '<token>',
@@ -1685,7 +1689,7 @@ describe('View SDK', () => {
             })();
           });
           it('then counts', () => {
-            expect(countApi.fetch).toHaveBeenCalledWith({
+            expect(capture(countApi.fetch).last()[0]).toEqual({
               data: {
                 uid: jasmine.any(String),
                 token: '<token>',
@@ -1718,7 +1722,7 @@ describe('View SDK', () => {
             })();
           });
           it('then counts', () => {
-            expect(countApi.fetch).toHaveBeenCalledWith({
+            expect(capture(countApi.fetch).last()[0]).toEqual({
               data: {
                 uid: jasmine.any(String),
                 token: '<token>',
@@ -1803,7 +1807,7 @@ describe('View SDK', () => {
             })();
           });
           it('then counts', () => {
-            expect(countApi.fetch).toHaveBeenCalledWith({
+            expect(capture(countApi.fetch).last()[0]).toEqual({
               data: {
                 uid: jasmine.any(String),
                 token: '<token>',
@@ -1843,7 +1847,7 @@ describe('View SDK', () => {
             })();
           });
           it('then counts', () => {
-            expect(countApi.fetch).toHaveBeenCalledWith({
+            expect(capture(countApi.fetch).last()[0]).toEqual({
               data: {
                 uid: jasmine.any(String),
                 token: '<token>',
@@ -1884,7 +1888,7 @@ describe('View SDK', () => {
             })();
           });
           it('then counts', () => {
-            expect(countApi.fetch).toHaveBeenCalledWith({
+            expect(capture(countApi.fetch).last()[0]).toEqual({
               data: {
                 uid: jasmine.any(String),
                 token: '<token>',
@@ -1923,7 +1927,7 @@ describe('View SDK', () => {
             })();
           });
           it('then counts', () => {
-            expect(countApi.fetch).toHaveBeenCalledWith({
+            expect(capture(countApi.fetch).last()[0]).toEqual({
               data: {
                 uid: jasmine.any(String),
                 token: '<token>',
@@ -1964,7 +1968,7 @@ describe('View SDK', () => {
             })();
           });
           it('then counts', () => {
-            expect(countApi.fetch).toHaveBeenCalledWith({
+            expect(capture(countApi.fetch).last()[0]).toEqual({
               data: {
                 uid: jasmine.any(String),
                 token: '<token>',
@@ -2003,7 +2007,7 @@ describe('View SDK', () => {
             })();
           });
           it('then counts', () => {
-            expect(countApi.fetch).toHaveBeenCalledWith({
+            expect(capture(countApi.fetch).last()[0]).toEqual({
               data: {
                 uid: jasmine.any(String),
                 token: '<token>',
@@ -3789,7 +3793,7 @@ describe('View SDK', () => {
             expect(filteredQuery).toEqual('');
           });
           it('then counts', () => {
-            expect(countApi.fetch).toHaveBeenCalledWith({
+            expect(capture(countApi.fetch).last()[0]).toEqual({
               data: {
                 uid: jasmine.any(String),
                 token: '<token>',
@@ -3903,7 +3907,7 @@ describe('View SDK', () => {
               });
               it('then calls the view journey API', () => {
                 expect(JourneyApi).toHaveBeenCalledWith(apiUrl);
-                expect(journeyApi.fetch).toHaveBeenCalledWith({
+                expect(capture(journeyApi.fetch).last()[0]).toEqual({
                   data: {
                     id: jasmine.any(String),
                     journey: [
@@ -3937,11 +3941,8 @@ describe('View SDK', () => {
                   rejectCommitPromise = reject;
                 });
                 (async () => {
-                  try {
-                    rejectCommitPromise(new Error("Failure"));
-                    await commitPromise
-                  } catch (e) {
-                  }
+                                      rejectCommitPromise(new Error("Failure"));
+                    await commitPromise.catch(() => undefined);
                   UnblockPromises();
                   ImmediatelyResolvePromise(30);
                   unit.commit()
@@ -3950,7 +3951,7 @@ describe('View SDK', () => {
               });
             });
             beforeEach(() => {
-              journeyApi.fetch.and.callFake(() => {
+              when(journeyApi.fetch(anything())).thenCall(() => {
                 return commitPromise
               });
             });
@@ -3966,11 +3967,8 @@ describe('View SDK', () => {
                   rejectCommitPromise = reject;
                 });
                 (async () => {
-                  try {
-                    rejectCommitPromise(new Error("failure"));
-                    await commitPromise
-                  } catch (e) {
-                  }
+                                      rejectCommitPromise(new Error("failure"));
+                    await commitPromise.catch(() => undefined);
                   UnblockPromises();
                   ImmediatelyResolvePromise(30);
                   try {
@@ -4002,7 +4000,7 @@ describe('View SDK', () => {
               });
             });
             beforeEach(() => {
-              journeyApi.fetch.and.callFake(() => {
+              when(journeyApi.fetch(anything())).thenCall(() => {
                 return commitPromise
               });
             });
@@ -4011,7 +4009,7 @@ describe('View SDK', () => {
         describe('when custom key', () => {
           let customKey = '<custom>';
           it('then calls the view journey API', () => {
-            expect(journeyApi.fetch).toHaveBeenCalledWith({
+            expect(capture(journeyApi.fetch).last()[0]).toEqual({
               data: {
                 id: jasmine.any(String),
                 journey: [
@@ -4028,7 +4026,7 @@ describe('View SDK', () => {
               let promise = new Promise(function (resolve, reject) {
                 resolveCommitPromise = resolve;
               });
-              journeyApi.fetch.and.returnValue(promise);
+              when(journeyApi.fetch(anything())).thenReturn(promise);
               ImmediatelyResolvePromise(30);
               await unit.init(customKey);
               ImmediatelyResolvePromise(30);
@@ -4063,7 +4061,7 @@ describe('View SDK', () => {
             describe('when API Successful', () => {
               it('then calls the view heartbeat API', () => {
                 expect(HeartbeatApi).toHaveBeenCalledWith(apiUrl);
-                expect(heartbeatApi.fetch).toHaveBeenCalledWith({
+                expect(capture(heartbeatApi.fetch).last()[0]).toEqual({
                   data: {
                     id: jasmine.any(String),
                     journey: [
@@ -4088,7 +4086,7 @@ describe('View SDK', () => {
                     resolvePromise = resolve;
                     rejectPromise = reject;
                   });
-                  heartbeatApi.fetch.and.returnValue(promise);
+                  when(heartbeatApi.fetch(anything())).thenReturn(promise);
                   resolvePromise({"Result": "Success"});
                   await promise;
                   UnblockPromises();
@@ -4113,12 +4111,9 @@ describe('View SDK', () => {
                     resolvePromise = resolve;
                     rejectPromise = reject;
                   });
-                  heartbeatApi.fetch.and.returnValue(promise);
-                  try {
-                    rejectPromise(new Error('failure'));
-                    await promise;
-                  } catch (e) {
-                  }
+                  when(heartbeatApi.fetch(anything())).thenReturn(promise);
+                                      rejectPromise(new Error('failure'));
+                    await promise.catch(() => undefined);
                   UnblockPromises();
                   await unit.heartbeat();
                   done();
@@ -4137,13 +4132,10 @@ describe('View SDK', () => {
                 resolvePromise = resolve;
                 rejectPromise = reject;
               });
-              heartbeatApi.fetch.and.returnValue(promise);
+              when(heartbeatApi.fetch(anything())).thenReturn(promise);
               (async () => {
-                try {
-                  rejectPromise(new Error("failure"));
-                  await promise
-                } catch (e) {
-                }
+                                  rejectPromise(new Error("failure"));
+                  await promise.catch(() => undefined);
                 UnblockPromises();
                 ImmediatelyResolvePromise(30);
                 try {
@@ -4159,7 +4151,7 @@ describe('View SDK', () => {
         describe('when tags', () => {
           it('then calls the view heartbeat API', () => {
             expect(HeartbeatApi).toHaveBeenCalledWith(apiUrl);
-            expect(heartbeatApi.fetch).toHaveBeenCalledWith({
+            expect(capture(heartbeatApi.fetch).last()[0]).toEqual({
               data: {
                 id: jasmine.any(String),
                 journey: [
@@ -4173,14 +4165,14 @@ describe('View SDK', () => {
             });
           });
           let resolvePromise = null;
-          let rejectPromise = null;
+
           beforeEach((done) => {
             (async () => {
               let promise = new Promise(function (resolve, reject) {
                 resolvePromise = resolve;
-                rejectPromise = reject;
+
               });
-              heartbeatApi.fetch.and.returnValue(promise);
+              when(heartbeatApi.fetch(anything())).thenReturn(promise);
               resolvePromise({"Result": "Success"});
               await promise;
               UnblockPromises();
@@ -4193,7 +4185,7 @@ describe('View SDK', () => {
         describe('when platform', () => {
           it('then calls the view heartbeat API', () => {
             expect(HeartbeatApi).toHaveBeenCalledWith(apiUrl);
-            expect(heartbeatApi.fetch).toHaveBeenCalledWith({
+            expect(capture(heartbeatApi.fetch).last()[0]).toEqual({
               data: {
                 id: jasmine.any(String),
                 journey: [
@@ -4212,14 +4204,14 @@ describe('View SDK', () => {
             });
           });
           let resolvePromise = null;
-          let rejectPromise = null;
+
           beforeEach((done) => {
             (async () => {
               let promise = new Promise(function (resolve, reject) {
                 resolvePromise = resolve;
-                rejectPromise = reject;
+
               });
-              heartbeatApi.fetch.and.returnValue(promise);
+              when(heartbeatApi.fetch(anything())).thenReturn(promise);
               resolvePromise({"Result": "Success"});
               await promise;
               UnblockPromises();
@@ -4231,14 +4223,14 @@ describe('View SDK', () => {
         });
         describe('when ecom abandonment', () => {
           let resolvePromise = null;
-          let rejectPromise = null;
+
           let heartbeatPromise;
           beforeEach((done) => {
             heartbeatPromise = new Promise(function (resolve, reject) {
               resolvePromise = resolve;
-              rejectPromise = reject;
+
             });
-            heartbeatApi.fetch.and.returnValue(heartbeatPromise);
+            when(heartbeatApi.fetch(anything())).thenReturn(heartbeatPromise);
             (async () => {
               ImmediatelyResolvePromise(30);
               await unit.ecomAbandonment();
@@ -4248,7 +4240,7 @@ describe('View SDK', () => {
           describe('when ecom stage 0', () => {
             it('then calls the view heartbeat API', () => {
               expect(HeartbeatApi).toHaveBeenCalledWith(apiUrl);
-              expect(heartbeatApi.fetch).toHaveBeenCalledWith({
+              expect(capture(heartbeatApi.fetch).last()[0]).toEqual({
                 data: {
                   id: jasmine.any(String),
                   journey: [
@@ -4288,7 +4280,7 @@ describe('View SDK', () => {
           describe('when ecom stage 1', () => {
             it('then calls the view heartbeat API', () => {
               expect(HeartbeatApi).toHaveBeenCalledWith(apiUrl);
-              expect(heartbeatApi.fetch).toHaveBeenCalledWith({
+              expect(capture(heartbeatApi.fetch).last()[0]).toEqual({
                 data: {
                   id: jasmine.any(String),
                   journey: [
@@ -4336,7 +4328,7 @@ describe('View SDK', () => {
           describe('when ecom stage 2', () => {
             it('then calls the view heartbeat API', () => {
               expect(HeartbeatApi).toHaveBeenCalledWith(apiUrl);
-              expect(heartbeatApi.fetch).toHaveBeenCalledWith({
+              expect(capture(heartbeatApi.fetch).last()[0]).toEqual({
                 data: {
                   id: jasmine.any(String),
                   journey: [
@@ -4384,7 +4376,7 @@ describe('View SDK', () => {
           describe('when ecom stage 3', () => {
             it('then calls the view heartbeat API', () => {
               expect(HeartbeatApi).toHaveBeenCalledWith(apiUrl);
-              expect(heartbeatApi.fetch).toHaveBeenCalledWith({
+              expect(capture(heartbeatApi.fetch).last()[0]).toEqual({
                 data: {
                   id: jasmine.any(String),
                   journey: [
@@ -4443,15 +4435,15 @@ describe('View SDK', () => {
         });
         describe('when custom abandonment', () => {
           let resolvePromise = null;
-          let rejectPromise = null;
+
           let heartbeatPromise;
           beforeEach((done) => {
             (async () => {
               heartbeatPromise = new Promise(function (resolve, reject) {
                 resolvePromise = resolve;
-                rejectPromise = reject;
+
               });
-              heartbeatApi.fetch.and.returnValue(heartbeatPromise);
+              when(heartbeatApi.fetch(anything())).thenReturn(heartbeatPromise);
               await unit.customAbandonment({
                 expires_in_seconds: 600,
                 if_abandoned: {
@@ -4466,7 +4458,7 @@ describe('View SDK', () => {
           describe('when called', () => {
             it('then calls the view heartbeat API', () => {
               expect(HeartbeatApi).toHaveBeenCalledWith(apiUrl);
-              expect(heartbeatApi.fetch).toHaveBeenCalledWith({
+              expect(capture(heartbeatApi.fetch).last()[0]).toEqual({
                 data: {
                   id: jasmine.any(String),
                   journey: [
@@ -4507,14 +4499,14 @@ describe('View SDK', () => {
         });
         describe('when canceling abandonment', () => {
           let resolvePromise = null;
-          let rejectPromise = null;
+
           let heartbeatPromise;
           beforeEach((done) => {
             heartbeatPromise = new Promise(function (resolve, reject) {
               resolvePromise = resolve;
-              rejectPromise = reject;
+
             });
-            heartbeatApi.fetch.and.returnValue(heartbeatPromise);
+            when(heartbeatApi.fetch(anything())).thenReturn(heartbeatPromise);
             (async () => {
               ImmediatelyResolvePromise(30);
               await unit.cancelAbandonment();
@@ -4524,7 +4516,7 @@ describe('View SDK', () => {
           describe('when called', () => {
             it('then calls the view heartbeat API', () => {
               expect(HeartbeatApi).toHaveBeenCalledWith(apiUrl);
-              expect(heartbeatApi.fetch).toHaveBeenCalledWith({
+              expect(capture(heartbeatApi.fetch).last()[0]).toEqual({
                 data: {
                   id: jasmine.any(String),
                   journey: [
@@ -4586,7 +4578,7 @@ describe('View SDK', () => {
         describe('when default', () => {
           it('then calls the view deanon API', () => {
             expect(DeanonApi).toHaveBeenCalledWith(apiUrl);
-            expect(deanonApi.fetch).toHaveBeenCalledWith({
+            expect(capture(deanonApi.fetch).last()[0]).toEqual({
               data: {
                 id: jasmine.any(String),
                 person: person,
@@ -4601,7 +4593,7 @@ describe('View SDK', () => {
               let promise = new Promise(function (resolve, reject) {
                 resolvePromise = resolve;
               });
-              deanonApi.fetch.and.returnValue(promise);
+              when(deanonApi.fetch(anything())).thenReturn(promise);
               ImmediatelyResolvePromise(30);
               countResolvePromise({"result": "success"});
               resolvePromise({"Result": "Success"});
@@ -4624,7 +4616,7 @@ describe('View SDK', () => {
         describe('when custom', () => {
           let customKey = '<custom>';
           it('then calls the view journey API', () => {
-            expect(deanonApi.fetch).toHaveBeenCalledWith({
+            expect(capture(deanonApi.fetch).last()[0]).toEqual({
               data: {
                 id: jasmine.any(String),
                 person: person,
@@ -4639,7 +4631,7 @@ describe('View SDK', () => {
               let promise = new Promise(function (resolve, reject) {
                 resolvePromise = resolve;
               });
-              deanonApi.fetch.and.returnValue(promise);
+              when(deanonApi.fetch(anything())).thenReturn(promise);
               ImmediatelyResolvePromise(30);
               countResolvePromise({"result": "success"});
               resolvePromise({"Result": "Success"});
@@ -4668,7 +4660,7 @@ describe('View SDK', () => {
           describe('it passes', () => {
             it('then calls the view count API', () => {
               expect(CountApi).toHaveBeenCalledWith(countApiUrl);
-              expect(countApi.fetch).toHaveBeenCalledWith({
+              expect(capture(countApi.fetch).last()[0]).toEqual({
                 data: {
                   uid: jasmine.any(String),
                   token: apiKey,
@@ -4698,7 +4690,7 @@ describe('View SDK', () => {
               operatingSystemVersion: '1.0'
             };
             it('then calls the view count API', () => {
-              expect(countApi.fetch).toHaveBeenCalledWith({
+              expect(capture(countApi.fetch).last()[0]).toEqual({
                 data: {
                   uid: jasmine.any(String),
                   token: apiKey,
@@ -4728,7 +4720,7 @@ describe('View SDK', () => {
           describe('it passes with SKUS', () => {
             it('then calls the view count API', () => {
               expect(CountApi).toHaveBeenCalledWith(countApiUrl);
-              expect(countApi.fetch).toHaveBeenCalledWith({
+              expect(capture(countApi.fetch).last()[0]).toEqual({
                 data: {
                   uid: jasmine.any(String),
                   token: apiKey,
@@ -4811,12 +4803,9 @@ describe('View SDK', () => {
                     countResolvePromise = resolve;
                     countRejectPromise = reject;
                   });
-                  countApi.fetch.and.returnValue(countPromise);
-                  try {
-                    countRejectPromise(new Error('failure'));
-                    await countPromise;
-                  } catch (e) {
-                  }
+                  when(countApi.fetch(anything())).thenReturn(countPromise);
+                  countRejectPromise(new Error('failure'));
+                    await countPromise.catch(() => undefined);
                   UnblockPromises();
                   resetCalls();
                   ImmediatelyResolvePromise(30);
@@ -4831,7 +4820,7 @@ describe('View SDK', () => {
             });
             describe('it is called successfully after failure', () => {
               it('should make calls with replays', () => {
-                expect(countApi.fetch).toHaveBeenCalledTimes(2);
+                verify(countApi.fetch(anything())).twice();
               });
               beforeEach((done) => {
                 (async () => {
@@ -4839,12 +4828,9 @@ describe('View SDK', () => {
                     countResolvePromise = resolve;
                     countRejectPromise = reject;
                   });
-                  countApi.fetch.and.returnValue(countPromise);
-                  try {
-                    countResolvePromise({"result": "success"});
-                    await countPromise;
-                  } catch (e) {
-                  }
+                  when(countApi.fetch(anything())).thenReturn(countPromise);
+                  countResolvePromise({"result": "success"});
+                    await countPromise.catch(() => undefined);
                   UnblockPromises();
                   resetCalls();
                   ImmediatelyResolvePromise(9);
@@ -4863,13 +4849,10 @@ describe('View SDK', () => {
                   countResolvePromise = resolve;
                   countRejectPromise = reject;
                 });
-                countApi.fetch.and.returnValue(countPromise);
+                when(countApi.fetch(anything())).thenReturn(countPromise);
                 ImmediatelyResolvePromise(1);
-                try {
                   countRejectPromise(new Error('failure'));
-                  await countPromise;
-                } catch (e) {
-                }
+                  await countPromise.catch(() => undefined);
                 UnblockPromises();
                 resetCalls();
                 ImmediatelyResolvePromise(8);
@@ -4904,12 +4887,9 @@ describe('View SDK', () => {
                   countResolvePromise = resolve;
                   countRejectPromise = reject;
                 });
-                countApi.fetch.and.returnValue(countPromise);
-                try {
+                when(countApi.fetch(anything())).thenReturn(countPromise);
                   countRejectPromise(new Error('failure'));
-                  await countPromise;
-                } catch (e) {
-                }
+                  await countPromise.catch(() => undefined);
                 UnblockPromises();
                 resetCalls();
                 ImmediatelyResolvePromise(30);
@@ -4961,7 +4941,7 @@ describe('View SDK', () => {
           const log = ["<line>"]
           it('then calls the view error log API', () => {
             expect(ErrorLogApi).toHaveBeenCalledWith(apiUrl);
-            expect(errorLogApi.fetch).toHaveBeenCalledWith({
+            expect(capture(errorLogApi.fetch).last()[0]).toEqual({
               data: {
                 log: log,
                 token: apiKey,
@@ -4971,7 +4951,7 @@ describe('View SDK', () => {
           beforeEach(() => {
             let promise = new Promise(function (resolve, reject) {
             });
-            errorLogApi.fetch.and.returnValue(promise);
+            when(errorLogApi.fetch(anything())).thenReturn(promise);
             unit.recordError(log);
           });
         });
@@ -5001,7 +4981,7 @@ describe('View SDK', () => {
       });
       describe('when api returns no sampling', () => {
         it('then calls the view sample API', () => {
-          expect(sampleApi.fetch).toHaveBeenCalledWith({
+          expect(capture(sampleApi.fetch).last()[0]).toEqual({
             data: {
               id: jasmine.any(String),
               token: apiKey
@@ -5019,16 +4999,7 @@ describe('View SDK', () => {
           describe('when default', () => {
             it('then never calls the view journey API', () => {
               expect(JourneyApi).not.toHaveBeenCalledWith(apiUrl);
-              expect(journeyApi.fetch).not.toHaveBeenCalledWith({
-                data: {
-                  id: jasmine.any(String),
-                  journey: [
-                    {category: 'Feature', action: 'Attempted', name: feature, timestamp: jasmine.any(Number)}
-                  ],
-                  token: apiKey,
-                  timestamp: jasmine.any(Number)
-                }
-              });
+              verify(journeyApi.fetch(anything())).never();
             });
             it('then never resets journey', (done) => {
               (async () => {
@@ -5058,16 +5029,7 @@ describe('View SDK', () => {
           describe('when default', () => {
             it('then never calls the view heartbeat API', () => {
               expect(HeartbeatApi).not.toHaveBeenCalledWith(apiUrl);
-              expect(heartbeatApi.fetch).not.toHaveBeenCalledWith({
-                data: {
-                  id: jasmine.any(String),
-                  journey: [
-                    {category: 'Feature', action: 'Attempted', name: feature, timestamp: jasmine.any(Number)}
-                  ],
-                  token: apiKey,
-                  timestamp: jasmine.any(Number)
-                }
-              });
+              verify(heartbeatApi.fetch(anything())).never();
             });
             it('then never resets journey', (done) => {
               (async () => {
@@ -5097,14 +5059,7 @@ describe('View SDK', () => {
           describe('when default', () => {
             it('then never calls the view deanon API', () => {
               expect(DeanonApi).not.toHaveBeenCalledWith(apiUrl);
-              expect(deanonApi.fetch).not.toHaveBeenCalledWith({
-                data: {
-                  id: jasmine.any(String),
-                  person: person,
-                  token: apiKey,
-                  timestamp: jasmine.any(Number)
-                }
-              });
+              verify(deanonApi.fetch(anything())).never();
             });
             beforeEach((done) => {
               (async () => {
@@ -5119,12 +5074,7 @@ describe('View SDK', () => {
           const log = ["<line>"]
           it('then never calls the view error log API', () => {
             expect(ErrorLogApi).not.toHaveBeenCalledWith(apiUrl);
-            expect(errorLogApi.fetch).not.toHaveBeenCalledWith({
-              data: {
-                log: log,
-                token: apiKey,
-              }
-            });
+            verify(errorLogApi.fetch(anything())).never();
           });
           beforeEach((done) => {
             (async () => {
@@ -5159,11 +5109,8 @@ describe('View SDK', () => {
           (async () => {
             localStorage.clear();
             sessionStorage.clear();
-            try {
-              sampleRejectPromise(new Error('{"result": "failed"}'));
-              await samplePromise;
-            } catch (e) {
-            }
+                          sampleRejectPromise(new Error('{"result": "failed"}'));
+              await samplePromise.catch(() => undefined);
             UnblockPromises();
             ImmediatelyResolvePromise(60);
             await unit.init(apiKey, apiUrl);
@@ -5184,13 +5131,10 @@ describe('View SDK', () => {
           (async () => {
             localStorage.clear();
             sessionStorage.clear();
-            try {
-              const error = new Error('{"result": "no-auth"}');
+                          const error = new Error('{"result": "no-auth"}');
               error.authIssue = true;
               sampleRejectPromise(error);
-              await samplePromise;
-            } catch (e) {
-            }
+              await samplePromise.catch(() => undefined);
             UnblockPromises();
             ImmediatelyResolvePromise(60);
             await unit.init(apiKey, apiUrl);
@@ -5218,13 +5162,10 @@ describe('View SDK', () => {
           (async () => {
             localStorage.clear();
             sessionStorage.clear();
-            try {
-              const error = new Error('{"result": "no-auth"}');
+                          const error = new Error('{"result": "no-auth"}');
               error.authIssue = true;
               sampleRejectPromise(error);
-              await samplePromise;
-            } catch (e) {
-            }
+              await samplePromise.catch(() => undefined);
             UnblockPromises();
             ImmediatelyResolvePromise(60);
             await unit.init(apiKey, apiUrl, callback);
@@ -5240,12 +5181,12 @@ describe('View SDK', () => {
         sampleResolvePromise = resolve;
         sampleRejectPromise = reject;
       });
-      sampleApi.fetch.and.returnValue(samplePromise);
+      when(sampleApi.fetch(anything())).thenReturn(samplePromise);
       countPromise = new Promise(function (resolve, reject) {
         countResolvePromise = resolve;
         countRejectPromise = reject;
       });
-      countApi.fetch.and.returnValue(countPromise);
+      when(countApi.fetch(anything())).thenReturn(countPromise);
       unit = new _Xenon(apiKey, apiUrl, countApiUrl, JourneyApi, DeanonApi, HeartbeatApi, SampleApi, CountApi, ErrorLogApi);
       unit2 = new _Xenon(apiKey, apiUrl, countApiUrl, JourneyApi, DeanonApi, HeartbeatApi, SampleApi, CountApi, ErrorLogApi);
     });
@@ -5275,7 +5216,7 @@ describe('View SDK', () => {
           sampleResolvePromise = resolve;
           sampleRejectPromise = reject;
         });
-        sampleApi.fetch.and.returnValue(samplePromise);
+        when(sampleApi.fetch(anything())).thenReturn(samplePromise);
         ImmediatelyResolvePromise(2);
         await storeSession('xenon-will-sample', false);
         unit3 = new _Xenon(apiKey, apiUrl, countApiUrl, JourneyApi, DeanonApi, HeartbeatApi, SampleApi, CountApi);

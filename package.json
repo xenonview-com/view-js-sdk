@@ -4,6 +4,7 @@
     "@babel/plugin-transform-runtime": "^7.15.0",
     "@babel/preset-env": "^7.15.6",
     "@babel/register": "^7.15.3",
+    "@eslint/js": "9",
     "@rollup/plugin-commonjs": "^24.0.0",
     "@rollup/plugin-node-resolve": "^15.0.1",
     "@rollup/plugin-terser": "^0.2.0",
@@ -11,9 +12,12 @@
     "babelify": "^10.0.0",
     "bluebird": "^3.7.2",
     "browserify": "^17.0.0",
+    "eslint": "9",
+    "eslint-plugin-sonarjs": "^4.2.2",
     "jasmine-ajax": "^4.0.0",
     "jasmine-async-suite": "^0.0.8",
     "jasmine-core": "^3.9.0",
+    "jscpd": "^5.4.0",
     "karma": "^6.3.4",
     "karma-babel-preprocessor": "^8.0.1",
     "karma-browserify": "^8.1.0",
@@ -27,6 +31,8 @@
     "rollup": "^3.7.5",
     "rollup-plugin-node-builtins": "^2.1.2",
     "rollup-plugin-node-globals": "^1.4.0",
+    "ts-mockito": "^2.6.1",
+    "typescript": "6",
     "watchify": "^4.0.0"
   },
   "scripts": {
@@ -34,7 +40,13 @@
     "test:watch": "karma start --auto-watch true --single-run false",
     "test:coverage": "karma start --reporters dots,coverage-istanbul",
     "compile": "yarn rollup --config --bundleConfigAsCjs",
-    "release": "np"
+    "release": "np",
+    "lint": "eslint .",
+    "eslint": "eslint .",
+    "complexity": "eslint src index.js useXenon.js --no-config-lookup --config eslint.complexity.config.mjs",
+    "duplication": "jscpd src index.js useXenon.js --min-lines 5 --min-tokens 50 --threshold 0 --reporters console",
+    "test:types": "tsc --noEmit --strict --skipLibCheck --ignoreConfig spec/types/product_metadata.ts",
+    "quality": "yarn lint && yarn complexity && yarn duplication && yarn test:types && yarn test:coverage && yarn compile"
   },
   "files": [
     "index.js",

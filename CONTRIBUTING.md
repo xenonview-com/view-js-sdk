@@ -38,6 +38,18 @@ To run the tests in "coverage mode" (runs all tests then calculates coverage for
 yarn test:coverage
 ```
 
+## Required quality checks
+
+Run `yarn quality` before submitting changes. It runs ESLint, complexity checks,
+duplication detection, TypeScript declaration checks, the coverage suite, and the browser bundle build.
+
+`yarn complexity` enforces cognitive complexity below 2 for production JavaScript.
+`yarn lint` applies the same complexity limit to tests and configuration files.
+`yarn duplication` rejects repeated production blocks of at least 5 lines and
+50 tokens; generated bundles and test fixtures are excluded from that scan.
+The coverage suite enforces 100% statements, branches, functions, and lines across
+`src`. Use `ts-mockito` for API dependency mocks in new tests.
+
 # Publishing
 
 _We (package maintainers) handle this step so this is more of internal notes:_

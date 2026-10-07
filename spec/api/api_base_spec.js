@@ -6,7 +6,7 @@ require('../helper/api_helper');
 
 describe('ApiBase', () => {
   let Subject;
-  let doneSpy, failSpy, request;
+  let doneSpy, failSpy;
   const apiUrl = 'https://app.xenonview.com';
   beforeEach((done) => {
     (async () => {
@@ -25,7 +25,6 @@ describe('ApiBase', () => {
       doneSpy = jasmine.createSpy('done');
       failSpy = jasmine.createSpy('fail');
       subject.fetch({data: {}}).then(doneSpy, failSpy);
-      request = jasmine.Ajax.requests.mostRecent();
     });
     it('requests base url', () => {
       expect(`${apiUrl}/`).toHaveBeenRequestedWith({

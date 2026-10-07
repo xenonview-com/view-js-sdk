@@ -18,6 +18,8 @@ describe('CountApi', () => {
     },
     platform: "<platform",
     skus: ["sku"],
+    productNames: ["Product"],
+    brands: ["Brand"],
     value: 123.31
   };
   beforeEach((done) => {
@@ -45,8 +47,16 @@ describe('CountApi', () => {
       leadGuid: null,
       platform: "<platform",
       skus: ["sku"],
+      productNames: ["Product"],
+      brands: ["Brand"],
       value: 123.31
     });
+  });
+  it('sends names and brands in the request body', () => {
+    const request = jasmine.Ajax.requests.mostRecent();
+    expect(JSON.parse(request.params).parameters).toEqual(jasmine.objectContaining({
+      skus: ['sku'], productNames: ['Product'], brands: ['Brand']
+    }));
   });
   afterEach(() => {
     ImmediatelyResolvePromise(0);
