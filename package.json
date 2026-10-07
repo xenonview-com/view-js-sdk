@@ -33,7 +33,7 @@
     "rollup-plugin-node-globals": "^1.4.0",
     "ts-mockito": "^2.6.1",
     "typescript": "6",
-    "watchify": "^4.0.0"
+      "watchify": "^4.0.0"
   },
   "scripts": {
     "test": "karma start",
