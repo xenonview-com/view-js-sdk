@@ -2555,13 +2555,104 @@ var Xenon = (function () {
      await ss.removeItem(name);
    }
 
+   class AttributionChannels {
+     constructor(params) {
+       this.source = String(Fields.fallback(params.get('utm_source'), '')).toLowerCase();
+       this.medium = String(Fields.fallback(params.get('utm_medium'), '')).toLowerCase();
+     }
+
+     paid() {
+       return /^(.*cp.*|ppc|retargeting|paid.*)$/.test(this.medium);
+     }
+
+     platform() {
+       return new Map([
+         ['google', 'Google'], ['bing', 'Bing'],
+         ['facebook', 'Facebook'], ['fb', 'Facebook'],
+         ['instagram', 'Instagram'], ['ig', 'Instagram'],
+         ['youtube', 'YouTube'], ['tiktok', 'TikTok']
+       ]).get(this.source);
+     }
+
+     platformChannel() {
+       const platform = this.platform();
+       if (!platform) return undefined;
+       return this.classifyPlatform(platform);
+     }
+
+     classifyPlatform(platform) {
+       if (this.paid()) return platform + this.paidChannel();
+       return this.organicPlatform(platform);
+     }
+
+     paidChannel() {
+       return Fields.fallback(new Map([
+         ['google', ' Paid Search'], ['bing', ' Paid Search'],
+         ['youtube', ' Paid Video'], ['tiktok', ' Paid Video']
+       ]).get(this.source), ' Paid Social');
+     }
+
+     organicPlatform(platform) {
+       if (['social', 'organic_social', 'organic', 'organic_search', 'video', 'organic_video'].includes(this.medium)) return platform + ' Organic';
+       return undefined;
+     }
+
+     values() {
+       const channels = new Map([
+         ['email', 'Email'], ['e-mail', 'Email'],
+         ['sms', 'SMS'], ['affiliate', 'Affiliate'],
+         ['referral', 'Referral'], ['app', 'Referral'], ['link', 'Referral'],
+         ['display', 'Display'], ['banner', 'Display'], ['cpm', 'Display'],
+         ['push', 'Push Notification']
+       ]);
+       return Fields.fallback(channels.get(this.medium), this.otherChannel());
+     }
+
+     otherChannel() {
+       return Fields.fallback(this.platformChannel(), this.genericChannel());
+     }
+
+     genericChannel() {
+       if (this.paid()) return 'Paid Other';
+       return new Map([
+         ['organic', 'Organic Search'], ['organic_search', 'Organic Search'],
+         ['social', 'Organic Social'], ['organic_social', 'Organic Social'],
+         ['video', 'Organic Video'], ['organic_video', 'Organic Video']
+       ]).get(this.medium);
+     }
+   }
+
    class Attribution {
      constructor(params) {
        this.params = params;
+       this.channel = new AttributionChannels(params).values();
      }
 
      campaign(key) {
-       return Fields.fallback(this.params.get(key), 'No Campaign');
+       return Fields.fallback(this.params.get(key), this.campaignFallback(key));
+     }
+
+     campaignFallback(key) {
+       if (key === 'utm_campaign') return Fields.fallback(this.params.get('utm_id'), 'No Campaign');
+       return 'No Campaign';
+     }
+
+     hasClickId(keys) {
+       return keys.some(key => Boolean(this.params.get(key)));
+     }
+
+     metadata() {
+       const keys = [
+         'utm_medium', 'utm_content', 'utm_term', 'utm_id', 'utm_source_platform',
+         'utm_creative_format', 'utm_marketing_tactic', 'gclid', 'wbraid', 'gbraid', 'dclid'
+       ];
+       const tracking = Fields.truthy(Object.fromEntries(keys.map(key => [key, this.params.get(key)])));
+       if (!Object.keys(tracking).length) return {};
+       return {leadTracking: {...this.manualSource(), ...tracking}};
+     }
+
+     manualSource() {
+       return Fields.truthy({utm_source: this.params.get('utm_source'), utm_campaign: this.params.get('utm_campaign')});
      }
 
      sourceIs(source) {
@@ -2587,22 +2678,27 @@ var Xenon = (function () {
          [() => p.has('cr_campaignid'), () => ['Cerebro', p.get('cr_campaignid')]],
          [() => this.sourceIs('klaviyo'), () => ['Klaviyo' + this.medium(), this.campaign('utm_campaign')]],
          [() => p.has('g_campaignid'), () => ['Google Ad', p.get('g_campaignid')]],
+         [() => this.hasClickId(['gclid', 'wbraid', 'gbraid']), () => ['Google Ad', this.campaign('utm_campaign')]],
+         [() => this.hasClickId(['dclid']), () => ['Google Marketing Platform Ad', this.campaign('utm_campaign')]],
          [() => this.sourceIs('shareasale'), () => ['Share-a-sale', this.campaign('sscid')]],
          [() => p.has('sscid'), () => ['Share-a-sale', p.get('sscid')]],
          [() => p.get('g_adtype') === 'none', () => ['Google Organic', this.campaign('g_campaign')]],
          [() => p.get('g_adtype') === 'search', () => ['Google Paid Search', this.campaign('g_campaign')]],
-         [() => p.get('utm_source') === 'facebook', () => ['Facebook Ad', this.campaign('utm_campaign')]],
-         [() => this.sourceIs('email-broadcast'), () => ['Email', this.campaign('utm_campaign')]],
-         [() => this.sourceIs('youtube'), () => ['YouTube', this.campaign('utm_campaign')]],
          [() => this.googleProductListing(), () => ['Google Merchant', this.campaign('utm_campaign')]],
+         [() => this.sourceIs('shopify_email'), () => ['Shopify Email', this.campaign('utm_campaign')]],
+         [() => this.sourceIs('shop_app'), () => ['Shop', this.campaign('utm_campaign')]],
          [() => p.has('avad'), () => ['Avantlink', this.campaign('avad')]],
          [() => p.has('dt_id'), () => ['Shopify Collabs', this.campaign('dt_id')]],
          [() => p.has('awc'), () => ['Awin', this.campaign('awc')]],
          [() => this.sourceIs('awin'), () => ['Awin', this.campaign('utm_campaign')]],
          [() => p.get('source') === 'sas-click', () => ['Share-a-sale', this.campaign('u')]],
-         [() => [p.has('utm_source'), p.has('utm_campaign')].every(Boolean), () => [p.get('utm_source'), p.get('utm_campaign')]],
-         [() => p.has('utm_source'), () => [p.get('utm_source'), 'No Campaign']],
+         [() => Boolean(this.channel), () => [this.channel, this.campaign('utm_campaign')]],
+         [() => this.sourceIs('facebook'), () => ['Facebook', this.campaign('utm_campaign')]],
+         [() => this.sourceIs('email-broadcast'), () => ['Email', this.campaign('utm_campaign')]],
+         [() => this.sourceIs('youtube'), () => ['YouTube', this.campaign('utm_campaign')]],
+         [() => p.has('utm_source'), () => [p.get('utm_source'), this.campaign('utm_campaign')]],
          [() => p.has('srsltid'), () => ['Google Organic', this.campaign('utm_campaign')]],
+         [() => ['utm_campaign', 'utm_id'].some(key => Boolean(p.get(key))), () => ['Unknown Source', this.campaign('utm_campaign')]],
          [() => true, () => ['Unattributed']]
        ];
      }
@@ -3562,7 +3658,7 @@ var Xenon = (function () {
        const params = new URLSearchParams(queryFromUrl);
        const [source, identifier] = await this.decipherParamsPerLibrary(params);
        if (await retrieveSession('view-attribution')) return queryFromUrl;
-       await this.saveAttribution(source, identifier);
+       await this.saveAttribution(source, identifier, new Attribution(params).metadata());
        ['xenonId', 'xenonSrc', 'xenon_euid'].forEach(key => params.delete(key));
        return this.remainingQuery(params);
      }
@@ -3577,8 +3673,8 @@ var Xenon = (function () {
        return queryFromUrl;
      }
 
-     async saveAttribution(source, identifier) {
-       await storeSession('view-attribution', {leadSource: source, leadCampaign: identifier, leadGuid: null});
+     async saveAttribution(source, identifier, metadata = {}) {
+       await storeSession('view-attribution', {leadSource: source, leadCampaign: identifier, leadGuid: null, ...metadata});
        const variantNames = Fields.fallback(await retrieveSession('view-tags'), []);
        if (Fields.all([() => source, () => !variantNames.includes(source)])) {
          await this.tagAttribution(variantNames, source, identifier);

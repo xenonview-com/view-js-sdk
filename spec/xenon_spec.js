@@ -3593,12 +3593,12 @@ describe('View SDK', () => {
             })();
           });
         });
-        describe('when Facebook Ad', () => {
+        describe('when Facebook', () => {
           let filteredQuery = '';
           it('then has tags', (done) => {
             (async () => {
               const tags = await retrieveSession('view-tags');
-              expect(tags).toContain("Facebook Ad");
+              expect(tags).toContain("Facebook");
               expect(tags).toContain("2024");
               done();
             })();
@@ -3614,12 +3614,12 @@ describe('View SDK', () => {
             })();
           });
         });
-        describe('when Facebook Ad without campaign', () => {
+        describe('when Facebook without campaign', () => {
           let filteredQuery = '';
           it('then uses fallback tags', (done) => {
             (async () => {
               const tags = await retrieveSession('view-tags');
-              expect(tags).toContain("Facebook Ad");
+              expect(tags).toContain("Facebook");
               expect(tags).toContain("No Campaign");
               done();
             })();
@@ -3627,7 +3627,7 @@ describe('View SDK', () => {
           it('then stores fallback attribution', (done) => {
             (async () => {
               const attribution = await retrieveSession('view-attribution');
-              expect(attribution).toEqual({leadSource: 'Facebook Ad', leadCampaign: 'No Campaign', leadGuid: null});
+              expect(attribution).toEqual({leadSource: 'Facebook', leadCampaign: 'No Campaign', leadGuid: null});
               done();
             })();
           });

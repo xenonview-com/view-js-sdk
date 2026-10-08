@@ -959,7 +959,7 @@ export class _Xenon {
     const params = new URLSearchParams(queryFromUrl);
     const [source, identifier] = await this.decipherParamsPerLibrary(params);
     if (await retrieveSession('view-attribution')) return queryFromUrl;
-    await this.saveAttribution(source, identifier);
+    await this.saveAttribution(source, identifier, new Attribution(params).metadata());
     ['xenonId', 'xenonSrc', 'xenon_euid'].forEach(key => params.delete(key));
     return this.remainingQuery(params);
   }
@@ -974,8 +974,8 @@ export class _Xenon {
     return queryFromUrl;
   }
 
-  async saveAttribution(source, identifier) {
-    await storeSession('view-attribution', {leadSource: source, leadCampaign: identifier, leadGuid: null});
+  async saveAttribution(source, identifier, metadata = {}) {
+    await storeSession('view-attribution', {leadSource: source, leadCampaign: identifier, leadGuid: null, ...metadata});
     const variantNames = Fields.fallback(await retrieveSession('view-tags'), []);
     if (Fields.all([() => source, () => !variantNames.includes(source)])) {
       await this.tagAttribution(variantNames, source, identifier);

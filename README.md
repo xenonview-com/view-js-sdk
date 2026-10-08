@@ -46,6 +46,7 @@ The Xenon View JavaScript SDK is the JavaScript SDK to interact with [XenonView]
 <br/>
 
 ## What's New <a id='whats-new'></a>
+* v0.2.12 - Improve ecommerce attribution, recognize Google ad click IDs, and preserve UTM tracking metadata.
 * v0.2.11 - Allow for product names and brand to be included along w/SKU
 * v0.2.10 - Handle Avantlink attributions
 * v0.2.9  - Use default campaign if none specified.
@@ -376,7 +377,7 @@ More are provided for each function.
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <script src="https://cdn.jsdelivr.net/gh/xenonview-com/view-js-sdk@v0.2.11/dist/xenon_view_sdk.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/gh/xenonview-com/view-js-sdk@v0.2.12/dist/xenon_view_sdk.min.js"></script>
   <script>
     Xenon.init('<API KEY>')
   </script>
@@ -434,7 +435,7 @@ export default function Home() {
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <script src="https://cdn.jsdelivr.net/gh/xenonview-com/view-js-sdk@v0.2.11/dist/xenon_view_sdk.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/gh/xenonview-com/view-js-sdk@v0.2.12/dist/xenon_view_sdk.min.js"></script>
   <script>
     Xenon.init('<API KEY>')
   </script>
@@ -2882,7 +2883,7 @@ Use this function to indicate a view of specific content.
 2. After load completes:
 ```html
 <head>
-    <script src="https://cdn.jsdelivr.net/gh/xenonview-com/view-js-sdk@v0.2.11/dist/xenon_view_sdk.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/xenonview-com/view-js-sdk@v0.2.12/dist/xenon_view_sdk.min.js"></script>
     <script>
         document.addEventListener("DOMContentLoaded", function(){
             const loadTime = timestamp() - startTime
@@ -3426,7 +3427,7 @@ export default function Home() {
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <script src="https://cdn.jsdelivr.net/gh/xenonview-com/view-js-sdk@v0.2.11/dist/xenon_view_sdk.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/xenonview-com/view-js-sdk@v0.2.12/dist/xenon_view_sdk.min.js"></script>
     <script>
         Xenon.init('<API KEY>')
         Xenon.ecomAbandonment()
@@ -3510,7 +3511,7 @@ export default function Home() {
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <script src="https://cdn.jsdelivr.net/gh/xenonview-com/view-js-sdk@v0.2.11/dist/xenon_view_sdk.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/gh/xenonview-com/view-js-sdk@v0.2.12/dist/xenon_view_sdk.min.js"></script>
   <script>
     Xenon.init('<API KEY>')
     const softwareVersion = '5.1.5'
@@ -3565,7 +3566,7 @@ export default function Home() {
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <script src="https://cdn.jsdelivr.net/gh/xenonview-com/view-js-sdk@v0.2.11/dist/xenon_view_sdk.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/gh/xenonview-com/view-js-sdk@v0.2.12/dist/xenon_view_sdk.min.js"></script>
   <script>
     Xenon.init('<API KEY>')
     Xenon.variant(['subscription-variant-A'])
@@ -3953,6 +3954,47 @@ Attribution uses the destination page's query string after redirects. Known rule
 | `awc` | `Awin` | `awc`, or `No Campaign` |
 | `utm_source=awin` | `Awin` | `utm_campaign`, or `No Campaign` |
 | `source=sas-click` forwarded to the destination | `Share-a-sale` | `u`, or `No Campaign` |
+| Nonempty `gclid`, `wbraid`, or `gbraid` | `Google Ad` | `utm_campaign`, then `utm_id`, or `No Campaign` |
+| Nonempty `dclid` | `Google Marketing Platform Ad` | `utm_campaign`, then `utm_id`, or `No Campaign` |
+| `utm_source=google`, `utm_medium=cpc` | `Google Paid Search` | `utm_campaign`, then `utm_id`, or `No Campaign` |
+| `utm_source=facebook`, `utm_medium=paid_social` | `Facebook Paid Social` | `utm_campaign`, then `utm_id`, or `No Campaign` |
+| `utm_source=facebook`, `utm_medium=social` | `Facebook Organic` | `utm_campaign`, then `utm_id`, or `No Campaign` |
+| `utm_source=facebook` without a recognized medium | `Facebook` | `utm_campaign`, then `utm_id`, or `No Campaign` |
+| `utm_source=youtube`, `utm_medium=cpc` | `YouTube Paid Video` | `utm_campaign`, then `utm_id`, or `No Campaign` |
+| `utm_source=shopify_email` | `Shopify Email` | `utm_campaign`, then `utm_id`, or `No Campaign` |
+| `utm_source=shop_app` | `Shop` | `utm_campaign`, then `utm_id`, or `No Campaign` |
+| `utm_medium=email`, `sms`, `affiliate`, or `referral` | `Email`, `SMS`, `Affiliate`, or `Referral` | `utm_campaign`, then `utm_id`, or `No Campaign` |
+| `utm_campaign` or `utm_id` without an identifiable source or medium | `Unknown Source` | `utm_campaign`, then `utm_id` |
+
+Source and medium matching for channel classification is case insensitive. Known
+platforms include Google, Bing, Facebook (`fb`), Instagram (`ig`), YouTube, and
+TikTok. Paid media include `cpc`, `ppc`, `retargeting`, and values starting with
+`paid`. Organic media include `organic`, `organic_search`, `social`,
+`organic_social`, `video`, and `organic_video`. Display and push media are also
+recognized; unknown paid platforms use `Paid Other`.
+
+Explicit Xenon overrides and existing provider identifiers retain priority.
+Google ad click identifiers take priority over organic and product listing
+markers. An opaque click identifier does not establish a campaign name or whether
+the ad came from Search, Shopping, YouTube, or Performance Max.
+
+When supplementary tracking fields are present, the stored attribution and API
+`data.content` include an optional `leadTracking` object. It preserves nonempty
+`utm_medium`, `utm_content`, `utm_term`, `utm_id`, `utm_source_platform`,
+`utm_creative_format`, `utm_marketing_tactic`, `gclid`, `wbraid`, `gbraid`, and
+`dclid`, together with the original `utm_source` and `utm_campaign` when present.
+This metadata travels with subsequent count events and their replay payloads.
+Unrelated query parameters are excluded. Existing `leadSource`, `leadCampaign`,
+and `leadGuid` fields remain available.
+
+These rules follow the parameter definitions in
+[Google's UTM documentation](https://support.google.com/analytics/answer/10917952?hl=en),
+[Google's ad auto-tagging documentation](https://support.google.com/analytics/answer/11242870?hl=en),
+[Google's iOS measurement documentation](https://support.google.com/analytics/answer/11367152?hl=en),
+[Shopify Email analytics](https://help.shopify.com/en/manual/promoting-marketing/analyze-marketing/shopify-email-analytics),
+and [Shop referral analytics](https://help.shopify.com/en/manual/online-sales-channels/shop/analytics).
+They provide SDK attribution labels; they do not reproduce Google's full channel
+grouping or Shopify's reporting attribution models.
 
 Google's `srsltid` auto-tagging does not establish which Google surface was used.
 The SDK defaults unqualified auto-tagged traffic to `Google Organic`; explicit
