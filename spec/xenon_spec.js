@@ -3202,13 +3202,13 @@ describe('View SDK', () => {
             })();
           });
         });
-        describe('when Google Merchant', () => {
+        describe('when Google auto-tagging without product listing UTMs', () => {
           let filteredQuery = '';
           it('then has tags', (done) => {
             (async () => {
               const tags = await retrieveSession('view-tags');
-              expect(tags).toContain("Google Merchant");
-              expect(tags).toContain("2024");
+              expect(tags).toContain("Google Organic");
+              expect(tags).toContain("No Campaign");
               done();
             })();
           });

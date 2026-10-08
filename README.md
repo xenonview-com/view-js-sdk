@@ -3942,6 +3942,31 @@ a variant journey to associate outcomes to the lead sources.
 
 <br/>
 
+Attribution uses the destination page's query string after redirects. Known rules include:
+
+| Landing page parameters | Lead source | Lead campaign |
+| --- | --- | --- |
+| `srsltid` alone | `Google Organic` | `No Campaign` |
+| `utm_source=google`, `utm_medium=product_sync`, and `sag_organic` in `utm_campaign` or `utm_content` | `Google Merchant` | `utm_campaign`, or `No Campaign` |
+| `utm_source=Youtube` or `utm_source=youtube` | `YouTube` | `utm_campaign`, or `No Campaign` |
+| `dt_id` | `Shopify Collabs` | `dt_id`, or `No Campaign` |
+| `awc` | `Awin` | `awc`, or `No Campaign` |
+| `utm_source=awin` | `Awin` | `utm_campaign`, or `No Campaign` |
+| `source=sas-click` forwarded to the destination | `Share-a-sale` | `u`, or `No Campaign` |
+
+Google's `srsltid` auto-tagging does not establish which Google surface was used.
+The SDK defaults unqualified auto-tagged traffic to `Google Organic`; explicit
+product listing UTMs identify `Google Merchant`. Other recognized sources and
+explicit UTMs take precedence over the unqualified `srsltid` fallback.
+The auto-tagging token is not treated as a campaign.
+
+For YouTube redirect links, the `q` parameter contains the destination URL. The SDK
+runs on that destination and reads its `utm_source` and other query parameters.
+An Awin `closedMerchant.html` URL is on Awin's domain; redirect parameters cannot
+be recovered by the destination SDK if they are not passed to the destination.
+Tracking query parameters are retained, and the first attribution in the session
+is preserved.
+
 ##### `autodiscoverLeadFrom()`
 ###### Framework example:
 ```javascript

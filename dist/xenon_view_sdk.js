@@ -2572,6 +2572,14 @@ var Xenon = (function () {
        return this.params.has('utm_medium') ? ' - ' + this.params.get('utm_medium') : '';
      }
 
+     googleProductListing() {
+       return Fields.all([
+         () => this.sourceIs('google'),
+         () => this.params.get('utm_medium') === 'product_sync',
+         () => ['utm_campaign', 'utm_content'].some(key => this.params.get(key) === 'sag_organic')
+       ]);
+     }
+
      rules() {
        const p = this.params;
        return [
@@ -2586,10 +2594,15 @@ var Xenon = (function () {
          [() => p.get('utm_source') === 'facebook', () => ['Facebook Ad', this.campaign('utm_campaign')]],
          [() => this.sourceIs('email-broadcast'), () => ['Email', this.campaign('utm_campaign')]],
          [() => this.sourceIs('youtube'), () => ['YouTube', this.campaign('utm_campaign')]],
-         [() => p.has('srsltid'), () => ['Google Merchant', p.get('srsltid')]],
+         [() => this.googleProductListing(), () => ['Google Merchant', this.campaign('utm_campaign')]],
          [() => p.has('avad'), () => ['Avantlink', this.campaign('avad')]],
+         [() => p.has('dt_id'), () => ['Shopify Collabs', this.campaign('dt_id')]],
+         [() => p.has('awc'), () => ['Awin', this.campaign('awc')]],
+         [() => this.sourceIs('awin'), () => ['Awin', this.campaign('utm_campaign')]],
+         [() => p.get('source') === 'sas-click', () => ['Share-a-sale', this.campaign('u')]],
          [() => [p.has('utm_source'), p.has('utm_campaign')].every(Boolean), () => [p.get('utm_source'), p.get('utm_campaign')]],
          [() => p.has('utm_source'), () => [p.get('utm_source'), 'No Campaign']],
+         [() => p.has('srsltid'), () => ['Google Organic', this.campaign('utm_campaign')]],
          [() => true, () => ['Unattributed']]
        ];
      }
@@ -2630,7 +2643,7 @@ var Xenon = (function () {
      }
 
      version() {
-       return 'v0.2.10';
+       return 'v0.2.12';
      }
 
      async init(apiKey, apiUrl = 'https://app.xenonview.com', onApiKeyFailure = null) {

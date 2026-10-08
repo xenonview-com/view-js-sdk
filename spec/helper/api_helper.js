@@ -89,6 +89,8 @@ afterAll(() => {
 beforeEach(() => {
   MockPromises.install(global.Promise);
   MockPromises.reset();
+  MockPromises.immediateResolveDisabled();
+  SettledPromises.enabled = false;
   jasmine.clock().install();
   jasmine.Ajax.install();
   Object.assign(XMLHttpRequest.prototype, {
